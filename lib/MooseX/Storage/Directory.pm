@@ -143,6 +143,20 @@ MooseX::Storage::Directory - The Great New magic data MooseX::Storage::Directory
 
 =head1 DESCRIPTION
 
+
+
+=head1 VERSION CONTROL
+
+L<http://code2.0beta.co.uk/moose/svn/>. Ask on #moose for commit bits.
+
+=head1 AUTHOR
+
+Yuval Kogman E<lt>nothingmuch@woobling.orgE<gt>
+
+=head1 COPYRIGHT
+
+	Copyright (c) 2008 Yuval Kogman, Infinity Interactive. All rights
+    reserved This program is free software; you can redistribute
+	it and/or modify it under the same terms as Perl itself.
+
 =cut
-
-
