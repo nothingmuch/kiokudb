@@ -13,6 +13,11 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
+sub collapse_jspon {
+    my ( $self, @args ) = @_;
+    $self->visit(@args);
+}
+
 sub visit_hash_key {
     my ( $self, $key ) = @_;
 

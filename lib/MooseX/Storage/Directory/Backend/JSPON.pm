@@ -80,7 +80,7 @@ has expander => (
     isa => "MooseX::Storage::Directory::Backend::JSPON::Expander",
     is  => "rw",
     builder => "_build_expander",
-    handles => { expand_jspon => "visit" },
+    handles => [qw(expand_jspon)],
 );
 
 sub _build_expander {
@@ -91,7 +91,7 @@ has collapser => (
     isa => "MooseX::Storage::Directory::Backend::JSPON::Collapser",
     is  => "rw",
     builder => "_build_collapser",
-    handles => { collapse_jspon => "visit" },
+    handles => [qw(collapse_jspon)],
 );
 
 sub _build_collapser {
@@ -141,13 +141,11 @@ sub exists {
 sub get_entry {
     my ( $self, $uid ) = @_;
 
-    my $json = $self->object_file($uid)->slurp;
+    my ( $json, @attrs ) = $self->read_entry($uid);
 
     my $data = $self->decode($json);
 
-    my $entry = $self->expand_jspon($data);
-
-    $entry->root(1) if -e $self->root_set_file($uid);
+    my $entry = $self->expand_jspon($data, @attrs);
 
     return $entry;
 }
@@ -155,13 +153,31 @@ sub get_entry {
 sub insert_entry {
     my ( $self, $entry ) = @_;
 
-    my $file = $self->object_file($entry->id);
-
     my $data = $self->collapse_jspon($entry);
+
+    $self->write_entry( $entry => $self->encode($data) );
+}
+
+sub read_entry {
+    my ( $self, $id ) = @_;
+
+    my $data = $self->object_file($id)->slurp;
+
+    my %attrs;
+
+    $attrs{root} = 1 if -e $self->root_set_file($id);
+
+    return ( $data, %attrs );
+}
+
+sub write_entry {
+    my ( $self, $entry, $json ) = @_;
+
+    my $file = $self->object_file($entry->id);
 
     my $fh = IO::AtomicFile->open( $file, "w" );
 
-    $fh->print( $self->encode($data) );
+    $fh->print( $json );
 
     {
         my $lock = $self->write_lock;
@@ -203,5 +219,16 @@ __END__
 
 MooseX::Storage::Directory::Backend::JSPON - JSON file backend with JSPON
 reference semantics
+
+=head1 TODO
+
+=over 4
+
+=item *
+
+Refactor into FS role and general JSPON role, and implement a REST based
+backend too
+
+=back
 
 =cut
