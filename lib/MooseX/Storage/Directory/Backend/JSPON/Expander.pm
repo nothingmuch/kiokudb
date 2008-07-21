@@ -29,12 +29,15 @@ override visit_hash => sub {
         my $meta = eval { $class->meta };
         croak "Class ($class) is not loaded, cannot unpack" if $@; 
 
+        ( my $id = delete $hash->{id} ) =~ s/\.json$//;;
+
         return MooseX::Storage::Directory::Entry->new(
-            id    => delete $hash->{id},
+            id    => $id,
             class => $meta,
             data  => super(),
         );
     } elsif ( my $id = $hash->{'$ref'} ) {
+        $id =~ s/\.json$//;
         return MooseX::Storage::Directory::Reference->new( id => $id, ( $hash->{is_weak} ? ( is_weak => 1 ) : () ) );
     } else {
         return super();
