@@ -131,3 +131,9 @@ is_deeply(
 
     is( $obj->bar->parent, $obj, "circular ref still correct even when lazy" );
 }
+
+is_deeply(
+    [ $dir->live_objects->live_objects ],
+    [],
+    "live object set is empty",
+);
