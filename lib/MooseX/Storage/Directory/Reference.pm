@@ -9,6 +9,11 @@ has id => (
     required => 1,
 );
 
+has is_weak => (
+    isa => "Bool",
+    is  => "rw",
+);
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
@@ -42,16 +47,6 @@ loading entries from the backend as necessary.
 =item id
 
 The ID this entry refers to
-
-=back
-
-=head1 TODO
-
-=over 4
-
-=item *
-
-C<is_weak> attribute
 
 =back
 

@@ -4,8 +4,8 @@ package MooseX::Storage::Directory::Collapser;
 use Moose;
 
 use Carp qw(croak);
-
 use Data::Swap qw(swap);
+use Scalar::Util qw(isweak);
 
 use MooseX::Storage::Directory::Entry;
 use MooseX::Storage::Directory::Reference;
@@ -21,6 +21,10 @@ has resolver => (
     is  => "rw",
     required => 1,
     handles => [qw(objects_to_ids object_to_id)],
+);
+
+has '+weaken' => (
+    default => 0,
 );
 
 has _accum_uids => (
@@ -51,7 +55,7 @@ sub visit_seen {
     my $id = $self->object_to_id($seen);
 
     unless ( exists $self->_accum_uids->{$id} ) {
-        my $ref = MooseX::Storage::Directory::Reference->new( id => $id );
+        my $ref = MooseX::Storage::Directory::Reference->new( id => $id ); # not weak, this was handled by visit_ref
 
         # inject the reference into the data structure where it was first seen
         swap( $ref, $prev );
@@ -63,8 +67,25 @@ sub visit_seen {
 
     }
 
-    # we could reuse these but the dumps are harder to read
-    return MooseX::Storage::Directory::Reference->new( id => $id );
+    return MooseX::Storage::Directory::Reference->new( id => $id, isweak($_[1]) ? ( is_weak => 1 ) : () );
+}
+
+sub visit_ref {
+    my ( $self, $ref ) = @_;
+
+    if ( isweak($_[1]) ) {
+        # weak references get an entry so that they are garbage collecte
+        my $id = $self->object_to_id($ref);
+
+        $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
+            id   => $id,
+            data => $self->SUPER::visit_ref($ref),
+        );
+
+        return MooseX::Storage::Directory::Reference->new( id => $id, is_weak => 1 );
+    } else {
+        return $self->SUPER::visit_ref($ref);
+    }
 }
 
 sub visit_object {
@@ -73,7 +94,7 @@ sub visit_object {
     if ( $object->can("meta") ) {
         my $id = $self->object_to_id($object);
 
-        my $ref = MooseX::Storage::Directory::Reference->new( id => $id );
+        my $ref = MooseX::Storage::Directory::Reference->new( id => $id, isweak($_[1]) ? ( is_weak => 1 ) : () );
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $ref );

@@ -5,6 +5,8 @@ use warnings;
 
 use Test::More 'no_plan';
 
+use Scalar::Util qw(weaken isweak);
+
 use ok 'MooseX::Storage::Directory::Collapser';
 use ok 'MooseX::Storage::Directory::Resolver';
 use ok 'MooseX::Storage::Directory::LiveObjects';
@@ -170,5 +172,96 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
             blah => MooseX::Storage::Directory::Reference->new( id => $id ),
         },
         "Bar object",
+    );
+}
+
+{
+    my $v = MooseX::Storage::Directory::Collapser->new(
+        resolver => MooseX::Storage::Directory::Resolver->new(
+            live_objects => MooseX::Storage::Directory::LiveObjects->new
+        ),
+    );
+
+    my $x = { name => "shared" };
+
+    # shared values must be assigned a UID
+    my $bar = Bar->new(
+        id => 5,
+        blah => [ $x, $x ],
+    );
+
+    weaken($bar->blah->[0]);
+
+    my @entries = $v->collapse_objects($bar);
+
+    is( scalar(@entries), 2, "two entries" );
+
+    my $id = $entries[0]->id;
+    my $other_id = $entries[1]->id;
+
+    is_deeply(
+        $entries[0]->data,
+        {
+            id => 5,
+            blah => [
+                MooseX::Storage::Directory::Reference->new( id => $other_id, is_weak => 1 ),
+                MooseX::Storage::Directory::Reference->new( id => $other_id ),
+            ],
+        },
+        "parent object",
+    );
+
+    is_deeply(
+        $entries[1]->data,
+        {
+            name => "shared",
+        },
+        "shared ref",
+    );
+}
+
+{
+    my $v = MooseX::Storage::Directory::Collapser->new(
+        resolver => MooseX::Storage::Directory::Resolver->new(
+            live_objects => MooseX::Storage::Directory::LiveObjects->new
+        ),
+    );
+
+    my $x = { name => "shared" };
+
+    # shared values must be assigned a UID
+    my $bar = Bar->new(
+        id => 5,
+        blah => [ $x, $x ],
+    );
+
+    # second one is weak
+    weaken($bar->blah->[1]);
+
+    my @entries = $v->collapse_objects($bar);
+
+    is( scalar(@entries), 2, "two entries" );
+
+    my $id = $entries[0]->id;
+    my $other_id = $entries[1]->id;
+
+    is_deeply(
+        $entries[0]->data,
+        {
+            id => 5,
+            blah => [
+                MooseX::Storage::Directory::Reference->new( id => $other_id ),
+                MooseX::Storage::Directory::Reference->new( id => $other_id, is_weak => 1 ),
+            ],
+        },
+        "parent object",
+    );
+
+    is_deeply(
+        $entries[1]->data,
+        {
+            name => "shared",
+        },
+        "shared ref",
     );
 }
