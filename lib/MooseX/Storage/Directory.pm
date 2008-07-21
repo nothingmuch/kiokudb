@@ -3,6 +3,8 @@
 package MooseX::Storage::Directory;
 use Moose;
 
+our $VERSION = "0.01_01";
+
 use MooseX::Storage::Directory::Backend;
 use MooseX::Storage::Directory::Resolver;
 use MooseX::Storage::Directory::Collapser;
