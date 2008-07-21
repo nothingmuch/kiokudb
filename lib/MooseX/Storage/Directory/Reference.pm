@@ -45,4 +45,14 @@ The ID this entry refers to
 
 =back
 
+=head1 TODO
+
+=over 4
+
+=item *
+
+C<is_weak> attribute
+
+=back
+
 =cut
