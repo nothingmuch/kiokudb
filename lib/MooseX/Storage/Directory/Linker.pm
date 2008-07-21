@@ -55,6 +55,10 @@ sub visit_object {
     my ( $self, $object ) = @_;
 
     if ( obj $object, "MooseX::Storage::Directory::Reference" ) {
+        # FIXME if $object->is_weak then we need a Data::Visitor api to make
+        # sure the container this gets put in is weakened
+        # not a huge issue because usually we'll encounter attrs with weak_ref
+        # => 1, but this is still needed for correctness
         return $self->get_or_load_object( $object->id );
     } else {
         return $object;
