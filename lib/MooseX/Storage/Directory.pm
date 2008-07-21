@@ -65,20 +65,23 @@ sub _build_linker {
     my $self = shift;
 
     MooseX::Storage::Directory::Linker->new(
-        directory => $self,
+        backend => $self->backend,
+        live_objects => $self->live_objects,
     );
 }
 
 sub lookup {
-    my ( $self, $id ) = @_; # FIXME @ids
+    my ( $self, @ids ) = @_; # FIXME @ids
 
-    if ( defined( my $live_obj = $self->live_objects->id_to_object($id) ) ) {
-        return $live_obj;
-    } elsif ( my $entry = $self->backend->get($id) ) {
-        return $self->linker->expand_object($entry);
+    my $linker = $self->linker;
+
+    my @objects = map { $linker->get_or_load_object($_) } @ids;
+
+    if ( @ids == 1 ) {
+        return $objects[0];
+    } else {
+        return @objects;
     }
-
-    return undef;
 }
 
 sub search { }

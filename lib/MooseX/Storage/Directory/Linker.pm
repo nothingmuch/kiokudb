@@ -9,13 +9,16 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
-# FIXME has a backend and a live objects?
-has directory => (
-    isa => "MooseX::Storage::Directory",
+has live_objects => (
+    isa => "MooseX::Storage::Directory::LiveObjects",
     is  => "rw",
     required => 1,
-    is_weak  => 1,
-    handles => [qw(lookup)],
+);
+
+has backend => (
+    does => "MooseX::Storage::Directory::Backend",
+    is  => "rw",
+    required => 1,
 );
 
 has lazy => (
@@ -25,19 +28,21 @@ has lazy => (
 );
 
 sub expand_object {
-    my ( $self, $entry ) = @_;
+    my ( $self, $entry, %args ) = @_;
 
     if ( my $class = $entry->class ) {
 
         my $instance = $class->get_meta_instance->create_instance();
 
-        $self->directory->live_objects->insert( $entry->id => $instance );
+        $self->live_objects->insert( $entry->id => $instance ) unless $args{no_register};
 
         my $data = $entry->data;
 
         foreach my $attr ( $class->compute_all_applicable_attributes ) {
-            my $value = $data->{ $attr->name };
-            $attr->set_value( $instance, $self->visit( $value ) );
+            my $name = $attr->name;
+            next unless exists $data->{$name};
+            my $value = $data->{$name};
+            $attr->set_value( $instance, $self->visit($value) );
         }
 
         return $instance;
@@ -50,14 +55,45 @@ sub visit_object {
     my ( $self, $object ) = @_;
 
     if ( obj $object, "MooseX::Storage::Directory::Reference" ) {
-        if ( $self->lazy ) {
-            # inject a Data::Thunk::Object to the live object cache:
-            # $object->id => lazy_object { $self->expand_object( $backend->get($id) ) }
-        }
-        return $self->lookup($object->id);
+        return $self->get_or_load_object( $object->id );
     } else {
         return $object;
     }
+}
+
+sub get_or_load_object {
+    my ( $self, $id ) = @_;
+
+    my $l = $self->live_objects;
+
+    if ( defined( my $obj = $l->id_to_object($id) ) ) {
+        return $obj;
+    } else {
+        return $self->lazy
+            ? $self->lazy_load_object($id)
+            : $self->load_object($id);
+    }
+}
+
+sub lazy_load_object {
+    my ( $self, $id ) = @_;
+
+    require Data::Thunk;
+
+    my $obj = Data::Thunk::lazy_object(sub {
+        $self->load_object( $id, no_register => 1 );
+    });
+
+    # pre-register the thunk as if it were the object
+    # hence the no_register to expand_object
+    $self->live_objects->insert( $id => $obj );
+
+    return $obj;
+}
+
+sub load_object {
+    my ( $self, $id, @args ) = @_;
+    $self->expand_object( $self->backend->get($id), @args );
 }
 
 __PACKAGE__->meta->make_immutable;

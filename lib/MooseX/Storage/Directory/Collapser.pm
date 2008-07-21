@@ -111,6 +111,8 @@ sub visit_object {
                 my $value = $attr->get_value($object);
                 my $collapsed = $self->visit($value);
                 ( $attr->name => $collapsed );
+            } grep {
+                $_->has_value($object)
             } @attrs
         };
 

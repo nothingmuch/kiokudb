@@ -88,4 +88,3 @@ foreach my $entry ( @entries ) {
 ok(  -e $b->root_set_file($entries[0]->id), "root is in root set" );
 ok( !-e $b->root_set_file($entries[1]->id), "other is not in root set" );
 
-

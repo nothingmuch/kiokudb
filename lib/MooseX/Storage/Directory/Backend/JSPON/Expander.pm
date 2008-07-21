@@ -35,7 +35,7 @@ override visit_hash => sub {
             data  => super(),
         );
     } elsif ( my $id = $hash->{'$ref'} ) {
-        return MooseX::Storage::Directory::Reference->new( id => $id );
+        return MooseX::Storage::Directory::Reference->new( id => $id, ( $hash->{is_weak} ? ( is_weak => 1 ) : () ) );
     } else {
         return super();
     }

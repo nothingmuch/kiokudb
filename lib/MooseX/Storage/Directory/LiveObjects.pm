@@ -95,7 +95,7 @@ sub insert {
 
     my ( $o, $i ) = ( $self->_objects, $self->_ids );
 
-    my %id_to_obj = map { obj($_, 'Data::GUID') ? $_->as_string : $_ } @pairs;
+    my %id_to_obj = @pairs;
 
     foreach my $object ( values %id_to_obj ) {
         croak dump($object, " is not a reference") unless ref($object);
