@@ -144,6 +144,10 @@ sub visit_ref {
 sub visit_object {
     my ( $self, $object ) = @_;
 
+    # FIXME allow breaking out early if $object is in the live object cache
+    # that is object_to_id is live_objects, not resolver
+    # this is required for shallow updates, and of course much more efficient
+
     if ( ref $object eq 'MooseX::Storage::Directory::Collapser::Collection' ) {
         $self->visit_object($_) for @$object;
         return undef;
