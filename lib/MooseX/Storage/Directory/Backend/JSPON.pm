@@ -54,6 +54,12 @@ sub _build_root_set_dir {
     $self->dir->subdir("root");
 }
 
+has lock => (
+    isa => "Bool",
+    is  => "rw",
+    default => 1,
+);
+
 has lock_file => (
     isa => File,
     is  => "ro",
@@ -109,6 +115,8 @@ sub _build_collapser {
 
 sub write_lock {
     my $self = shift;
+
+    return 1 unless $self->lock;
 
     File::NFSLock->new({ file => $self->lock_file->stringify, lock_type => "EXCLUSIVE" });
 }
@@ -170,7 +178,12 @@ sub insert_entry {
 sub read_entry {
     my ( $self, $id ) = @_;
 
-    my $data = $self->object_file($id)->slurp;
+    my $fh = $self->object_file($id)->openr
+        || croak("read_entry($id): $!");
+
+    $fh->binmode(":utf8");
+
+    my $data = do { local $/; <$fh> };
 
     my %attrs;
 
