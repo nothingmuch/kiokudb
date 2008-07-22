@@ -62,11 +62,13 @@ sub collapse_objects {
     # visit() call so that the shared refs are truly shared ;-)
     $self->visit(bless( \@objects, 'MooseX::Storage::Directory::Collapser::Collection'));
 
-    # simplify the data structure
-    if ( my @non_shared = grep { !$shared->{$_->id} } @$simple ) {
+    # unify non shared simple references
+    if ( my @non_shared = grep { not exists $shared->{$_} } @$simple ) {
         my %non_shared = map { $_ => 1 } @non_shared;
 
         my $l = $self->resolver->live_objects;
+
+        my %purged;
 
         # FIXME for performance reasons make this more naïve, no need for full
         # Data::Visitor since the structures are very simple
@@ -82,12 +84,16 @@ sub collapse_objects {
                     unless ( $entry->has_class ) {
                         # replace with data from entry
                         $_ = $entry->data;
-                        delete $entries->{$id};
-                        $l->remove($id);
+                        $purged{$id} = $entry;
                     }
                 }
             }
         )->visit([ map { $_->data } values %$entries ]);
+
+        foreach my $id ( keys %purged ) {
+            delete $entries->{$id};
+            $l->remove($id);
+        }
     }
 
     my @root_set = delete @{ $entries }{@ids};
@@ -125,9 +131,11 @@ sub visit_ref {
 
     my $id = $self->object_to_id($ref);
 
-    push @{ $self->_simple_entries }, $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
+    push @{ $self->_simple_entries }, $id;
+    
+    $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
         id   => $id,
-        data => $self->SUPER::visit_ref($ref),
+        data => $self->SUPER::visit_ref($_[1]),
     );
 
     $self->make_ref( $id => $_[1] );
