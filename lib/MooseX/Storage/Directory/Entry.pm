@@ -5,25 +5,50 @@ use Moose;
 
 has id => (
     isa => "Str",
-    is  => "ro",
+    is  => "rw",
 );
 
 has root => (
     isa => "Bool",
     is  => "rw",
-    default => 0,
 );
 
 has data => (
     isa => "Ref",
-    is  => "ro",
+    is  => "rw",
 );
 
 has class => (
     isa => "Class::MOP::Class",
-    is  => "ro",
+    is  => "rw",
     predicate => "has_class",
 );
+
+sub STORABLE_freeze {
+    my ( $self, $cloning ) = @_;
+
+    return (
+        join(",",
+            $self->id,
+            !!$self->root,
+            $self->has_class ? $self->class->identifier : '',
+        ),
+        $self->data,
+    );
+}
+
+sub STORABLE_thaw {
+    my ( $self, $cloning, $attrs, $data ) = @_;
+    
+    my ( $id, $root, $class ) = split ',', $attrs;
+
+    $self->id($id);
+    $self->root(1) if $root;;
+    $self->class( $class->meta ) if $class; # FIXME
+    $self->data($data);
+
+    return $self;
+}
 
 __PACKAGE__->meta->make_immutable;
 
