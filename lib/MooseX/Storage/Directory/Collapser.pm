@@ -27,7 +27,7 @@ has '+weaken' => (
     default => 0,
 );
 
-has _accum_uids => (
+has _entries => (
     isa => 'HashRef',
     is  => "ro",
     init_arg => undef,
@@ -54,7 +54,7 @@ has _first_class => (
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    my ( $entries, $fc, $simple ) = ( $self->_accum_uids, $self->_first_class, $self->_simple_entries );
+    my ( $entries, $fc, $simple ) = ( $self->_entries, $self->_first_class, $self->_simple_entries );
     local %$entries = ();
     local %$fc      = ();
     local @$simple  = ();
@@ -133,7 +133,7 @@ sub visit_ref {
 
     push @{ $self->_simple_entries }, $id;
     
-    $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
+    $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
         id   => $id,
         data => $self->SUPER::visit_ref($_[1]),
     );
@@ -176,7 +176,7 @@ sub visit_object {
             } @attrs
         };
 
-        $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
+        $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
             data  => $hash,
             id    => $id,
             class => $meta,
