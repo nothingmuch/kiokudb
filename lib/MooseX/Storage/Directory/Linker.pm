@@ -52,6 +52,12 @@ sub expand_object {
         if ( $args{no_register} ) {
             return $self->visit($entry->data);
         } else {
+            # FIXME remove Data::Swap
+            # make sure we have some sort of refaddr in case of circular refs to simple structures
+            # after visiting $entry->data we swap it
+            # the alternative (no Data::Swap) approach is to register the object by subclassing
+            # the visitor such that _register_mapping registers with the live
+            # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
             my $placeholder = {};
             $self->live_objects->insert( $entry->id => $placeholder ) unless $args{no_register};
             my $data = $self->visit( $entry->data );
