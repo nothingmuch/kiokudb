@@ -1,0 +1,3 @@
+* LiveObjects::Cached, using Tie::Cache::LRU (directly as an object, not via
+  the tie interface)
+
