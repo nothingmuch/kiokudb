@@ -195,7 +195,9 @@ sub read_entry {
 sub write_entry {
     my ( $self, $entry, $json ) = @_;
 
-    my $file = $self->object_file($entry->id);
+    my $id = $entry->id;
+
+    my $file = $self->object_file($id);
 
     my $fh = IO::AtomicFile->open( $file, "w" );
 
@@ -208,7 +210,7 @@ sub write_entry {
 
         $fh->close || croak "Couldn't store: $!";
 
-        my $root_file = $self->root_set_file($entry->id);
+        my $root_file = $self->root_set_file($id);
         $root_file->remove;
         link( $file, $root_file ) if $entry->root;
     }
