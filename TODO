@@ -1,3 +1,10 @@
 * LiveObjects::Cached, using Tie::Cache::LRU (directly as an object, not via
   the tie interface)
 
+* replace Data::Visitor with a dumb variant for entry visiting (ref
+  simplification & JSPON expansion/collapsing), since they are never
+  circular/weak/whatever
+
+
+* Generic entry caching in the backends, possibly using LiveObjects?
+
