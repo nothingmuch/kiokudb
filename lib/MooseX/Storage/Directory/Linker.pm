@@ -3,6 +3,7 @@
 package MooseX::Storage::Directory::Linker;
 use Moose;
 
+use Carp qw(croak);
 use Check::ISA;
 use Data::Swap qw(swap);
 
@@ -59,7 +60,7 @@ sub expand_object {
             # the visitor such that _register_mapping registers with the live
             # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
             my $placeholder = {};
-            $self->live_objects->insert( $entry->id => $placeholder ) unless $args{no_register};
+            $self->live_objects->insert( $entry->id => $placeholder );
             my $data = $self->visit( $entry->data );
             swap($data, $placeholder);
             return $placeholder;
@@ -77,7 +78,7 @@ sub visit_object {
         # => 1, but this is still needed for correctness
         return $self->get_or_load_object( $object->id );
     } else {
-        return $object;
+        croak "Unexpected object $object in entry";
     }
 }
 
