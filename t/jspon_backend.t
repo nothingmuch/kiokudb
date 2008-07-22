@@ -35,7 +35,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     );
 }
 
-my $b = MooseX::Storage::Directory::Backend::JSPON->new( dir => temp_root );
+my $b = MooseX::Storage::Directory::Backend::JSPON->new( dir => temp_root, pretty => 1, lock => 0 );
 
 my $obj = Foo->new(
     id => "shlomo",
