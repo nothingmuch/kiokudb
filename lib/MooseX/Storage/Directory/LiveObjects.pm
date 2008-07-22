@@ -10,7 +10,6 @@ use Scope::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
 use Carp qw(croak);
 use Devel::PartialDump qw(dump);
-use Check::ISA qw(obj);
 
 use namespace::clean -except => 'meta';
 
@@ -39,12 +38,6 @@ sub id_to_object {
     scalar $self->ids_to_objects($id);
 }
 
-# stringification takes care of this... is that bad?
-#sub ids_to_objects {
-#    my ( $self, @ids ) = @_;
-#    $self->string_ids_to_objects(map { obj($_, 'Data::GUID') ? $_->as_string : $_ } @ids);
-#}
-
 sub objects_to_ids {
     my ( $self, @objects ) = @_;
     my $o = $self->_objects;
@@ -71,7 +64,7 @@ sub remove {
     my ( $o, $i ) = ( $self->_objects, $self->_ids );
 
     foreach my $thing ( @stuff ) {
-        if ( ref $thing && !obj($thing, "Data::GUID") ) {
+        if ( ref $thing ) { 
             if ( my $ent = delete $o->{$thing} ) {
                 delete $i->{$ent->{id}};
                 $ent->{guard}->dismiss;
