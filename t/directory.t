@@ -48,6 +48,8 @@ sub no_live_objects {
         is  => "rw",
         weak_ref => 1,
     );
+
+    __PACKAGE__->meta->make_immutable;
 }
 
 # Pixie ain't got nuthin on us
