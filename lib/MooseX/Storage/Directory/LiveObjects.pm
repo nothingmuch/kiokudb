@@ -94,6 +94,7 @@ sub insert {
 
     foreach my $object ( values %id_to_obj ) {
         croak dump($object, " is not a reference") unless ref($object);
+        croak dump($object, " is already registered as $o->{$object}{id}") if exists $o->{$object};
     }
 
     foreach my $id ( keys %id_to_obj ) {
@@ -103,8 +104,6 @@ sub insert {
 
     foreach my $id ( keys %id_to_obj ) {
         my $object = $id_to_obj{$id};
-
-        next if exists $o->{$object};
 
         weaken($i->{$id} = $object);
 

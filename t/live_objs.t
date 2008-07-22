@@ -100,4 +100,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     is_deeply( [ $l->ids_to_objects($id) ], [ $obj ], "fetch by Data::GUID object" );
 
     is_deeply( [ $l->live_ids ], [ $id->as_string ], "internally IDs are strings" );
+
+    lives_ok { $l->remove("foo") } "removing non existent IDs is not an error";
+    lives_ok { $l->remove(Foo->new) } "removing non existent objects is not an error";
 }
+
+
