@@ -216,3 +216,9 @@ is_deeply(
 
     is( $second->bar, $first->bar, "shared value" );
 }
+
+is_deeply(
+    [ $dir->live_objects->live_objects ],
+    [],
+    "live object set is empty",
+);
