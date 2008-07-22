@@ -20,6 +20,15 @@ my $dir = MooseX::Storage::Directory->new(
     ),
 );
 
+sub no_live_objects {
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [],
+        "live object set is empty",
+    );
+}
+
 {
     package Foo;
     use Moose;
@@ -67,11 +76,7 @@ my $id;
     );
 };
 
-is_deeply(
-    [ $dir->live_objects->live_objects ],
-    [ ],
-    "live object set empty"
-);
+no_live_objects;
 
 {
     my $obj = $dir->lookup($id);
@@ -83,11 +88,7 @@ is_deeply(
     is( $obj->bar->parent, $obj, "circular ref" );
 }
 
-is_deeply(
-    [ $dir->live_objects->live_objects ],
-    [],
-    "live object set is empty",
-);
+no_live_objects;
 
 {
     my $x = Foo->new(
@@ -114,11 +115,7 @@ is_deeply(
     is( $objects[0]->bar, $y, "link recreated" );
 }
 
-is_deeply(
-    [ $dir->live_objects->live_objects ],
-    [],
-    "live object set is empty",
-);
+no_live_objects;
 
 {
 
@@ -140,11 +137,7 @@ is_deeply(
     is( $obj->bar->parent, $obj, "circular ref still correct even when lazy" );
 }
 
-is_deeply(
-    [ $dir->live_objects->live_objects ],
-    [],
-    "live object set is empty",
-);
+no_live_objects;
 
 {
     $dir->linker->lazy(0);
@@ -158,11 +151,7 @@ is_deeply(
         $dir->store( $first, $second );
     };
 
-    is_deeply(
-        [ $dir->live_objects->live_objects ],
-        [],
-        "live object set is empty",
-    );
+    no_live_objects;
 
     my $first = $dir->lookup($ids[0]);
 
@@ -179,6 +168,8 @@ is_deeply(
     is( $second->bar, $first->bar, "shared object" );
 }
 
+no_live_objects;
+
 {
     $dir->linker->lazy(0);
 
@@ -193,11 +184,7 @@ is_deeply(
         $dir->store( $first, $second );
     };
 
-    is_deeply(
-        [ $dir->live_objects->live_objects ],
-        [],
-        "live object set is empty",
-    );
+    no_live_objects;
 
     my $first = $dir->lookup($ids[0]);
 
@@ -217,8 +204,4 @@ is_deeply(
     is( $second->bar, $first->bar, "shared value" );
 }
 
-is_deeply(
-    [ $dir->live_objects->live_objects ],
-    [],
-    "live object set is empty",
-);
+no_live_objects;
