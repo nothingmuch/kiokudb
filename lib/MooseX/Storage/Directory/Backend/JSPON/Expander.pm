@@ -19,15 +19,18 @@ sub expand_jspon {
 
     ( my $id = delete $data->{id} )=~ s/\.json$//;
 
-    # check the class more thoroughly here ...
-    my ($class, $version, $authority) = (split '-' => delete $data->{__CLASS__});
-    my $meta = eval { $class->meta };
-    croak "Class ($class) is not loaded, cannot unpack" if $@; 
+    if ( exists $data->{__CLASS__} ) {
+        # check the class more thoroughly here ...
+        my ($class, $version, $authority) = (split '-' => delete $data->{__CLASS__});
+        local $@;
+        my $meta = eval { $class->meta };
+        croak "Class ($class) is not loaded, cannot unpack" if $@;
+        push @attrs, class => $meta;
+    }
 
     return MooseX::Storage::Directory::Entry->new(
-        id    => $id,
-        class => $meta,
-        data  => $self->visit($data),
+        id   => $id,
+        data => $self->visit($data),
         @attrs,
     );
 }

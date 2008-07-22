@@ -22,6 +22,7 @@ has data => (
 has class => (
     isa => "Class::MOP::Class",
     is  => "ro",
+    predicate => "has_class",
 );
 
 __PACKAGE__->meta->make_immutable;

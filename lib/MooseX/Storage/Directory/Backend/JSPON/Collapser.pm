@@ -35,7 +35,7 @@ sub visit_object {
         return { '$ref' => $object->id . '.json', ( $object->is_weak ? ( is_weak => 1 ) : () ) };
     } elsif ( obj $object, 'MooseX::Storage::Directory::Entry' ) {
         return {
-            __CLASS__ => $object->class->identifier,
+            ( $object->has_class ? ( __CLASS__ => $object->class->identifier ) : () ),
             id        => $object->id . '.json',
             $self->visit_hash_entries($object->data),
         };
