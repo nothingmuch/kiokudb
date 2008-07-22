@@ -7,7 +7,7 @@ use Test::More 'no_plan';
 use Test::TempDir;
 use Test::Memory::Cycle;
 
-use Scalar::Util qw(blessed);
+use Scalar::Util qw(blessed weaken isweak);
 
 BEGIN { $MooseX::Storage::Directory::Resolver::SERIAL_IDS = 1 }
 
@@ -204,6 +204,38 @@ no_live_objects;
     is( $second->foo, "second", "normal attr" );
 
     is( $second->bar, $first->bar, "shared value" );
+}
+
+no_live_objects;
+
+{
+    $dir->linker->lazy(0);
+
+    my $id = do{
+        my $shared = { foo => "hippies" };
+
+        weaken($shared->{self} = $shared);
+
+        $dir->store( Foo->new( foo => "blimey", bar => $shared ) );
+    };
+
+    no_live_objects;
+
+    my $obj = $dir->lookup($id);
+
+    isa_ok( $obj, "Foo" );
+    is( $obj->foo, "blimey", "normal attr" );
+
+    is( ref($obj->bar), "HASH", "shared hash" );
+    is( $obj->bar->{foo}, "hippies", "hash data" );
+    is( $obj->bar->{self}, $obj->bar, "circular ref" );
+
+    {
+        local $TODO = "weaken is not yet supported in expander";
+        ok( isweak($obj->bar->{self}), "weak ref" );
+
+        weaken($obj->bar->{self}); # to make no_live_objects pass
+    }
 }
 
 no_live_objects;
