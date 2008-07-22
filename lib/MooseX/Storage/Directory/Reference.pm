@@ -14,6 +14,23 @@ has is_weak => (
     is  => "rw",
 );
 
+sub STORABLE_freeze {
+    my ( $self, $cloning ) = @_;
+
+
+    join(",", $self->id, !!$self->is_weak);
+}
+
+sub STORABLE_thaw {
+    my ( $self, $cloning, $serialized ) = @_;
+    my ( $id, $weak ) = split ',', $serialized;
+
+    $self->id($id);
+    $self->is_weak(1) if $weak;
+
+    return $self;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
