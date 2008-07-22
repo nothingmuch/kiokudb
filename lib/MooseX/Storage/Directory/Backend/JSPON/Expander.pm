@@ -46,7 +46,7 @@ sub visit_hash {
 
     if ( my $id = $hash->{'$ref'} ) {
         $id =~ s/\.json$//;
-        return MooseX::Storage::Directory::Reference->new( id => $id, ( $hash->{is_weak} ? ( is_weak => 1 ) : () ) );
+        return MooseX::Storage::Directory::Reference->new( id => $id, ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
     } else {
         return $self->SUPER::visit_hash($hash);
     }
