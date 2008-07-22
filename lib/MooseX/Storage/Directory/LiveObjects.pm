@@ -73,7 +73,6 @@ sub remove {
                 $ent->{guard}->dismiss;
             }
         } else {
-            $thing = $thing->as_string if ref $thing;
             if ( ref( my $object = delete $i->{$thing} ) ) {
                 if ( my $ent = delete $o->{$object} ) {
                     $ent->{guard}->dismiss;
