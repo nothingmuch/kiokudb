@@ -75,7 +75,7 @@ MooseX::Storage::Directory::Resolver - UID <-> refaddr mapping
 
 =head1 SYNOPSIS
 
-	use MooseX::Storage::Directory::Resolver;
+    use MooseX::Storage::Directory::Resolver;
 
 =head1 DESCRIPTION
 
