@@ -65,6 +65,12 @@ sub _build_lock_file {
     $self->dir->file("lock");
 }
 
+has pretty => (
+    isa => "Bool",
+    is  => "rw",
+    default => 0,
+);
+
 has json => (
     isa => "Object",
     is  => "rw",
@@ -73,7 +79,10 @@ has json => (
 );
 
 sub _build_json {
-    JSON->new->utf8->pretty;
+    my $self = shift;
+    my $json = JSON->new->canonical;
+    $json->pretty if $self->pretty;
+    return $json;
 }
 
 has expander => (
@@ -176,6 +185,8 @@ sub write_entry {
     my $file = $self->object_file($entry->id);
 
     my $fh = IO::AtomicFile->open( $file, "w" );
+
+    $fh->binmode(":utf8");
 
     $fh->print( $json );
 

@@ -47,7 +47,7 @@ sub visit_hash {
     } else {
         return $self->SUPER::visit_hash($hash);
     }
-};
+}
 
 __PACKAGE__->meta->make_immutable;
 
