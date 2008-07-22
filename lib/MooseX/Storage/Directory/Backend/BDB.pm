@@ -24,7 +24,7 @@ has environment => (
     lazy => 1,
     default => sub {
         my $self = shift;
-        my $db = $self->dir->subdir('store');
+        my $db = $self->dir;
         $db->mkpath;
         return BerkeleyDB::Env->new(
             -Home  => $db->stringify,
@@ -37,16 +37,20 @@ has environment => (
 
 has dbm => (
     is      => 'ro',
-    isa     => 'BerkeleyDB::Btree',
+    isa     => 'Object',
     lazy    => 1,
     default => sub {
         my $self = shift;
-        return BerkeleyDB::Btree->new(
+        my $hash = BerkeleyDB::Btree->new(
             -Env      => $self->environment,
-            -Filename => 'forward_index',
-            -Property => DB_DUP,
+            -Filename => 'objects.db',
             -Flags    => DB_CREATE,
         );
+
+        $hash->filter_store_value(sub { $_ = nfreeze($_) });
+        $hash->filter_fetch_value(sub { $_ = thaw($_) });
+
+        return $hash;
     },
 );
 
@@ -59,18 +63,19 @@ sub delete {
 sub insert {
     my ( $self, @entries ) = @_;
     my $dbm = $self->dbm;
-    $dbm->db_put( $_->id => nfreeze($_) ) for @entries;
+    $dbm->db_put( $_->id => $_ ) for @entries;
 }
 
 sub get {
     my ( $self, $uid ) = @_;
     $self->dbm->db_get($uid, my $var) == 0 || return;
-    return thaw($var);
+    return $var;
 }
 
 sub exists {
     my ( $self, @uids ) = @_;
     my $dbm = $self->dbm;
+    # fucking wasteful
     map { $dbm->db_get($_, my $var) == 0 } @uids;
 }
 

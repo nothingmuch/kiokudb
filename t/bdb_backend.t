@@ -71,11 +71,7 @@ is_deeply(
 );
 
 foreach my $entry ( @entries ) {
-    ok( $b->dbm->db_get($entry->id, my $frozen_entry) == 0, "got from db" );
-
-    local $@;
-    my $data = eval { thaw($frozen_entry) };
-    is( $@, "", "no error loading data" );
+    ok( $b->dbm->db_get($entry->id, my $data) == 0, "got from db" );
 
     isa_ok( $data, "MooseX::Storage::Directory::Entry" );
     is( ref $data->data, 'HASH', "hash loaded" );
