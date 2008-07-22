@@ -59,8 +59,8 @@ my @entries = $c->collapse_objects($obj);
 is( scalar(@entries), 2, "two entries" );
 
 is_deeply(
-    [ $b->exists(map { $_->id } @entries) ],
-    [ undef, undef ],
+    [ map { !!$_ } $b->exists(map { $_->id } @entries) ],
+    [ '', '' ],
     "none exist yet",
 );
 
