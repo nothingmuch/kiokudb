@@ -4,6 +4,7 @@ package MooseX::Storage::Directory::Linker;
 use Moose;
 
 use Check::ISA;
+use Data::Swap qw(swap);
 
 use namespace::clean -except => 'meta';
 
@@ -48,13 +49,15 @@ sub expand_object {
 
         return $instance;
     } else {
-        my $data = $entry->data;
-
-        $self->live_objects->insert( $entry->id => $data ) unless $args{no_register};
-
-        $self->visit($data);
-
-        return $data;
+        if ( $args{no_register} ) {
+            return $self->visit($entry->data);
+        } else {
+            my $placeholder = {};
+            $self->live_objects->insert( $entry->id => $placeholder ) unless $args{no_register};
+            my $data = $self->visit( $entry->data );
+            swap($data, $placeholder);
+            return $placeholder;
+        }
     }
 }
 

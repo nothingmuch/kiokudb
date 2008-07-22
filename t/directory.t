@@ -32,7 +32,6 @@ my $dir = MooseX::Storage::Directory->new(
     );
 
     has parent => (
-        isa => "Foo",
         is  => "rw",
         weak_ref => 1,
     );
@@ -182,7 +181,9 @@ is_deeply(
     $dir->linker->lazy(0);
 
     my @ids = do{
-        my $shared = { foo => "shared" };
+        my $shared = { foo => "shared", object => Foo->new( foo => "shared child" ) };
+
+        $shared->{object}->parent($shared);
 
         my $first  = Foo->new( foo => "first",  bar => $shared );
         my $second = Foo->new( foo => "second", bar => $shared );
@@ -203,11 +204,13 @@ is_deeply(
 
     is( ref($first->bar), "HASH", "shared hash" );
     is( $first->bar->{foo}, "shared", "hash data" );
+
+    isa_ok( $first->bar->{object}, "Foo", "indirect shared child" );
     
     my $second = $dir->lookup($ids[1]);
 
     isa_ok( $second, "Foo" );
     is( $second->foo, "second", "normal attr" );
 
-    is( $second->bar, $first->bar, "shared object" );
+    is( $second->bar, $first->bar, "shared value" );
 }

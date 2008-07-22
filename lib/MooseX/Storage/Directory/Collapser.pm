@@ -4,13 +4,13 @@ package MooseX::Storage::Directory::Collapser;
 use Moose;
 
 use Carp qw(croak);
-use Data::Swap qw(swap);
 use Scalar::Util qw(isweak);
 
 use MooseX::Storage::Directory::Entry;
 use MooseX::Storage::Directory::Reference;
 
 use Data::Visitor 0.18;
+use Data::Visitor::Callback;
 
 use namespace::clean -except => 'meta';
 
@@ -29,24 +29,85 @@ has '+weaken' => (
 
 has _accum_uids => (
     isa => 'HashRef',
-    is  => "rw",
-    default => sub { +{} },
+    is  => "ro",
+    init_arg => undef,
+    default  => sub { +{} },
+);
+
+has _shared => (
+    isa => 'HashRef',
+    is  => "ro",
+    init_arg => undef,
+    default  => sub { +{} },
+);
+
+has _simple_entries => (
+    isa => 'ArrayRef',
+    is  => "ro",
+    init_arg => undef,
+    default  => sub { [] },
 );
 
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    local %{ $self->_accum_uids } = ();
+    my ( $entries, $shared, $simple ) = ( $self->_accum_uids, $self->_shared, $self->_simple_entries );
+    local %$entries = ();
+    local %$shared  = ();
+    local @$simple  = ();
 
     my @ids = $self->objects_to_ids(@objects);
 
-    $self->visit(\@objects);
+    # Collection is ignored by the entry creation code, but we want them in one
+    # visit() call so that the shared refs are truly shared ;-)
+    $self->visit(bless( \@objects, 'MooseX::Storage::Directory::Collapser::Collection'));
 
-    my @root_set = delete @{ $self->_accum_uids }{@ids};
+    # simplify the data structure
+    if ( my @non_shared = grep { !$shared->{$_->id} } @$simple ) {
+        my %non_shared = map { $_ => 1 } @non_shared;
+
+        my $l = $self->resolver->live_objects;
+
+        # FIXME for performance reasons make this more naïve, no need for full
+        # Data::Visitor since the structures are very simple
+        Data::Visitor::Callback->new(
+            ignore_return_values => 1,
+            'MooseX::Storage::Directory::Reference' => sub {
+                my ( $v, $ref ) = @_;
+
+                my $id = $ref->id;
+                if ( exists $non_shared{$id} and not $ref->is_weak ) {
+                    my $entry = $entries->{$id};
+
+                    unless ( $entry->has_class ) {
+                        # replace with data from entry
+                        $_ = $entry->data;
+                        delete $entries->{$id};
+                        $l->remove($id);
+                    }
+                }
+            }
+        )->visit([ map { $_->data } values %$entries ]);
+    }
+
+    my @root_set = delete @{ $entries }{@ids};
 
     $_->root(1) for @root_set;
 
-    return ( @root_set, values %{ $self->_accum_uids } );
+    return ( @root_set, values %$entries );
+}
+
+sub make_ref {
+    my ( $self, $id, $value ) = @_;
+    
+    my $weak = isweak($_[2]);
+
+    $self->_shared->{$id} = undef if $weak;
+
+    return MooseX::Storage::Directory::Reference->new(
+        id => $id,
+        $weak ? ( is_weak => 1 ) : ()
+    );
 }
 
 sub visit_seen {
@@ -54,50 +115,37 @@ sub visit_seen {
 
     my $id = $self->object_to_id($seen);
 
-    unless ( exists $self->_accum_uids->{$id} ) {
-        my $ref = MooseX::Storage::Directory::Reference->new( id => $id ); # not weak, this was handled by visit_ref
+    $self->_shared->{$id} = undef;
 
-        # inject the reference into the data structure where it was first seen
-        swap( $ref, $prev );
-
-        $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
-            id   => $id,
-            data => $ref, # not the ref, but actually what $prev was
-        );
-
-    }
-
-    return MooseX::Storage::Directory::Reference->new( id => $id, isweak($_[1]) ? ( is_weak => 1 ) : () );
+    $self->make_ref( $id => $_[1] );
 }
 
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    if ( isweak($_[1]) ) {
-        # weak references get an entry so that they are garbage collecte
-        my $id = $self->object_to_id($ref);
+    my $id = $self->object_to_id($ref);
 
-        $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
-            id   => $id,
-            data => $self->SUPER::visit_ref($ref),
-        );
+    push @{ $self->_simple_entries }, $self->_accum_uids->{$id} = MooseX::Storage::Directory::Entry->new(
+        id   => $id,
+        data => $self->SUPER::visit_ref($ref),
+    );
 
-        return MooseX::Storage::Directory::Reference->new( id => $id, is_weak => 1 );
-    } else {
-        return $self->SUPER::visit_ref($ref);
-    }
+    $self->make_ref( $id => $_[1] );
 }
 
 sub visit_object {
     my ( $self, $object ) = @_;
 
+    if ( ref $object eq 'MooseX::Storage::Directory::Collapser::Collection' ) {
+        $self->visit_object($_) for @$object;
+        return undef;
+    }
+
     if ( $object->can("meta") ) {
         my $id = $self->object_to_id($object);
 
-        my $ref = MooseX::Storage::Directory::Reference->new( id => $id, isweak($_[1]) ? ( is_weak => 1 ) : () );
-
         # Data::Visitor stuff for circular refs
-        $self->_register_mapping( $object, $ref );
+        $self->_register_mapping( $object, $object );
 
         my $meta = $object->meta;
 
@@ -122,7 +170,7 @@ sub visit_object {
             class => $meta,
         );
 
-        return $ref;
+        return $self->make_ref( $id => $_[1] );
     } else {
         croak "FIXME non moose objects";
     }
