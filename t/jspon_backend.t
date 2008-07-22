@@ -77,7 +77,7 @@ foreach my $entry ( @entries ) {
     ok( -e $file, "file for " . $entry->id . " exists" );
 
     local $@;
-    my $data = eval { decode_json(scalar $file->slurp) };
+    my $data = eval { from_json(scalar $file->slurp, { utf8 => 1 }) };
     is( $@, "", "no error loading json" );
 
     is( ref $data, 'HASH', "hash loaded" );
