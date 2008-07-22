@@ -40,11 +40,14 @@ sub id_to_object {
 
 sub objects_to_ids {
     my ( $self, @objects ) = @_;
+
+    return $self->object_to_id($objects[0]) if @objects == 1;
+
     my $o = $self->_objects;
 
     return map {
         my $ent = $o->{$_};
-        $ent ? $ent->{id} : undef;
+        $ent && $ent->{id};
     } @objects;
 }
 
