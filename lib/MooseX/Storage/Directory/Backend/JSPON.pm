@@ -80,7 +80,7 @@ has pretty => (
 has json => (
     isa => "Object",
     is  => "rw",
-    builder => "_build_json",
+    lazy_build => 1,
     handles => [qw(encode decode)],
 );
 
