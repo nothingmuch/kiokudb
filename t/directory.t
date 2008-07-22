@@ -13,9 +13,11 @@ use ok 'MooseX::Storage::Directory';
 use ok 'MooseX::Storage::Directory::Backend::JSPON';
 
 my $dir = MooseX::Storage::Directory->new(
-	backend => MooseX::Storage::Directory::Backend::JSPON->new(
-		dir => temp_root,
-	),
+    backend => MooseX::Storage::Directory::Backend::JSPON->new(
+        dir    => temp_root,
+        pretty => 1,
+        lock   => 0,
+    ),
 );
 
 {
