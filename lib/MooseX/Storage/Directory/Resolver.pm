@@ -12,7 +12,7 @@ has live_objects => (
     isa => "MooseX::Storage::Directory::LiveObjects",
     is  => "ro",
     required => 1,
-    handles  => [qw(ids_to_objects id_to_object)],
+    handles  => [qw(ids_to_objects id_to_object remove)],
 );
 
 # get the ID of an object, or make one

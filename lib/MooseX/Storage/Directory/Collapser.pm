@@ -34,13 +34,7 @@ has _accum_uids => (
     default  => sub { +{} },
 );
 
-has _shared => (
-    isa => 'HashRef',
-    is  => "ro",
-    init_arg => undef,
-    default  => sub { +{} },
-);
-
+# a list of the IDs of all simple entries
 has _simple_entries => (
     isa => 'ArrayRef',
     is  => "ro",
@@ -48,12 +42,21 @@ has _simple_entries => (
     default  => sub { [] },
 );
 
+# keeps track of the simple references which are first class (either weak or
+# shared, and must have an entry)
+has _first_class => (
+    isa => 'HashRef',
+    is  => "ro",
+    init_arg => undef,
+    default  => sub { +{} },
+);
+
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    my ( $entries, $shared, $simple ) = ( $self->_accum_uids, $self->_shared, $self->_simple_entries );
+    my ( $entries, $fc, $simple ) = ( $self->_accum_uids, $self->_first_class, $self->_simple_entries );
     local %$entries = ();
-    local %$shared  = ();
+    local %$fc      = ();
     local @$simple  = ();
 
     my @ids = $self->objects_to_ids(@objects);
@@ -63,10 +66,9 @@ sub collapse_objects {
     $self->visit(bless( \@objects, 'MooseX::Storage::Directory::Collapser::Collection'));
 
     # unify non shared simple references
-    if ( my @non_shared = grep { not exists $shared->{$_} } @$simple ) {
-        my %non_shared = map { $_ => 1 } @non_shared;
-
-        my $l = $self->resolver->live_objects;
+    # FIXME hashes and arrays should be Set::Object
+    if ( my @flatten = grep { not exists $fc->{$_} } @$simple ) {
+        my %flatten = map { $_ => undef } @flatten;
 
         my %purged;
 
@@ -78,23 +80,21 @@ sub collapse_objects {
                 my ( $v, $ref ) = @_;
 
                 my $id = $ref->id;
-                if ( exists $non_shared{$id} and not $ref->is_weak ) {
-                    my $entry = $entries->{$id};
 
-                    unless ( $entry->has_class ) {
-                        # replace with data from entry
-                        $_ = $entry->data;
-                        $purged{$id} = $entry;
-                    }
+                if ( exists $flatten{$id} ) {
+                    # replace reference with data from entry, so that the
+                    # simple data is inlined, and mark that entry for removal
+                    $_ = $entries->{$id}->data;
+                    $purged{$id} = undef;
                 }
             }
         )->visit([ map { $_->data } values %$entries ]);
 
-        foreach my $id ( keys %purged ) {
-            delete $entries->{$id};
-            $l->remove($id);
-        }
+        # remove from the live objects and entries to store list
+        delete @{$entries}{keys %purged};
+        $self->resolver->remove(keys %purged);
     }
+
 
     my @root_set = delete @{ $entries }{@ids};
 
@@ -108,7 +108,7 @@ sub make_ref {
     
     my $weak = isweak($_[2]);
 
-    $self->_shared->{$id} = undef if $weak;
+    $self->_first_class->{$id} = undef if $weak;
 
     return MooseX::Storage::Directory::Reference->new(
         id => $id,
@@ -121,7 +121,7 @@ sub visit_seen {
 
     my $id = $self->object_to_id($seen);
 
-    $self->_shared->{$id} = undef;
+    $self->_first_class->{$id} = undef;
 
     $self->make_ref( $id => $_[1] );
 }
