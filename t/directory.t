@@ -9,6 +9,8 @@ use Test::Memory::Cycle;
 
 use Scalar::Util qw(blessed);
 
+BEGIN { $MooseX::Storage::Directory::Resolver::SERIAL_IDS = 1 }
+
 use ok 'MooseX::Storage::Directory';
 use ok 'MooseX::Storage::Directory::Backend::JSPON';
 
