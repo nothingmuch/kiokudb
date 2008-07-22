@@ -34,6 +34,7 @@ sub expand_object {
 
         my $instance = $class->get_meta_instance->create_instance();
 
+        # note, this is registered *before* any other value expansion, to allow circular refs
         $self->live_objects->insert( $entry->id => $instance ) unless $args{no_register};
 
         my $data = $entry->data;
@@ -47,7 +48,13 @@ sub expand_object {
 
         return $instance;
     } else {
-        return $entry->data;
+        my $data = $entry->data;
+
+        $self->live_objects->insert( $entry->id => $data ) unless $args{no_register};
+
+        $self->visit($data);
+
+        return $data;
     }
 }
 

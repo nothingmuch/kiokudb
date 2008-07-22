@@ -82,6 +82,12 @@ is_deeply(
     is( $obj->bar->parent, $obj, "circular ref" );
 }
 
+is_deeply(
+    [ $dir->live_objects->live_objects ],
+    [],
+    "live object set is empty",
+);
+
 {
     my $x = Foo->new(
         foo => "oink oink",
@@ -107,12 +113,13 @@ is_deeply(
     is( $objects[0]->bar, $y, "link recreated" );
 }
 
+is_deeply(
+    [ $dir->live_objects->live_objects ],
+    [],
+    "live object set is empty",
+);
+
 {
-    is_deeply(
-        [ $dir->live_objects->live_objects ],
-        [],
-        "live object set is empty",
-    );
 
     $dir->linker->lazy(1);
 
@@ -137,3 +144,70 @@ is_deeply(
     [],
     "live object set is empty",
 );
+
+{
+    $dir->linker->lazy(0);
+
+    my @ids = do{
+        my $shared = Foo->new( foo => "shared" );
+
+        my $first  = Foo->new( foo => "first",  bar => $shared );
+        my $second = Foo->new( foo => "second", bar => $shared );
+
+        $dir->store( $first, $second );
+    };
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [],
+        "live object set is empty",
+    );
+
+    my $first = $dir->lookup($ids[0]);
+
+    isa_ok( $first, "Foo" );
+    is( $first->foo, "first", "normal attr" );
+    isa_ok( $first->bar, "Foo", "shared object" );
+    is( $first->bar->foo, "shared", "normal attr of shared" );
+    
+    my $second = $dir->lookup($ids[1]);
+
+    isa_ok( $second, "Foo" );
+    is( $second->foo, "second", "normal attr" );
+
+    is( $second->bar, $first->bar, "shared object" );
+}
+
+{
+    $dir->linker->lazy(0);
+
+    my @ids = do{
+        my $shared = { foo => "shared" };
+
+        my $first  = Foo->new( foo => "first",  bar => $shared );
+        my $second = Foo->new( foo => "second", bar => $shared );
+
+        $dir->store( $first, $second );
+    };
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [],
+        "live object set is empty",
+    );
+
+    my $first = $dir->lookup($ids[0]);
+
+    isa_ok( $first, "Foo" );
+    is( $first->foo, "first", "normal attr" );
+
+    is( ref($first->bar), "HASH", "shared hash" );
+    is( $first->bar->{foo}, "shared", "hash data" );
+    
+    my $second = $dir->lookup($ids[1]);
+
+    isa_ok( $second, "Foo" );
+    is( $second->foo, "second", "normal attr" );
+
+    is( $second->bar, $first->bar, "shared object" );
+}
