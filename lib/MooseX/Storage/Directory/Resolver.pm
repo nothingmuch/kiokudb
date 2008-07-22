@@ -9,7 +9,7 @@ use Data::GUID;
 use namespace::clean -except => 'meta';
 
 # useful for debugging
-use constant SERIAL_IDS => our $SERIAL_IDS;
+use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
 has live_objects => (
     isa => "MooseX::Storage::Directory::LiveObjects",
@@ -29,16 +29,10 @@ sub get_object_id {
     }
 }
 
-# so that the first 100 objects sort lexically
-my $i = "01";
+my $i = "01"; # so that the first 100 objects sort lexically
 sub generate_id {
     my $self = shift;
-
-    if ( SERIAL_IDS ) {
-        return $i++;
-    } else {
-        return Data::GUID->new->as_string;
-    }
+    return SERIAL_IDS ? $i++ : Data::GUID->new->as_string;
 }
 
 sub object_to_id {
