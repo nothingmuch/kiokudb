@@ -214,21 +214,14 @@ sub write_entry {
     }
 }
 
-sub uid_basename {
-    my ( $self, $uid ) = @_;
-    return "${uid}.json";   
-}
-
 sub object_file {
     my ( $self, $uid ) = @_;
-    my $base = $self->uid_basename($uid);
-    $self->object_dir->file($base);
+    $self->object_dir->file($uid);
 }
 
 sub root_set_file {
     my ( $self, $uid ) = @_;
-    my $base = $self->uid_basename($uid);
-    $self->root_set_dir->file($base);
+    $self->root_set_dir->file($uid);
 }
 
 __PACKAGE__->meta->make_immutable;

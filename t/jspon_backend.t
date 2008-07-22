@@ -82,7 +82,7 @@ foreach my $entry ( @entries ) {
 
     is( ref $data, 'HASH', "hash loaded" );
 
-    is( $data->{id}, $entry->id . '.json', "id is correct" );
+    is( $data->{id}, $entry->id, "id is correct" );
 }
 
 ok(  -e $b->root_set_file($entries[0]->id), "root is in root set" );

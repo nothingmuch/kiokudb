@@ -32,12 +32,12 @@ sub visit_object {
     my ( $self, $object ) = @_;
 
     if ( obj $object, 'MooseX::Storage::Directory::Reference' ) {
-        return { '$ref' => $object->id . '.json', ( $object->is_weak ? ( weak => 1 ) : () ) };
+        return { '$ref' => $object->id, ( $object->is_weak ? ( weak => 1 ) : () ) };
     } elsif ( obj $object, 'MooseX::Storage::Directory::Entry' ) {
         croak "Unsupported data for JSPON: " . $object->data unless ref($object->data) eq 'HASH';
         return {
             ( $object->has_class ? ( __CLASS__ => $object->class->identifier ) : () ),
-            id        => $object->id . '.json',
+            id        => $object->id,
             $self->visit_hash_entries($object->data),
         };
     }
