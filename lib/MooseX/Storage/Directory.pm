@@ -104,8 +104,14 @@ sub store {
     # FIXME update known objects?
     if ( my @unknown = grep { not $ids{$_} } @objects ) {
         my @entries = $self->collapser->collapse_objects(@unknown);
+
+        @ids{@unknown} = map { $_->id } @entries;
+
+        # FIXME make these entries live? or..?
         $self->backend->insert( @entries );
-        @ids{@objects} = map { $_->id } @entries[ 0 .. $#objects ];
+
+        idhash my %entries;
+        @entries{@objects} = @entries;
     }
 
     if ( @objects == 1 ) {
