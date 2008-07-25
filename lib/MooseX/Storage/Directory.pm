@@ -5,6 +5,15 @@ use Moose;
 
 our $VERSION = "0.01_01";
 
+# set $BINARY_UUIDS before loading to use string UUIDs in memory (eases
+# debugging), while retaining storage compat
+# for even easier debugging, $SERIAL_IDs are not UUIDs at all, but this is not
+# compatible
+our ( $BINARY_UUIDS, $SERIAL_IDS );
+
+use constant SERIAL_IDS           => not not our $SERIAL_IDS;
+use constant RUNTIME_BINARY_UUIDS => !SERIAL_IDS && ( defined($BINARY_UUIDS) ? not not $BINARY_UUIDS : 1 );
+
 use MooseX::Storage::Directory::Backend;
 use MooseX::Storage::Directory::Resolver;
 use MooseX::Storage::Directory::Collapser;
@@ -13,7 +22,7 @@ use MooseX::Storage::Directory::LiveObjects;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
 
-use namespace::clean -except => 'meta';
+use namespace::clean -except => [qw(meta SERIAL_IDS RUNTIME_BINARY_UUIDS)];
 
 has live_objects => (
     isa => "MooseX::Storage::Directory::LiveObjects",

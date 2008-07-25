@@ -13,6 +13,8 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
+with qw(MooseX::Storage::Directory::Role::StorageUUIDs);
+
 sub collapse_jspon {
     my ( $self, @args ) = @_;
     $self->visit(@args);
@@ -32,12 +34,12 @@ sub visit_object {
     my ( $self, $object ) = @_;
 
     if ( obj $object, 'MooseX::Storage::Directory::Reference' ) {
-        return { '$ref' => $object->id, ( $object->is_weak ? ( weak => 1 ) : () ) };
+        return { '$ref' => $self->format_uid($object->id), ( $object->is_weak ? ( weak => 1 ) : () ) };
     } elsif ( obj $object, 'MooseX::Storage::Directory::Entry' ) {
         croak "Unsupported data for JSPON: " . $object->data unless ref($object->data) eq 'HASH';
         return {
             ( $object->has_class ? ( __CLASS__ => $object->class->identifier ) : () ),
-            id        => $object->id,
+            id        => $self->format_uid($object->id),
             $self->visit_hash_entries($object->data),
         };
     }

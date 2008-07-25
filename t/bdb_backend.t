@@ -33,7 +33,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     );
 }
 
-my $b = MooseX::Storage::Directory::Backend::BDB->new( dir => temp_root );
+my $b = MooseX::Storage::Directory::Backend::BDB->new( dir => temp_root, binary_uuids => 1 );
 
 my $obj = Foo->new(
     id => "shlomo",

@@ -12,12 +12,14 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
+with qw(MooseX::Storage::Directory::Role::StorageUUIDs);
+
 # Note: this method is destructive
 # maybe it's a good idea to copy $hash before deleting items out of it?
 sub expand_jspon {
     my ( $self, $data, @attrs ) = @_;
 
-    my $id = delete $data->{id};
+    my $id = $self->parse_uid(delete $data->{id});
 
     if ( exists $data->{__CLASS__} ) {
         # check the class more thoroughly here ...
@@ -45,7 +47,7 @@ sub visit_hash {
     my ( $self, $hash ) = @_;
 
     if ( my $id = $hash->{'$ref'} ) {
-        return MooseX::Storage::Directory::Reference->new( id => $id, ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
+        return MooseX::Storage::Directory::Reference->new( id => $self->parse_uid($id), ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
     } else {
         return $self->SUPER::visit_hash($hash);
     }

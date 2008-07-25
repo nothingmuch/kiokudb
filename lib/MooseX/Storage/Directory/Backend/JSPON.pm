@@ -9,6 +9,7 @@ use File::NFSLock;
 use IO::AtomicFile;
 use JSON;
 
+use MooseX::Storage::Directory ();
 use MooseX::Storage::Directory::Backend::JSPON::Expander;
 use MooseX::Storage::Directory::Backend::JSPON::Collapser;
 
@@ -16,7 +17,10 @@ use MooseX::Types::Path::Class qw(Dir File);
 
 use namespace::clean -except => 'meta';
 
-with qw(MooseX::Storage::Directory::Backend);
+with qw(
+    MooseX::Storage::Directory::Backend
+    MooseX::Storage::Directory::Role::StorageUUIDs
+);
 
 sub BUILD {
     my $self = shift;
@@ -36,6 +40,27 @@ has object_dir => (
     isa => Dir,
     is  => "ro",
     lazy_build => 1,
+);
+
+# TODO implement trie fanning on disk
+has trie => (
+    isa => "Bool",
+    is  => "ro",
+    default => 0,
+);
+
+# how many hex nybbles per trie level
+has trie_nybbles => (
+    isa => "Int",
+    is  => "rw",
+    default => 3, # default 4096 entries per level
+);
+
+# /dec/afb/decafbad
+has trie_levels => (
+    isa => "Int",
+    is  => "rw",
+    default => 2,
 );
 
 sub _build_object_dir {
@@ -94,23 +119,29 @@ sub _build_json {
 has expander => (
     isa => "MooseX::Storage::Directory::Backend::JSPON::Expander",
     is  => "rw",
-    builder => "_build_expander",
+    lazy_build => 1,
     handles => [qw(expand_jspon)],
 );
 
 sub _build_expander {
-    MooseX::Storage::Directory::Backend::JSPON::Expander->new;
+    my $self = shift;
+    MooseX::Storage::Directory::Backend::JSPON::Expander->new(
+        binary_uuids => $self->binary_uuids,
+    );
 }
 
 has collapser => (
     isa => "MooseX::Storage::Directory::Backend::JSPON::Collapser",
     is  => "rw",
-    builder => "_build_collapser",
+    lazy_build => 1,
     handles => [qw(collapse_jspon)],
 );
 
 sub _build_collapser {
-    MooseX::Storage::Directory::Backend::JSPON::Collapser->new;
+    my $self = shift;
+    MooseX::Storage::Directory::Backend::JSPON::Collapser->new(
+        binary_uuids => $self->binary_uuids,
+    );
 }
 
 sub write_lock {
@@ -218,12 +249,12 @@ sub write_entry {
 
 sub object_file {
     my ( $self, $uid ) = @_;
-    $self->object_dir->file($uid);
+    $self->object_dir->file($self->uuid_to_string($uid));
 }
 
 sub root_set_file {
     my ( $self, $uid ) = @_;
-    $self->root_set_dir->file($uid);
+    $self->root_set_dir->file($self->uuid_to_string($uid));
 }
 
 __PACKAGE__->meta->make_immutable;

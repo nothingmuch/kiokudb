@@ -3,13 +3,12 @@
 package MooseX::Storage::Directory::Resolver;
 use Moose;
 
+use MooseX::Storage::Directory ();
 use MooseX::Storage::Directory::LiveObjects;
-use Data::GUID;
 
 use namespace::clean -except => 'meta';
 
-# useful for debugging
-use constant SERIAL_IDS => not not our $SERIAL_IDS;
+with qw(MooseX::Storage::Directory::Role::UUIDs);
 
 has live_objects => (
     isa => "MooseX::Storage::Directory::LiveObjects",
@@ -25,14 +24,8 @@ sub get_object_id {
     if ( blessed($object) and $object->can("does") and $object->does("MooseX::Storage::Directory::UID") ) {
         return $object->storage_uid;
     } else {
-        return $self->generate_id;
+        return $self->generate_uuid;
     }
-}
-
-my $i = "01"; # so that the first 100 objects sort lexically
-sub generate_id {
-    my $self = shift;
-    return SERIAL_IDS ? $i++ : Data::GUID->new->as_string;
 }
 
 sub object_to_id {

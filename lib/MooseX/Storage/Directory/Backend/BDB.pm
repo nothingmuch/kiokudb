@@ -9,7 +9,10 @@ use MooseX::Types::Path::Class qw(Dir);
 
 use namespace::clean -except => 'meta';
 
-with qw(MooseX::Storage::Directory::Backend);
+with qw(
+    MooseX::Storage::Directory::Backend
+    MooseX::Storage::Directory::Role::StorageUUIDs
+);
 
 has dir => (
     isa => Dir,
@@ -47,6 +50,8 @@ has dbm => (
             -Flags    => DB_CREATE,
         );
 
+        $hash->filter_store_key(sub { $_ = $self->format_uid($_) });
+        $hash->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
         $hash->filter_store_value(sub { $_ = nfreeze($_) });
         $hash->filter_fetch_value(sub { $_ = thaw($_) });
 
