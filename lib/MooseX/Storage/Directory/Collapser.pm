@@ -61,9 +61,7 @@ sub collapse_objects {
 
     my @ids = $self->objects_to_ids(@objects);
 
-    # Collection is ignored by the entry creation code, but we want them in one
-    # visit() call so that the shared refs are truly shared ;-)
-    $self->visit(bless( \@objects, 'MooseX::Storage::Directory::Collapser::Collection'));
+    $self->visit(@objects);
 
     # unify non shared simple references
     # FIXME hashes and arrays should be Set::Object
@@ -147,11 +145,6 @@ sub visit_object {
     # FIXME allow breaking out early if $object is in the live object cache
     # that is object_to_id is live_objects, not resolver
     # this is required for shallow updates, and of course much more efficient
-
-    if ( ref $object eq 'MooseX::Storage::Directory::Collapser::Collection' ) {
-        $self->visit_object($_) for @$object;
-        return undef;
-    }
 
     if ( $object->can("meta") ) {
         my $id = $self->object_to_id($object);
