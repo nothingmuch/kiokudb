@@ -150,7 +150,11 @@ sub update {
 sub store_objects {
     my ( $self, %args ) = @_;
 
-    my @entries = $self->collapser->collapse_objects(@{ $args{objects} });
+    my $objects = $args{objects};
+
+    my @entries = $self->collapser->collapse_objects(@$objects);
+
+    $_->root(1) for @entries[0 .. $#$objects];
 
     $self->backend->insert(@entries);
 

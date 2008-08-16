@@ -4,7 +4,7 @@ package MooseX::Storage::Directory::Collapser;
 use Moose;
 
 use Carp qw(croak);
-use Scalar::Util qw(isweak);
+use Scalar::Util qw(isweak refaddr);
 
 use MooseX::Storage::Directory::Entry;
 use MooseX::Storage::Directory::Reference;
@@ -66,32 +66,49 @@ has _options => (
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    $self->collapse( objects => \@objects );
+    my $entries = $self->collapse( objects => \@objects );
+
+    # compute the root set
+    my @ids = $self->resolver->live_objects->objects_to_ids(@objects);
+    my @root_set = delete @{ $entries }{@ids};
+
+    # return the root set and all additional necessary entries
+    return ( @root_set, values %$entries );
 }
 
 sub shallow_collapse_objects {
-    my ( $self, @objects ) = @-;
+    my ( $self, @objects ) = @_;
 
-    $self->collapse( objects => \@objects, resolver => $self->resolver->live_objects );
+    my $live_objects = $self->resolver->live_objects;
+
+    my $entries = $self->collapse(
+        objects      => \@objects,
+        resolver     => $live_objects,
+        live_objects => $live_objects,
+    );
+
+    my @ids = $self->resolver->live_objects->objects_to_ids(@objects);
+    my @root_set = map { $_ and delete $entries->{$_} } @ids;
+
+    # return the root set and all additional necessary entries
+    # may contain undefs
+    return ( @root_set, values %$entries );
 }
 
 sub collapse {
     my ( $self, %args ) = @_;
 
-    my $objects      = $args{objects};
-    my $resolver     = $args{resolver}     || $self->resolver;
-    my $live_objects = $args{live_objects} || $resolver->live_objects;
+    my $objects = delete $args{objects};
 
+    my $resolver     = $args{resolver}     ||= $self->resolver;
+    my $live_objects = $args{live_objects} ||= $resolver->live_objects;
 
     # set up localized env that we don't want to pass around all the time
     my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
     local %$entries = ();
     local %$fc      = ();
     local @$simple  = ();
-    local %$options = (
-        resolver     => $resolver,
-        live_objects => $live_objects,
-    );
+    local %$options = %args;
 
     # recurse through the object, accumilating entries
     $self->visit(@$objects);
@@ -100,13 +117,7 @@ sub collapse {
     # deep entry
     $self->compact_entries() if $self->compact;
 
-    # compute the root set
-    my @ids = $live_objects->objects_to_ids(@$objects);
-    my @root_set = delete @{ $entries }{@ids};
-    $_->root(1) for @root_set;
-
-    # return the root set and all additional necessary entries
-    return ( @root_set, values %$entries );
+    return {%$entries}; # gotta make a copy, it's localized
 }
 
 sub compact_entries {
@@ -162,11 +173,25 @@ sub make_ref {
 sub visit_seen {
     my ( $self, $seen, $prev ) = @_;
 
-    my $id = $self->_options->{live_objects}->object_to_id($seen) || return;
+    my $id = $self->_seen_id($seen) || return;
 
+    # register ID as first class
     $self->_first_class->{$id} = undef;
 
-    $self->make_ref( $id => $_[1] );
+    # return a uuid ref
+    return $self->make_ref( $id => $_[1] );
+}
+
+sub _seen_id {
+    my ( $self, $seen ) = @_;
+
+    if ( my $id = $self->_options->{live_objects}->object_to_id($seen) ) {
+        return $id;
+    } elsif ( $self->compact ) {
+        return refaddr($seen);
+    }
+
+    return;
 }
 
 sub visit_ref {
@@ -174,7 +199,8 @@ sub visit_ref {
 
     # FIXME for shallow visiting to work we need to subvert this case,
     # allocating a private temporary ID if compact is true.
-    my $id = $self->_options->{resolver}->object_to_id($ref) || return;
+
+    my $id = $self->_ref_id($ref) || return;
 
     push @{ $self->_simple_entries }, $id;
     
@@ -186,6 +212,18 @@ sub visit_ref {
     $self->make_ref( $id => $_[1] );
 }
 
+sub _ref_id {
+    my ( $self, $ref ) = @_;
+
+    if ( my $id = $self->_options->{resolver}->object_to_id($ref) ) {
+        return $id;
+    } elsif ( $self->compact ) {
+        return refaddr($self);
+    }
+
+    return;
+}
+
 sub visit_object {
     my ( $self, $object ) = @_;
 
@@ -194,7 +232,7 @@ sub visit_object {
     # this is required for shallow updates, and of course much more efficient
 
     if ( $object->can("meta") ) {
-        my $id = $self->_options->{resolver}->object_to_id($object) || return;
+        my $id = $self->_object_id($object) || return;
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $object );
@@ -226,6 +264,11 @@ sub visit_object {
     } else {
         croak "FIXME non moose objects";
     }
+}
+
+sub _object_id {
+    my ( $self, $object ) = @_;
+    $self->_options->{resolver}->object_to_id($object);
 }
 
 __PACKAGE__->meta->make_immutable;

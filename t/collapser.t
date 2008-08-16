@@ -48,15 +48,29 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         ),
     );
 
+    {
+        my @partial = $v->shallow_collapse_objects($foo);
+        is( scalar(grep { defined && warn $_ } @partial), 0, "no entries for shallow collapse" );
+    }
+
+    $v->resolver->object_to_id($foo->bar);
+
+    {
+        my @partial = $v->shallow_collapse_objects($foo);
+        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
+    }
+
+    {
+        my @partial = $v->shallow_collapse_objects($foo->bar);
+        is( scalar(grep { defined } @partial), 1, "one entry for shallow collapse" );
+    }
+
     my @entries = $v->collapse_objects($foo);
 
     is( scalar(@entries), 2, "two entries" );
 
     my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
-
-    ok(  $entries[0]->root, "first entry is a root entry" );
-    ok( !$entries[1]->root, "second entry is not" );
 
     is( $entries[0]->class->name, 'Foo', "metaclass" );
 
@@ -149,9 +163,6 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 
     my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
-
-    ok(  $entries[0]->root, "first entry is a root entry" );
-    ok( !$entries[1]->root, "second entry is not" );
 
     is( $entries[0]->class->name, 'Foo', "metaclass" );
 
