@@ -41,7 +41,8 @@ sub id_to_object {
 sub objects_to_ids {
     my ( $self, @objects ) = @_;
 
-    return $self->object_to_id($objects[0]) if @objects == 1;
+    return $self->object_to_id($objects[0])
+        if @objects == 1;
 
     my $o = $self->_objects;
 
