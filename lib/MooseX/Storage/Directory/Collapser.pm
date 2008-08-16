@@ -66,28 +66,46 @@ has _options => (
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    # FIXME args
-    my $resolver = $self->resolver;
-    my $live_objects = $resolver->live_objects;
+    $self->collapse( objects => \@objects );
+}
 
+sub shallow_collapse_objects {
+    my ( $self, @objects ) = @-;
+
+    $self->collapse( objects => \@objects, resolver => $self->resolver->live_objects );
+}
+
+sub collapse {
+    my ( $self, %args ) = @_;
+
+    my $objects      = $args{objects};
+    my $resolver     = $args{resolver}     || $self->resolver;
+    my $live_objects = $args{live_objects} || $resolver->live_objects;
+
+
+    # set up localized env that we don't want to pass around all the time
     my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
     local %$entries = ();
     local %$fc      = ();
     local @$simple  = ();
     local %$options = (
-        resolver => $resolver,
+        resolver     => $resolver,
         live_objects => $live_objects,
     );
 
-    $self->visit(@objects);
+    # recurse through the object, accumilating entries
+    $self->visit(@$objects);
+
+    # compact UUID space by merging simple non shared structures into a single
+    # deep entry
     $self->compact_entries() if $self->compact;
 
-    my @ids = $live_objects->objects_to_ids(@objects);
-
+    # compute the root set
+    my @ids = $live_objects->objects_to_ids(@$objects);
     my @root_set = delete @{ $entries }{@ids};
-
     $_->root(1) for @root_set;
 
+    # return the root set and all additional necessary entries
     return ( @root_set, values %$entries );
 }
 
@@ -121,6 +139,7 @@ sub compact_entries {
             }
         )->visit([ map { $_->data } values %$entries ]);
 
+        # FIXME only remove if we allocated the ID
         # remove from the live objects and entries to store list
         delete @{$entries}{keys %purged};
         $options->{resolver}->remove(keys %purged);
@@ -143,7 +162,7 @@ sub make_ref {
 sub visit_seen {
     my ( $self, $seen, $prev ) = @_;
 
-    my $id = $self->_options->{live_objects}->object_to_id($seen);
+    my $id = $self->_options->{live_objects}->object_to_id($seen) || return;
 
     $self->_first_class->{$id} = undef;
 
@@ -153,7 +172,9 @@ sub visit_seen {
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    my $id = $self->_options->{resolver}->object_to_id($ref);
+    # FIXME for shallow visiting to work we need to subvert this case,
+    # allocating a private temporary ID if compact is true.
+    my $id = $self->_options->{resolver}->object_to_id($ref) || return;
 
     push @{ $self->_simple_entries }, $id;
     
@@ -173,7 +194,7 @@ sub visit_object {
     # this is required for shallow updates, and of course much more efficient
 
     if ( $object->can("meta") ) {
-        my $id = $self->_options->{resolver}->object_to_id($object);
+        my $id = $self->_options->{resolver}->object_to_id($object) || return;
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $object );
