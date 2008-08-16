@@ -8,3 +8,29 @@
 
 * Generic entry caching in the backends, possibly using LiveObjects?
 
+
+* Backend roles:
+    * Serialize ( reusable serialization API )
+        * JSPON
+        * Storable
+        * Protobuf
+    * Map ( for all UUID <-> serialized blob mappings )
+    * Backend::CAS (content addressible map based on serialize)
+    * Backend::Store
+        * BDB
+        * Dir
+            * Flat
+            * Trie
+    * DBI
+        * props + blob column with Serialize role
+    * SQLite
+        * with dynamic alter table statements?
+        * audrey style indexing?
+    * Fetching
+        * Scanning
+        * Listing
+        * Iterator
+        * compat API
+    * Backend::TXN
+    * Backend::Locking
+        * TXN::Exclusive
