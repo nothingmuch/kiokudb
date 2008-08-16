@@ -27,7 +27,7 @@ WriteMakefile(
         'Data::GUID' => 0,
 
         # visits are also important
-        'Data::Visitor' => '0.18',
+        'Data::Visitor' => '0.19',
 
         # JSPON backend
         'JSON' => 0,
