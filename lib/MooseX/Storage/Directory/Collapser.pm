@@ -20,7 +20,12 @@ has resolver => (
     isa => "MooseX::Storage::Directory::Resolver",
     is  => "rw",
     required => 1,
-    handles => [qw(objects_to_ids object_to_id)],
+);
+
+has compact => (
+    isa => "Bool",
+    is  => "rw",
+    default => 1,
 );
 
 has '+weaken' => (
@@ -51,20 +56,48 @@ has _first_class => (
     default  => sub { +{} },
 );
 
+has _options => (
+    isa => 'HashRef',
+    is  => "ro",
+    init_arg => undef,
+    default  => sub { +{} },
+);
+
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    my ( $entries, $fc, $simple ) = ( $self->_entries, $self->_first_class, $self->_simple_entries );
+    # FIXME args
+    my $resolver = $self->resolver;
+    my $live_objects = $resolver->live_objects;
+
+    my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
     local %$entries = ();
     local %$fc      = ();
     local @$simple  = ();
-
-    my @ids = $self->objects_to_ids(@objects);
+    local %$options = (
+        resolver => $resolver,
+        live_objects => $live_objects,
+    );
 
     $self->visit(@objects);
+    $self->compact_entries() if $self->compact;
+
+    my @ids = $live_objects->objects_to_ids(@objects);
+
+    my @root_set = delete @{ $entries }{@ids};
+
+    $_->root(1) for @root_set;
+
+    return ( @root_set, values %$entries );
+}
+
+sub compact_entries {
+    my $self = shift;
+
+    my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
 
     # unify non shared simple references
-    # FIXME hashes and arrays should be Set::Object
+    # FIXME hashes and arrays should be registered in a Set::Object
     if ( my @flatten = grep { not exists $fc->{$_} } @$simple ) {
         my %flatten = map { $_ => undef } @flatten;
 
@@ -90,15 +123,8 @@ sub collapse_objects {
 
         # remove from the live objects and entries to store list
         delete @{$entries}{keys %purged};
-        $self->resolver->remove(keys %purged);
+        $options->{resolver}->remove(keys %purged);
     }
-
-
-    my @root_set = delete @{ $entries }{@ids};
-
-    $_->root(1) for @root_set;
-
-    return ( @root_set, values %$entries );
 }
 
 sub make_ref {
@@ -117,7 +143,7 @@ sub make_ref {
 sub visit_seen {
     my ( $self, $seen, $prev ) = @_;
 
-    my $id = $self->object_to_id($seen);
+    my $id = $self->_options->{live_objects}->object_to_id($seen);
 
     $self->_first_class->{$id} = undef;
 
@@ -127,7 +153,7 @@ sub visit_seen {
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    my $id = $self->object_to_id($ref);
+    my $id = $self->_options->{resolver}->object_to_id($ref);
 
     push @{ $self->_simple_entries }, $id;
     
@@ -147,7 +173,7 @@ sub visit_object {
     # this is required for shallow updates, and of course much more efficient
 
     if ( $object->can("meta") ) {
-        my $id = $self->object_to_id($object);
+        my $id = $self->_options->{resolver}->object_to_id($object);
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $object );

@@ -130,6 +130,23 @@ sub insert {
     }
 }
 
+sub update {
+    my ( $self, @objects ) = @_;
+
+    idhash my %ids;
+
+    @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
+
+    if ( my @unknown = grep { not $ids{$_} } @objects ) {
+        $self->store_objects( objects => \@unknown );
+    }
+
+    # find new IDs
+    if ( defined wantarray ) {
+        return $self->live_objects->objects_to_ids(@objects);
+    }
+}
+
 sub store_objects {
     my ( $self, %args ) = @_;
 
