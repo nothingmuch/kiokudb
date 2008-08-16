@@ -106,21 +106,30 @@ sub all { }
 sub store {
     my ( $self, @objects ) = @_;
 
+    my @entries = $self->collapser->collapse_objects(@objects);
+
+    $self->backend->insert( @entries );
+
+    if ( @objects == 1 ) {
+        return $entries[0]->id;
+    } else {
+        return map { $_->id } @entries;
+    }
+}
+
+sub insert {
+    my ( $self, @objects ) = @_;
+
     idhash my %ids;
 
     @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
 
-    # FIXME update known objects?
     if ( my @unknown = grep { not $ids{$_} } @objects ) {
         my @entries = $self->collapser->collapse_objects(@unknown);
 
         @ids{@unknown} = map { $_->id } @entries;
 
-        # FIXME make these entries live? or..?
         $self->backend->insert( @entries );
-
-        idhash my %entries;
-        @entries{@objects} = @entries;
     }
 
     if ( @objects == 1 ) {

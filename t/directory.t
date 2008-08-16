@@ -4,22 +4,22 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
-use Test::TempDir;
 use Test::Memory::Cycle;
 
-use Scalar::Util qw(blessed weaken isweak);
+use Scalar::Util qw(blessed weaken isweak refaddr);
 
 BEGIN { $MooseX::Storage::Directory::Resolver::SERIAL_IDS = 1 }
 
 use ok 'MooseX::Storage::Directory';
-use ok 'MooseX::Storage::Directory::Backend::JSPON';
+use ok 'MooseX::Storage::Directory::Backend::Hash';
 
 my $dir = MooseX::Storage::Directory->new(
-    backend => MooseX::Storage::Directory::Backend::JSPON->new(
-        dir    => temp_root,
-        pretty => 1,
-        lock   => 0,
-    ),
+    backend => MooseX::Storage::Directory::Backend::Hash->new,
+    #backend => MooseX::Storage::Directory::Backend::JSPON->new(
+    #    dir    => temp_root,
+    #    pretty => 1,
+    #    lock   => 0,
+    #),
 );
 
 sub no_live_objects {
@@ -237,6 +237,147 @@ no_live_objects;
         ok( isweak($obj->bar->{self}), "weak ref" );
 
         weaken($obj->bar->{self}); # to make no_live_objects pass
+    }
+}
+
+no_live_objects;
+
+{
+    my $id = $dir->store( Foo->new( foo => "blimey" ) );
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        isa_ok( $obj, "Foo" );
+        is( $obj->foo, "blimey", "normal attr" );
+
+        $obj->foo("fancy");
+
+        is( $obj->foo, "fancy", "attr changed" );
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        isa_ok( $obj, "Foo" );
+        is( $obj->foo, "blimey", "change not saved" );
+
+        $obj->foo("pancy");
+
+        is( $obj->foo, "pancy", "attr changed" );
+
+        is( $dir->insert($obj), $id, "insert returns ID" );
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        isa_ok( $obj, "Foo" );
+        is( $obj->foo, "blimey", "change not saved" );
+
+        $obj->foo("shmancy");
+
+        is( $obj->foo, "shmancy", "attr changed" );
+
+        is( $dir->store($obj), $id, "ID" );
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        isa_ok( $obj, "Foo" );
+        is( $obj->foo, "shmancy", "store saved change" );
+
+        is( $obj->bar, undef, "no 'bar' attr" );
+
+        $obj->bar( Foo->new( foo => "child" ) );
+
+        is( $dir->store($obj), $id, "ID" );
+    }
+
+    no_live_objects;
+
+    {
+        my $child;
+
+        {
+            my $obj = $dir->lookup($id);
+
+            isa_ok( $obj, "Foo" );
+
+            isa_ok( $obj->bar, "Foo" );
+
+            is( $obj->bar->foo, "child", "child object's attr" );
+
+            $child = $obj->bar;
+        }
+
+        is_deeply(
+            [ $dir->live_objects->live_objects ],
+            [ $child ],
+            "only child in live object set",
+        );
+
+
+        {
+            my $obj = $dir->lookup($id);
+
+            isa_ok( $obj, "Foo" );
+
+            isa_ok( $obj->bar, "Foo" );
+
+            is( $obj->bar->foo, "child", "child object's attr" );
+
+            is( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
+
+            is_deeply(
+                [ sort $dir->live_objects->live_objects ],
+                [ sort $child, $obj ],
+                "two objects in live object set",
+            );
+
+            $obj->bar( Foo->new( foo => "third" ) );
+
+            $dir->store( $obj->bar );
+        }
+
+        {
+            my $obj = $dir->lookup($id);
+
+            isa_ok( $obj, "Foo" );
+
+            isa_ok( $obj->bar, "Foo" );
+
+            is( $obj->bar->foo, "child", "child object's attr unchanged" );
+
+            is( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
+
+            $obj->bar( Foo->new( foo => "third" ) );
+
+            $dir->store( $obj );
+        }
+
+        {
+            my $obj = $dir->lookup($id);
+
+            isa_ok( $obj, "Foo" );
+
+            isa_ok( $obj->bar, "Foo" );
+
+            isnt( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
+
+            is( $obj->bar->foo, "third", "child inserted due to parent's update" );
+
+            $dir->store( $obj );
+        }
     }
 }
 
