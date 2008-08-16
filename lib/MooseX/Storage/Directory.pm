@@ -106,14 +106,10 @@ sub all { }
 sub store {
     my ( $self, @objects ) = @_;
 
-    my @entries = $self->collapser->collapse_objects(@objects);
+    $self->store_objects( objects => \@objects );
 
-    $self->backend->insert( @entries );
-
-    if ( @objects == 1 ) {
-        return $entries[0]->id;
-    } else {
-        return map { $_->id } @entries;
+    if ( defined wantarray ) {
+        return $self->live_objects->objects_to_ids(@objects);
     }
 }
 
@@ -125,18 +121,23 @@ sub insert {
     @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
 
     if ( my @unknown = grep { not $ids{$_} } @objects ) {
-        my @entries = $self->collapser->collapse_objects(@unknown);
-
-        @ids{@unknown} = map { $_->id } @entries;
-
-        $self->backend->insert( @entries );
+        $self->store_objects( objects => \@unknown );
     }
 
-    if ( @objects == 1 ) {
-        return $ids{$objects[0]};
-    } else {
-        return @ids{@objects};
+    # find new IDs
+    if ( defined wantarray ) {
+        return $self->live_objects->objects_to_ids(@objects);
     }
+}
+
+sub store_objects {
+    my ( $self, %args ) = @_;
+
+    my @entries = $self->collapser->collapse_objects(@{ $args{objects} });
+
+    $self->backend->insert(@entries);
+
+    # FIXME update index
 }
 
 sub delete { }
