@@ -291,3 +291,31 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         "shared ref",
     );
 }
+
+{
+    my $obj = Foo->new( bar => { foo => "hello" } );
+
+    {
+        my $v = MooseX::Storage::Directory::Collapser->new(
+            resolver => MooseX::Storage::Directory::Resolver->new(
+                live_objects => MooseX::Storage::Directory::LiveObjects->new
+            ),
+            compact => 0,
+        );
+
+        my @entries = $v->collapse_objects($obj);
+        is( scalar(@entries), 2, "two entries" );
+    }
+
+    {
+        my $v = MooseX::Storage::Directory::Collapser->new(
+            resolver => MooseX::Storage::Directory::Resolver->new(
+                live_objects => MooseX::Storage::Directory::LiveObjects->new
+            ),
+            compact => 1,
+        );
+
+        my @entries = $v->collapse_objects($obj);
+        is( scalar(@entries), 1, "one entry with compacter" );
+    }
+}
