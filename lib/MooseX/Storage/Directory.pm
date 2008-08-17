@@ -108,9 +108,6 @@ sub store {
 
     $self->store_objects( objects => \@objects );
 
-    if ( defined wantarray ) {
-        return $self->live_objects->objects_to_ids(@objects);
-    }
 }
 
 sub insert {
@@ -121,30 +118,17 @@ sub insert {
     @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
 
     if ( my @unknown = grep { not $ids{$_} } @objects ) {
-        $self->store_objects( objects => \@unknown );
+        @ids{@unknown} = $self->store_objects( objects => \@unknown );
+        return @ids{@objects};
     }
 
-    # find new IDs
-    if ( defined wantarray ) {
-        return $self->live_objects->objects_to_ids(@objects);
-    }
+    return;
 }
 
 sub update {
     my ( $self, @objects ) = @_;
 
-    idhash my %ids;
-
-    @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
-
-    if ( my @unknown = grep { not $ids{$_} } @objects ) {
-        $self->store_objects( objects => \@unknown );
-    }
-
-    # find new IDs
-    if ( defined wantarray ) {
-        return $self->live_objects->objects_to_ids(@objects);
-    }
+    $self->store_objects( shallow => 1, objects => \@objects );
 }
 
 sub store_objects {
@@ -152,13 +136,20 @@ sub store_objects {
 
     my $objects = $args{objects};
 
-    my @entries = $self->collapser->collapse_objects(@$objects);
+    my $method = $args{shallow} ? "shallow_collapse_objects" : "collapse_objects";
+
+    my @entries = $self->collapser->$method(@$objects);
 
     $_->root(1) for @entries[0 .. $#$objects];
 
     $self->backend->insert(@entries);
 
     # FIXME update index
+
+    
+    if ( defined wantarray ) {
+        return $self->live_objects->objects_to_ids(@$objects);
+    }
 }
 
 sub delete { }

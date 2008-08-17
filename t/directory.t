@@ -242,6 +242,23 @@ no_live_objects;
 
 no_live_objects;
 
+
+{
+    my $id = $dir->insert( Foo->new( foo => "henry" ) );
+    ok( $id, "insert returns ID for new object" );
+
+    no_live_objects;
+
+    my $obj = $dir->lookup($id);
+
+    is( $obj->foo, "henry", "stored by insert" );
+
+    is( $dir->insert($obj), undef, "insert returns undef" );
+}
+
+no_live_objects;
+
+
 {
     my $id = $dir->store( Foo->new( foo => "blimey" ) );
 
@@ -270,7 +287,7 @@ no_live_objects;
 
         is( $obj->foo, "pancy", "attr changed" );
 
-        is( $dir->insert($obj), $id, "insert returns ID" );
+        is( $dir->insert($obj), undef, "insert returns undef for live object" );
     }
 
     no_live_objects;
