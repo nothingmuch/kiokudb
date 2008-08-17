@@ -3,6 +3,7 @@
 package MooseX::Storage::Directory::Collapser;
 use Moose;
 
+use Scope::Guard;
 use Carp qw(croak);
 use Scalar::Util qw(isweak);
 
@@ -36,7 +37,8 @@ has _entries => (
     isa => 'HashRef',
     is  => "ro",
     init_arg => undef,
-    default  => sub { +{} },
+    clearer => "_clear_entries",
+    writer  => "_set_entries",
 );
 
 # a list of the IDs of all simple entries
@@ -44,7 +46,8 @@ has _simple_entries => (
     isa => 'ArrayRef',
     is  => "ro",
     init_arg => undef,
-    default  => sub { [] },
+    clearer => "_clear_simple_entries",
+    writer  => "_set_simple_entries",
 );
 
 # keeps track of the simple references which are first class (either weak or
@@ -53,15 +56,25 @@ has _first_class => (
     isa => 'HashRef',
     is  => "ro",
     init_arg => undef,
-    default  => sub { +{} },
+    clearer => "_clear_first_class",
+    writer  => "_set_first_class",
 );
 
 has _options => (
     isa => 'HashRef',
     is  => "ro",
     init_arg => undef,
-    default  => sub { +{} },
+    clearer => "_clear_options",
+    writer  => "_set_options",
 );
+
+sub clear_temp_structs {
+    my $self = shift;
+    $self->_clear_entries;
+    $self->_clear_simple_entries;
+    $self->_clear_first_class;
+    $self->_clear_options;
+}
 
 sub collapse_objects {
     my ( $self, @objects ) = @_;
@@ -103,12 +116,19 @@ sub collapse {
     my $resolver     = $args{resolver}     ||= $self->resolver;
     my $live_objects = $args{live_objects} ||= $resolver->live_objects;
 
-    # set up localized env that we don't want to pass around all the time
-    my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
-    local %$entries = ();
-    local %$fc      = ();
-    local @$simple  = ();
-    local %$options = %args;
+    if ( $args{shallow} ) {
+        $args{only} = set(@$objects);
+    }
+
+    my $g = Scope::Guard->new(sub {
+        $self->clear_temp_structs;
+    });
+
+    my %entries;
+    $self->_set_entries(\%entries);
+    $self->_set_options(\%args);
+    $self->_set_first_class({});
+    $self->_set_simple_entries([]);
 
     # recurse through the object, accumilating entries
     $self->visit(@$objects);
@@ -117,7 +137,7 @@ sub collapse {
     # deep entry
     $self->compact_entries() if $self->compact;
 
-    return {%$entries}; # gotta make a copy, it's localized
+    return \%entries;
 }
 
 sub compact_entries {
