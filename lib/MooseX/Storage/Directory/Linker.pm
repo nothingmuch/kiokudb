@@ -82,12 +82,16 @@ sub visit_object {
     }
 }
 
+sub get_or_load_objects {
+    my ( $self, @ids ) = @_;
+
+    map { $self->get_or_load_object($_) } @ids;
+}
+
 sub get_or_load_object {
     my ( $self, $id ) = @_;
 
-    my $l = $self->live_objects;
-
-    if ( defined( my $obj = $l->id_to_object($id) ) ) {
+    if ( defined( my $obj = $self->live_objects->id_to_object($id) ) ) {
         return $obj;
     } else {
         return $self->lazy
@@ -114,7 +118,11 @@ sub lazy_load_object {
 
 sub load_object {
     my ( $self, $id, @args ) = @_;
-    $self->expand_object( $self->backend->get($id), @args );
+    if ( my $entry = $self->backend->get($id) ) {
+        $self->expand_object( $entry, @args );
+    } else {
+        croak "Object not in store: $id";
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
