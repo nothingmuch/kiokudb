@@ -14,7 +14,7 @@ has live_objects => (
     isa => "MooseX::Storage::Directory::LiveObjects",
     is  => "ro",
     required => 1,
-    handles  => [qw(ids_to_objects id_to_object remove)],
+    handles  => [qw(ids_to_objects id_to_object remove insert)],
 );
 
 # get the ID of an object, or make one
@@ -45,15 +45,21 @@ sub objects_to_ids {
 
     my $l = $self->live_objects;
 
+    my %new;
+
     foreach my $obj ( @objects ) {
         my $id;
 
         unless ( $id = $l->object_to_id($obj) ) {
             $id = $self->get_object_id($obj);
-            $l->insert( $id => $obj );
+            $new{$id} = $obj;
         }
 
         push @ids, $id;
+    }
+
+    if ( keys %new ) {
+        $self->register_new_ids( %new );
     }
 
     if ( @objects == 1 ) {
@@ -61,6 +67,11 @@ sub objects_to_ids {
     } else {
         return @ids;
     }
+}
+
+sub register_new_ids {
+    my ( $self, @pairs ) = @_;
+    $self->insert( @pairs );
 }
 
 __PACKAGE__->meta->make_immutable;
