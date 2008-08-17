@@ -56,6 +56,8 @@ my $c = MooseX::Storage::Directory::Collapser->new(
 
 my @entries = $c->collapse_objects($obj);
 
+$entries[0]->root(1);
+
 is( scalar(@entries), 2, "two entries" );
 
 is_deeply(
