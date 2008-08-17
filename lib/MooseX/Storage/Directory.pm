@@ -12,7 +12,7 @@ our $VERSION = "0.01_01";
 our ( $BINARY_UUIDS, $SERIAL_IDS );
 
 use constant SERIAL_IDS           => not not our $SERIAL_IDS;
-use constant RUNTIME_BINARY_UUIDS => !SERIAL_IDS && ( defined($BINARY_UUIDS) ? not not $BINARY_UUIDS : 1 );
+use constant RUNTIME_BINARY_UUIDS => !SERIAL_IDS && ( defined($BINARY_UUIDS) ? not not $BINARY_UUIDS : 0 );
 
 use MooseX::Storage::Directory::Backend;
 use MooseX::Storage::Directory::Resolver;

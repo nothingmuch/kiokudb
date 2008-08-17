@@ -9,7 +9,7 @@ use namespace::clean -except => 'meta';
 
 with qw(MooseX::Storage::Directory::Role::UUIDs::Str);
 
-sub generate_uuid { Data::UUID::LibUUID::new_uuid_binary() }
+sub generate_uuid { Data::UUID::LibUUID::new_uuid_string() }
 
 sub uuid_to_binary { Data::UUID::LibUUID::uuid_to_binary($_[1]) }
 sub binary_to_uuid { Data::UUID::LibUUID::uuid_to_string($_[1]) }
