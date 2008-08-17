@@ -399,3 +399,90 @@ no_live_objects;
 }
 
 no_live_objects;
+
+
+{
+    my $id = $dir->insert( Foo->new( foo => "hippies" ) );
+
+    ok( $id, "insert returns ID for new object" );
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->foo, "hippies", "stored by insert" );
+
+        $obj->foo("blah");
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->foo, "hippies", "not updated" );
+
+        $obj->foo("goddamn");
+
+        $dir->update($obj);
+    }
+
+    no_live_objects;
+
+    my $child = Foo->new( foo => "meddling kids" );
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->foo, "goddamn", "updated" );
+
+        $obj->bar( $child );
+
+        eval { $dir->update($obj) };
+
+        is_deeply( $@, { unknown => $child }, "update with a partial object" );
+
+        $dir->insert($child);
+
+        eval { $dir->update($obj) };
+
+        ok( !$@, "no error this time" );
+    }
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->bar, $child, "updated" );
+
+        undef $child;
+
+        $obj->bar->foo("OH HAI");
+
+        $dir->update( $obj );
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->bar->foo, "meddling kids", "update is shallow" );
+
+        $obj->bar->foo("three");
+
+        $dir->update( $obj->bar );
+    }
+
+    no_live_objects;
+
+    {
+        my $obj = $dir->lookup($id);
+
+        is( $obj->bar->foo, "three", "updated" );
+    }
+}
+
+no_live_objects;
+
+

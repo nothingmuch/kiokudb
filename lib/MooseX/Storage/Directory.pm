@@ -86,7 +86,7 @@ sub lookup {
 
     my $linker = $self->linker;
 
-    my @objects = map { $linker->get_or_load_object($_) } @ids;
+    my @objects = $linker->get_or_load_objects(@ids);
 
     if ( @ids == 1 ) {
         return $objects[0];
@@ -106,7 +106,7 @@ sub all { }
 sub store {
     my ( $self, @objects ) = @_;
 
-    $self->store_objects( objects => \@objects );
+    $self->store_objects( root_set => 1, objects => \@objects );
 
 }
 
@@ -118,8 +118,15 @@ sub insert {
     @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
 
     if ( my @unknown = grep { not $ids{$_} } @objects ) {
-        @ids{@unknown} = $self->store_objects( objects => \@unknown );
-        return @ids{@objects};
+
+        $self->store_objects( root_set => 1, objects => \@unknown );
+
+        # return IDs only for unknown objects
+        if ( defined wantarray ) {
+            idhash my %ret;
+            @ret{@unknown} = $self->live_objects->objects_to_ids(@unknown);
+            return @ret{@objects};
+        }
     }
 
     return;
@@ -128,7 +135,7 @@ sub insert {
 sub update {
     my ( $self, @objects ) = @_;
 
-    $self->store_objects( shallow => 1, objects => \@objects );
+    $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
 
 sub store_objects {
@@ -136,19 +143,22 @@ sub store_objects {
 
     my $objects = $args{objects};
 
-    my $method = $args{shallow} ? "shallow_collapse_objects" : "collapse_objects";
+    my $entries = $self->collapser->collapse(%args); 
 
-    my @entries = $self->collapser->$method(@$objects);
+    my @ids = $self->live_objects->objects_to_ids(@$objects);
 
-    $_->root(1) for @entries[0 .. $#$objects];
+    if ( $args{root_set} ) {
+        $_->root(1) for grep { defined } @{$entries}{@ids};
+    }
 
-    $self->backend->insert(@entries);
+    $self->backend->insert(values %$entries);
 
     # FIXME update index
 
-    
-    if ( defined wantarray ) {
-        return $self->live_objects->objects_to_ids(@$objects);
+    if ( @$objects == 1 ) {
+        return $ids[0];
+    } else {
+        return @ids;
     }
 }
 

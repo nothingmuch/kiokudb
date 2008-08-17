@@ -338,3 +338,25 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         is( scalar(@entries), 1, "one entry with compacter" );
     }
 }
+
+{
+    my $obj = Foo->new( foo => "one", bar => Foo->new( foo => "two" ) );
+
+    {
+        my $v = MooseX::Storage::Directory::Collapser->new(
+            resolver => MooseX::Storage::Directory::Resolver->new(
+                live_objects => MooseX::Storage::Directory::LiveObjects->new
+            ),
+        );
+
+        {
+            my $entries = $v->collapse( objects => [ $obj ] );
+            is( scalar(keys %$entries), 2, "two entries for deep collapse" );
+        }
+
+        {
+            my $entries = $v->collapse( objects => [ $obj ], shallow => 1 );
+            is( scalar(keys %$entries), 1, "one entry for shallow collapse" );
+        }
+    }
+}

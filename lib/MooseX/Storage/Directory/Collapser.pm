@@ -13,6 +13,8 @@ use MooseX::Storage::Directory::Reference;
 use Data::Visitor 0.18;
 use Data::Visitor::Callback;
 
+use Set::Object qw(set);
+
 use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
@@ -95,9 +97,8 @@ sub collapse_known_objects {
     my $live_objects = $self->resolver->live_objects;
 
     my $entries = $self->collapse(
-        objects      => \@objects,
-        resolver     => $live_objects,
-        live_objects => $live_objects,
+        objects    => \@objects,
+        only_known => 1,
     );
 
     my @ids = $self->resolver->live_objects->objects_to_ids(@objects);
@@ -113,8 +114,13 @@ sub collapse {
 
     my $objects = delete $args{objects};
 
-    my $resolver     = $args{resolver}     ||= $self->resolver;
-    my $live_objects = $args{live_objects} ||= $resolver->live_objects;
+    if ( $args{only_known} ) {
+        $args{live_objects} ||= $self->resolver->live_objects;
+        $args{resolver}     ||= $args{live_objects};
+    } else {
+        $args{resolver}     ||= $self->resolver;
+        $args{live_objects} ||= $args{resolver}->live_objects;
+    }
 
     if ( $args{shallow} ) {
         $args{only} = set(@$objects);
@@ -179,7 +185,7 @@ sub compact_entries {
 
 sub make_ref {
     my ( $self, $id, $value ) = @_;
-    
+
     my $weak = isweak($_[2]);
 
     $self->_first_class->{$id} = undef if $weak;
@@ -216,6 +222,11 @@ sub visit_ref {
     my ( $self, $ref ) = @_;
 
     if ( my $id = $self->_ref_id($ref) ) {
+        if ( !$self->compact and my $only = $self->_options->{only} ) {
+            unless ( $only->contains($ref) ) {
+                return $self->make_ref( $id => $_[1] );
+            }
+        }
 
         push @{ $self->_simple_entries }, $id;
 
@@ -259,6 +270,12 @@ sub visit_object {
 
     if ( my $meta = Class::MOP::get_metaclass_by_name($class) ) {
         my $id = $self->_object_id($object) || return;
+
+        if ( my $only = $self->_options->{only} ) {
+            unless ( $only->contains($object) ) {
+                return $self->make_ref( $id => $_[1] );
+            }
+        }
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $object );
