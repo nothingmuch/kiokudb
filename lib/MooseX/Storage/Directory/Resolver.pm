@@ -21,11 +21,16 @@ has live_objects => (
 sub get_object_id {
     my ( $self, $object ) = @_;
 
-    if ( blessed($object) and $object->can("does") and $object->does("MooseX::Storage::Directory::UID") ) {
-        return $object->storage_uid;
-    } else {
-        return $self->generate_uuid;
-    }
+    # FIXME Objects of this sort will probably do their own pre-resolution,
+    # with an MXSD instance belonging to the metaclass. I don't think we can do
+    # any of this yet, and that it will emerge from the first real moose poop
+    # impl.
+
+    #if ( blessed($object) and $object->can("does") and $object->does("MooseX::Storage::Directory::UID") ) {
+    #    return $object->storage_uid;
+    #} else {
+    return $self->generate_uuid;
+    #}
 }
 
 sub object_to_id {
