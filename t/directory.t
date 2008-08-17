@@ -485,4 +485,27 @@ no_live_objects;
 
 no_live_objects;
 
+{
+     my $id = $dir->store(
+        Foo->new(
+            foo => "dancing",
+            bar => Foo->new(
+                foo => "oh",
+            ),
+        ),
+    );
 
+    no_live_objects;
+
+    isa_ok( $dir->lookup($id), "Foo" );
+
+    no_live_objects;
+
+    $dir->delete($id);
+
+    no_live_objects;
+
+    is( $dir->lookup($id), undef, "deleted" );
+};
+
+no_live_objects;

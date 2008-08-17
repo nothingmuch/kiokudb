@@ -172,7 +172,18 @@ sub store_objects {
     }
 }
 
-sub delete { }
+sub delete {
+    my ( $self, @objects ) = @_;
+
+    my @ids = (
+        $self->live_objects->objects_to_ids(grep { ref } @objects),
+        grep { not ref } @objects,
+    );
+
+    # FIXME update index
+
+    $self->backend->delete(@ids);
+}
 
 __PACKAGE__->meta->make_immutable;
 
