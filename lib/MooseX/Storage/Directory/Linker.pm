@@ -122,7 +122,7 @@ sub load_object {
     if ( my $entry = $self->backend->get($id) ) {
         $self->expand_object( $entry, @args );
     } else {
-        croak "Object not in store: $id";
+        die { missing => $id };
     }
 }
 

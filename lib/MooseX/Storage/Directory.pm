@@ -86,12 +86,22 @@ sub lookup {
 
     my $linker = $self->linker;
 
-    my @objects = $linker->get_or_load_objects(@ids);
+    my ( $e, @objects );
 
-    if ( @ids == 1 ) {
-        return $objects[0];
+    eval {
+        local $@;
+        eval { @objects = $linker->get_or_load_objects(@ids) };
+        $e = $@;
+    };
+
+    if ( ref $e and $e->{missing} ) {
+        return;
     } else {
-        return @objects;
+        if ( @ids == 1 ) {
+            return $objects[0];
+        } else {
+            return @objects;
+        }
     }
 }
 
