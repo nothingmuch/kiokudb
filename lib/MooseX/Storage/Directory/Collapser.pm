@@ -76,7 +76,7 @@ sub collapse_objects {
     return ( @root_set, values %$entries );
 }
 
-sub shallow_collapse_objects {
+sub collapse_known_objects {
     my ( $self, @objects ) = @_;
 
     my $live_objects = $self->resolver->live_objects;
@@ -173,7 +173,7 @@ sub make_ref {
 sub visit_seen {
     my ( $self, $seen, $prev ) = @_;
 
-    my $id = $self->_seen_id($seen) || return;
+    my $id = $self->_seen_id($seen);
 
     # register ID as first class
     $self->_first_class->{$id} = undef;
@@ -191,7 +191,7 @@ sub _seen_id {
         return refaddr($seen);
     }
 
-    return;
+    die { unknown => $seen };
 }
 
 sub visit_ref {
@@ -200,7 +200,7 @@ sub visit_ref {
     # FIXME for shallow visiting to work we need to subvert this case,
     # allocating a private temporary ID if compact is true.
 
-    my $id = $self->_ref_id($ref) || return;
+    my $id = $self->_ref_id($ref);
 
     push @{ $self->_simple_entries }, $id;
     
@@ -221,7 +221,7 @@ sub _ref_id {
         return refaddr($self);
     }
 
-    return;
+    die { unknown => $ref };
 }
 
 sub visit_object {
@@ -268,7 +268,7 @@ sub visit_object {
 
 sub _object_id {
     my ( $self, $object ) = @_;
-    $self->_options->{resolver}->object_to_id($object);
+    $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
 }
 
 __PACKAGE__->meta->make_immutable;

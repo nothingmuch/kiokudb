@@ -49,21 +49,36 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     );
 
     {
-        my @partial = $v->shallow_collapse_objects($foo);
-        is( scalar(grep { defined && warn $_ } @partial), 0, "no entries for shallow collapse" );
+        my @partial = eval { $v->collapse_known_objects($foo) };
+        is_deeply( $@, { unknown => $foo }, "error" );
+        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
+    }
+
+    {
+        my $obj = Foo->new( bar => $foo->bar );
+
+        $v->resolver->object_to_id($obj);
+
+        my @partial = eval { $v->collapse_known_objects($obj) };
+        is_deeply( $@, { unknown => $foo->bar }, "error" );
+        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
     }
 
     $v->resolver->object_to_id($foo->bar);
 
     {
-        my @partial = $v->shallow_collapse_objects($foo);
+        my @partial = eval { $v->collapse_known_objects($foo) };
+        is_deeply( $@, { unknown => $foo }, "error" );
         is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
     }
 
     {
-        my @partial = $v->shallow_collapse_objects($foo->bar);
+        my @partial = eval { $v->collapse_known_objects($foo->bar) };
+        ok( !$@, "no error" );
         is( scalar(grep { defined } @partial), 1, "one entry for shallow collapse" );
     }
+
+    $v->resolver->object_to_id($foo->bar);
 
     my @entries = $v->collapse_objects($foo);
 
