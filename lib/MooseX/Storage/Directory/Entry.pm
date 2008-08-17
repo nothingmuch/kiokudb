@@ -44,7 +44,7 @@ sub STORABLE_thaw {
 
     $self->id($id);
     $self->root(1) if $root;;
-    $self->class( $class->meta ) if $class; # FIXME
+    $self->class( Class::MOP::Class->initialize($class) ) if $class;
     $self->data($data);
 
     return $self;
