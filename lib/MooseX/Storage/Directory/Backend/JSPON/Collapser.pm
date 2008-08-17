@@ -38,7 +38,7 @@ sub visit_object {
     } elsif ( obj $object, 'MooseX::Storage::Directory::Entry' ) {
         croak "Unsupported data for JSPON: " . $object->data unless ref($object->data) eq 'HASH';
         return {
-            ( $object->has_class ? ( __CLASS__ => $object->class->identifier ) : () ),
+            ( $object->has_class ? ( __CLASS__ => $object->class ) : () ),
             id        => $self->format_uid($object->id),
             $self->visit_hash_entries($object->data),
         };

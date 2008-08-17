@@ -22,7 +22,7 @@ use ok 'MooseX::Storage::Directory::Entry';
         MooseX::Storage::Directory::Entry->new(
             id => "foo",
             root => 1,
-            class => Foo->meta,
+            class => "Foo",
             data => { oi => "vey" },
         ),
         MooseX::Storage::Directory::Entry->new(

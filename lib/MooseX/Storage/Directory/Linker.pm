@@ -33,15 +33,16 @@ sub expand_object {
     my ( $self, $entry, %args ) = @_;
 
     if ( my $class = $entry->class ) {
+        my $meta = Class::MOP::get_metaclass_by_name($class);
 
-        my $instance = $class->get_meta_instance->create_instance();
+        my $instance = $meta->get_meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
         $self->live_objects->insert( $entry->id => $instance ) unless $args{no_register};
 
         my $data = $entry->data;
 
-        foreach my $attr ( $class->compute_all_applicable_attributes ) {
+        foreach my $attr ( $meta->compute_all_applicable_attributes ) {
             my $name = $attr->name;
             next unless exists $data->{$name};
             my $value = $data->{$name};

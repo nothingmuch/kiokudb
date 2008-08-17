@@ -235,13 +235,13 @@ sub visit_object {
     # that is object_to_id is live_objects, not resolver
     # this is required for shallow updates, and of course much more efficient
 
-    if ( $object->can("meta") ) {
+    my $class = ref $object;
+
+    if ( my $meta = Class::MOP::get_metaclass_by_name($class) ) {
         my $id = $self->_object_id($object) || return;
 
         # Data::Visitor stuff for circular refs
         $self->_register_mapping( $object, $object );
-
-        my $meta = $object->meta;
 
         my @attrs = $meta->compute_all_applicable_attributes;
 
@@ -261,7 +261,7 @@ sub visit_object {
         $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
             data  => $hash,
             id    => $id,
-            class => $meta,
+            class => $class,
         );
 
         # we pass $_[1], an alias, so that isweak works

@@ -19,7 +19,7 @@ has data => (
 );
 
 has class => (
-    isa => "Class::MOP::Class",
+    isa => "ClassName",
     is  => "rw",
     predicate => "has_class",
 );
@@ -31,7 +31,7 @@ sub STORABLE_freeze {
         join(",",
             $self->id,
             !!$self->root,
-            $self->has_class ? $self->class->identifier : '',
+            $self->class || '',
         ),
         $self->data,
     );
@@ -44,7 +44,7 @@ sub STORABLE_thaw {
 
     $self->id($id);
     $self->root(1) if $root;;
-    $self->class( Class::MOP::Class->initialize($class) ) if $class;
+    $self->class( $class) if $class;
     $self->data($data);
 
     return $self;

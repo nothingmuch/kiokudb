@@ -87,7 +87,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
-    is( $entries[0]->class->name, 'Foo', "metaclass" );
+    is( $entries[0]->class, 'Foo', "class" );
 
     is_deeply(
         $entries[0]->data,
@@ -179,7 +179,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
-    is( $entries[0]->class->name, 'Foo', "metaclass" );
+    is( $entries[0]->class, 'Foo', "class" );
 
     is_deeply(
         $entries[0]->data,
