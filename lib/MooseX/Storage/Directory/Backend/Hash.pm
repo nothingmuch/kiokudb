@@ -44,7 +44,7 @@ sub get {
 sub insert {
     my ( $self, @entries ) = @_;
 
-    @{ $self->storage }{ map { $_-> id } @entries } = map { freeze($_) } @entries;
+    @{ $self->storage }{ map { $_->id } @entries } = map { freeze($_) } @entries;
 }
 
 sub delete {
