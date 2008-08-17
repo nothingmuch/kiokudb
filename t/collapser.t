@@ -51,7 +51,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     {
         my @partial = eval { $v->collapse_known_objects($foo) };
         is_deeply( $@, { unknown => $foo }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
+        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
     }
 
     {
@@ -61,7 +61,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 
         my @partial = eval { $v->collapse_known_objects($obj) };
         is_deeply( $@, { unknown => $foo->bar }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
+        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
     }
 
     $v->resolver->object_to_id($foo->bar);
@@ -69,13 +69,13 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     {
         my @partial = eval { $v->collapse_known_objects($foo) };
         is_deeply( $@, { unknown => $foo }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for shallow collapse" );
+        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
     }
 
     {
         my @partial = eval { $v->collapse_known_objects($foo->bar) };
         ok( !$@, "no error" );
-        is( scalar(grep { defined } @partial), 1, "one entry for shallow collapse" );
+        is( scalar(grep { defined } @partial), 1, "one entry for known obj collapse" );
     }
 
     $v->resolver->object_to_id($foo->bar);
@@ -290,6 +290,25 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         },
         "shared ref",
     );
+}
+
+{
+    my $v = MooseX::Storage::Directory::Collapser->new(
+        resolver => MooseX::Storage::Directory::Resolver->new(
+            live_objects => MooseX::Storage::Directory::LiveObjects->new
+        ),
+    );
+
+    my $data = { };
+    $data->{self} = $data;
+
+    my $obj = Foo->new( bar => $data );
+
+    $v->resolver->object_to_id($obj);
+
+    my @partial = eval { $v->collapse_known_objects($obj) };
+    is_deeply( $@, { unknown => $data }, "error" );
+    is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse with circular simple structure" );
 }
 
 {

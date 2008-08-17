@@ -4,7 +4,7 @@ package MooseX::Storage::Directory::Collapser;
 use Moose;
 
 use Carp qw(croak);
-use Scalar::Util qw(isweak refaddr);
+use Scalar::Util qw(isweak);
 
 use MooseX::Storage::Directory::Entry;
 use MooseX::Storage::Directory::Reference;
@@ -187,8 +187,6 @@ sub _seen_id {
 
     if ( my $id = $self->_options->{live_objects}->object_to_id($seen) ) {
         return $id;
-    } elsif ( $self->compact ) {
-        return refaddr($seen);
     }
 
     die { unknown => $seen };
@@ -197,19 +195,23 @@ sub _seen_id {
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    # FIXME for shallow visiting to work we need to subvert this case,
-    # allocating a private temporary ID if compact is true.
+    if ( my $id = $self->_ref_id($ref) ) {
 
-    my $id = $self->_ref_id($ref);
+        push @{ $self->_simple_entries }, $id;
 
-    push @{ $self->_simple_entries }, $id;
-    
-    $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
-        id   => $id,
-        data => $self->SUPER::visit_ref($_[1]),
-    );
+        $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
+            id   => $id,
+            data => $self->SUPER::visit_ref($_[1]),
+        );
 
-    $self->make_ref( $id => $_[1] );
+        $self->make_ref( $id => $_[1] );
+    } elsif ( $self->compact and not isweak($_[1]) ) {
+        # for now we assume this data just won't be shared, instead of
+        # compacting it later.
+        return $self->SUPER::visit_ref($_[1]);
+    } else {
+        die { unknown => $ref };
+    }
 }
 
 sub _ref_id {
@@ -218,7 +220,9 @@ sub _ref_id {
     if ( my $id = $self->_options->{resolver}->object_to_id($ref) ) {
         return $id;
     } elsif ( $self->compact ) {
-        return refaddr($self);
+        # if we're compacting this is not an error, we just compact in place
+        # and we generate an error if we encounter this data again in _seen_id
+        return;
     }
 
     die { unknown => $ref };
@@ -260,6 +264,7 @@ sub visit_object {
             class => $meta,
         );
 
+        # we pass $_[1], an alias, so that isweak works
         return $self->make_ref( $id => $_[1] );
     } else {
         croak "FIXME non moose objects";
