@@ -82,7 +82,7 @@ sub _build_linker {
 }
 
 sub lookup {
-    my ( $self, @ids ) = @_; # FIXME @ids
+    my ( $self, @ids ) = @_;
 
     my $linker = $self->linker;
 
