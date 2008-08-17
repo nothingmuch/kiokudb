@@ -9,7 +9,7 @@ use Scalar::Util qw(weaken);
 use Scope::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
 use Carp qw(croak);
-use Devel::PartialDump qw(dump);
+use Devel::PartialDump qw(croak);
 
 use namespace::clean -except => 'meta';
 
@@ -94,8 +94,8 @@ sub insert {
     my %id_to_obj = @pairs;
 
     foreach my $object ( values %id_to_obj ) {
-        croak dump($object, " is not a reference") unless ref($object);
-        croak dump($object, " is already registered as $o->{$object}{id}") if exists $o->{$object};
+        croak($object, " is not a reference") unless ref($object);
+        croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object};
     }
 
     foreach my $id ( keys %id_to_obj ) {
