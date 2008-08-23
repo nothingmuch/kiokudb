@@ -16,7 +16,7 @@ sub serialize {
 sub deserialize {
     my ( $self, $blob ) = @_;
 
-    return dclone($blob);
+    return defined($blob) && dclone($blob);
 }
 
 __PACKAGE__
