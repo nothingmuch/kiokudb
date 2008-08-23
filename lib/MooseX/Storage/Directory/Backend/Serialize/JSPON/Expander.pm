@@ -24,10 +24,7 @@ sub expand_jspon {
     if ( exists $data->{__CLASS__} ) {
         # check the class more thoroughly here ...
         my ($class, $version, $authority) = (split '-' => delete $data->{__CLASS__});
-        local $@;
-        my $meta = eval { $class->meta };
-        croak "Class ($class) is not loaded, cannot unpack" if $@;
-        push @attrs, class => $meta;
+        push @attrs, class => $class;
     }
 
     return MooseX::Storage::Directory::Entry->new(
