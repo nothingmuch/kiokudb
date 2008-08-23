@@ -62,6 +62,31 @@ sub object_to_id {
     return undef;
 }
 
+sub object_to_entry {
+    my ( $self, $obj ) = @_;
+
+    if ( my $ent = $self->_objects->{$obj} ){
+        return $ent->{entry};
+    }
+
+    return undef;
+}
+
+sub update_entry {
+    my ( $self, $entry ) = @_;
+
+    my $id = $entry->id;
+
+    my $obj = $self->_ids->{$id};
+
+    croak "The object doesn't exist"
+        unless defined $obj;
+
+    my $ent = $self->_objects->{$obj};
+
+    $ent->{entry} = $entry;
+}
+
 sub remove {
     my ( $self, @stuff ) = @_;   
 
@@ -86,34 +111,36 @@ sub remove {
 sub insert {
     my ( $self, @pairs ) = @_;
 
-    croak "The arguments must be an list of pairs of IDs to objects"
+    croak "The arguments must be an list of pairs of IDs/Entries to objects"
         unless @pairs % 2 == 0;
 
     my ( $o, $i ) = ( $self->_objects, $self->_ids );
 
-    my %id_to_obj = @pairs;
+    while ( @pairs ) {
+        my ( $id, $object ) = splice @pairs, 0, 2;
+        my $entry;
 
-    foreach my $object ( values %id_to_obj ) {
+        if ( ref $id ) {
+            $entry = $id;
+            $id = $entry->id;
+        }
+
         croak($object, " is not a reference") unless ref($object);
         croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object};
-    }
 
-    foreach my $id ( keys %id_to_obj ) {
-        croak "An object with the id '$id' is already registered"
-            if exists $i->{$id};
-    }
+        if ( exists $i->{$id} ) {
+            croak "An object with the id '$id' is already registered";
+        } else {
+            weaken($i->{$id} = $object);
 
-    foreach my $id ( keys %id_to_obj ) {
-        my $object = $id_to_obj{$id};
-
-        weaken($i->{$id} = $object);
-
-        $o->{$object} = {
-            id => $id,
-            guard => Scope::Guard->new(sub {
-                delete $i->{$id};
-            }),
-        },
+            $o->{$object} = {
+                id => $id,
+                entry => $entry,
+                guard => Scope::Guard->new(sub {
+                    delete $i->{$id};
+                }),
+            };
+        }
     }
 }
 

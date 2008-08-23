@@ -24,6 +24,34 @@ has class => (
     predicate => "has_class",
 );
 
+has backend_data => (
+    isa => "Any",
+    is  => "rw",
+);
+
+has prev => (
+    isa => __PACKAGE__,
+    is  => "rw",
+    predicate => "has_prev",
+);
+
+has live_objects => (
+    isa => "MooseX::Storage::Directory::LiveObjects",
+    is  => "rw",
+    predicate => "has_live_object",
+    clearer   => "clear_live_objects",
+    weak_ref  => 1,
+);
+
+sub update_live_objects {
+    my $self = shift;
+
+    if ( my $l = $self->live_objects ) {
+        $l->update_entry($self);
+        $self->clear_live_objects;
+    }
+}
+
 sub STORABLE_freeze {
     my ( $self, $cloning ) = @_;
 

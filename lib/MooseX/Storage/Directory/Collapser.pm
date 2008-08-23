@@ -230,9 +230,14 @@ sub visit_ref {
 
         push @{ $self->_simple_entries }, $id;
 
+        my $live_objects = $self->_options->{live_objects};
+        my $prev = $live_objects->object_to_entry($ref);
+
         $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
-            id   => $id,
-            data => $self->SUPER::visit_ref($_[1]),
+            live_objects => $live_objects,
+            id           => $id,
+            data         => $self->SUPER::visit_ref($_[1]),
+            ( $prev ? ( prev => $prev ) : () ),
         );
 
         $self->make_ref( $id => $_[1] );
@@ -295,10 +300,15 @@ sub visit_object {
             } @attrs
         };
 
+        my $live_objects = $self->_options->{live_objects};
+        my $prev = $live_objects->object_to_entry($object);
+
         $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
-            data  => $hash,
-            id    => $id,
-            class => $class,
+            live_objects => $live_objects,
+            data         => $hash,
+            id           => $id,
+            class        => $class,
+            ( $prev ? ( prev => $prev ) : () ),
         );
 
         # we pass $_[1], an alias, so that isweak works

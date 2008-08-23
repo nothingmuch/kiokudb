@@ -38,7 +38,7 @@ sub expand_object {
         my $instance = $meta->get_meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
-        $self->live_objects->insert( $entry->id => $instance ) unless $args{no_register};
+        $self->live_objects->insert( $entry => $instance ) unless $args{no_register};
 
         my $data = $entry->data;
 
@@ -61,7 +61,7 @@ sub expand_object {
             # the visitor such that _register_mapping registers with the live
             # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
             my $placeholder = {};
-            $self->live_objects->insert( $entry->id => $placeholder );
+            $self->live_objects->insert( $entry => $placeholder );
             my $data = $self->visit( $entry->data );
             swap($data, $placeholder);
             return $placeholder;
