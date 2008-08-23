@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MooseX::Storage::Directory::Backend::JSPON::Expander;
+package MooseX::Storage::Directory::Backend::Serialize::JSPON::Expander;
 use Moose;
 
 use Carp qw(croak);

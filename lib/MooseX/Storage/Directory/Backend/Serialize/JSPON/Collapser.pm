@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package MooseX::Storage::Directory::Backend::JSPON::Collapser;
+package MooseX::Storage::Directory::Backend::Serialize::JSPON::Collapser;
 use Moose;
 
 use Check::ISA;

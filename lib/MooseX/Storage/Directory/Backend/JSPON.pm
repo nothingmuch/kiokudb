@@ -10,8 +10,6 @@ use IO::AtomicFile;
 use JSON;
 
 use MooseX::Storage::Directory ();
-use MooseX::Storage::Directory::Backend::JSPON::Expander;
-use MooseX::Storage::Directory::Backend::JSPON::Collapser;
 
 use MooseX::Types::Path::Class qw(Dir File);
 
@@ -19,6 +17,7 @@ use namespace::clean -except => 'meta';
 
 with qw(
     MooseX::Storage::Directory::Backend
+    MooseX::Storage::Directory::Backend::Serialize::JSPON
     MooseX::Storage::Directory::Role::StorageUUIDs
 );
 
@@ -114,34 +113,6 @@ sub _build_json {
     my $json = JSON->new->canonical;
     $json->pretty if $self->pretty;
     return $json;
-}
-
-has expander => (
-    isa => "MooseX::Storage::Directory::Backend::JSPON::Expander",
-    is  => "rw",
-    lazy_build => 1,
-    handles => [qw(expand_jspon)],
-);
-
-sub _build_expander {
-    my $self = shift;
-    MooseX::Storage::Directory::Backend::JSPON::Expander->new(
-        binary_uuids => $self->binary_uuids,
-    );
-}
-
-has collapser => (
-    isa => "MooseX::Storage::Directory::Backend::JSPON::Collapser",
-    is  => "rw",
-    lazy_build => 1,
-    handles => [qw(collapse_jspon)],
-);
-
-sub _build_collapser {
-    my $self = shift;
-    MooseX::Storage::Directory::Backend::JSPON::Collapser->new(
-        binary_uuids => $self->binary_uuids,
-    );
 }
 
 sub write_lock {
