@@ -3,6 +3,7 @@
 package MooseX::Storage::Directory::Backend::BDB;
 use Moose;
 
+use Scalar::Util qw(weaken);
 use Storable qw(nfreeze thaw);
 use BerkeleyDB;
 use MooseX::Types::Path::Class qw(Dir);
@@ -49,6 +50,8 @@ has dbm => (
             -Filename => 'objects.db',
             -Flags    => DB_CREATE,
         );
+
+        weaken $self;
 
         $hash->filter_store_key(sub { $_ = $self->format_uid($_) });
         $hash->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
