@@ -3,23 +3,10 @@
 package MooseX::Storage::Directory::Backend::Hash;
 use Moose;
 
-BEGIN {
-    local $@;
-    eval {
-        # nicer dumps
-        require Clone;
-        ( *freeze, *thaw ) = ( \&Clone::clone, \&Clone::clone );
-        1;
-    } or do {
-        # more reliable
-        require Storable;
-        Storable->import(qw(freeze thaw));
-    };
-}
-
 use namespace::clean -except => 'meta';
 
 with qw(
+    MooseX::Storage::Directory::Backend::Serialize::Memory
     MooseX::Storage::Directory::Backend
 );
 
@@ -32,7 +19,7 @@ has storage => (
 sub get {
     my ( $self, @uids ) = @_;
 
-    my @objs = map { thaw($_) } @{ $self->storage }{@uids};
+    my @objs = map { $self->deserialize($_) } @{ $self->storage }{@uids};
 
     if ( @objs == 1 ) {
         return $objs[0];
@@ -44,7 +31,7 @@ sub get {
 sub insert {
     my ( $self, @entries ) = @_;
 
-    @{ $self->storage }{ map { $_->id } @entries } = map { freeze($_) } @entries;
+    @{ $self->storage }{ map { $_->id } @entries } = map { $self->serialize($_) } @entries;
 }
 
 sub delete {

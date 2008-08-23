@@ -12,6 +12,7 @@ use namespace::clean -except => 'meta';
 
 with qw(
     MooseX::Storage::Directory::Backend
+    MooseX::Storage::Directory::Backend::Serialize::Storable
     MooseX::Storage::Directory::Role::StorageUUIDs
 );
 
@@ -55,8 +56,8 @@ has dbm => (
 
         $hash->filter_store_key(sub { $_ = $self->format_uid($_) });
         $hash->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
-        $hash->filter_store_value(sub { $_ = nfreeze($_) });
-        $hash->filter_fetch_value(sub { $_ = thaw($_) });
+        $hash->filter_store_value(sub { $_ = $self->serialize($_) });
+        $hash->filter_fetch_value(sub { $_ = $self->deserialize($_) });
 
         return $hash;
     },
