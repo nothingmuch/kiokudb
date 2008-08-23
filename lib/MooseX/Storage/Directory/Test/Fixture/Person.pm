@@ -43,19 +43,22 @@ has root => ( # as in "of the problem"
 sub populate {
     my $self = shift;
 
-    my $junior     = p("Geroge W. Bush");
-    my $laura      = p("Laura Bush");
-    my $the_drunk  = p("Jenna Bush");
-    my $other_one  = p("Barbara Pierce Bush");
-    my $daddy      = p("George H. W. Bush");
-    my $barb       = p("Barbara Bush");
-    my $jeb        = p("Jeb Bush");
-    my $dick       = p("Dick Cheney");
-    my $connie     = p("Condoleezza Rice");
+    my $junior    = p("Geroge W. Bush");
+    my $laura     = p("Laura Bush");
+    my $the_drunk = p("Jenna Bush");
+    my $other_one = p("Barbara Pierce Bush");
+    my $daddy     = p("George H. W. Bush");
+    my $barb      = p("Barbara Bush");
+    my $jeb       = p("Jeb Bush");
+    my $dick      = p("Dick Cheney");
+    my $condie    = p("Condoleezza Rice");
+    my $putin     = p("Vladimir Putin");
 
     married( $junior, $laura, $the_drunk, $other_one );
     married( $daddy, $barb, $junior, $jeb );
-    clique( $junior, $connie, $dick );
+    clique( $junior, $condie, $dick );
+
+    push @{ $junior->friends }, $putin;
 
     $self->root( $self->directory->store( $junior ) );
     
@@ -93,6 +96,37 @@ sub verify {
         [ $junior, $junior->so ],
         "mutual refs in nested and non nested structure",
     );
+
+    is_deeply(
+        [ map { $_->name } @{ $junior->friends } ],
+        [ "Condoleezza Rice", "Dick Cheney", "Vladimir Putin" ],
+        "mutual refs in nested and non nested structure",
+    );
+
+    is_deeply(
+        $junior->friends->[-1]->friends,
+        [],
+        "Putin is paranoid",
+    );
+
+    pop @{ $junior->friends };
+
+    $self->directory->update($junior);
+
+    circular_off($junior);
+    undef $junior;
+    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+
+    $junior = $self->directory->lookup( $self->root );
+
+    isa_ok( $junior, "MooseX::Storage::Directory::Test::Person" );
+
+    is_deeply(
+        [ map { $_->name } @{ $junior->friends } ],
+        [ "Condoleezza Rice", "Dick Cheney" ],
+        "Georgia got plastered",
+    );
+
 }
 
 __PACKAGE__->meta->make_immutable;

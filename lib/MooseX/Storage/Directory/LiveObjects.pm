@@ -88,12 +88,12 @@ sub update_entry {
 }
 
 sub remove {
-    my ( $self, @stuff ) = @_;   
+    my ( $self, @stuff ) = @_;
 
     my ( $o, $i ) = ( $self->_objects, $self->_ids );
 
     foreach my $thing ( @stuff ) {
-        if ( ref $thing ) { 
+        if ( ref $thing ) {
             if ( my $ent = delete $o->{$thing} ) {
                 delete $i->{$ent->{id}};
                 $ent->{guard}->dismiss;

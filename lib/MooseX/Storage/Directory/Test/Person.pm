@@ -18,16 +18,19 @@ has so => (
 has parents => (
     isa => "ArrayRef[MooseX::Storage::Directory::Test::Person]",
     is  => "rw",
+    default => sub { [] },
 );
 
 has kids => (
     isa => "ArrayRef[MooseX::Storage::Directory::Test::Person]",
     is  => "rw",
+    default => sub { [] },
 );
 
 has friends => (
     isa => "ArrayRef[MooseX::Storage::Directory::Test::Person]",
     is  => "rw",
+    default => sub { [] },
 );
 
 __PACKAGE__->meta->make_immutable;
