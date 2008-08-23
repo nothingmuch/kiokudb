@@ -94,14 +94,18 @@ sub lookup {
         $e = $@;
     };
 
-    if ( ref $e and $e->{missing} ) {
-        return;
-    } else {
-        if ( @ids == 1 ) {
-            return $objects[0];
-        } else {
-            return @objects;
+    if ( $e ) {
+        if ( ref $e and $e->{missing} ) {
+            return;
         }
+
+        die $e;
+    }
+
+    if ( @ids == 1 ) {
+        return $objects[0];
+    } else {
+        return @objects;
     }
 }
 
