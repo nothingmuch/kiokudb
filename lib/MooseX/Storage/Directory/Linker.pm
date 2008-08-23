@@ -77,7 +77,10 @@ sub visit_object {
         # sure the container this gets put in is weakened
         # not a huge issue because usually we'll encounter attrs with weak_ref
         # => 1, but this is still needed for correctness
-        return $self->get_or_load_object( $object->id );
+
+        # GAH! just returning the object is broken, gotta find out why
+        my $obj = $self->get_or_load_object( $object->id );
+        return $obj;
     } else {
         croak "Unexpected object $object in entry";
     }
