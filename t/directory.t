@@ -122,30 +122,6 @@ no_live_objects;
 no_live_objects;
 
 {
-
-    $dir->linker->lazy(1);
-
-    my $obj = $dir->lookup($id);
-
-    is( scalar($dir->live_objects->live_objects), 1, "only one thunk loaded so far" );
-
-    is( blessed($obj), "Data::Thunk::Object", "it's actually a thunk" );
-
-    isa_ok( $obj, "Foo" ); 
-    is( $obj->foo, "dancing", "field works" );
-
-    is( blessed($obj), "Foo", "thunk upgraded to object" );
-
-    is( scalar($dir->live_objects->live_objects), 2, "two objects loaded" );
-
-    is( $obj->bar->parent, $obj, "circular ref still correct even when lazy" );
-}
-
-no_live_objects;
-
-{
-    $dir->linker->lazy(0);
-
     my @ids = do{
         my $shared = Foo->new( foo => "shared" );
 
@@ -175,8 +151,6 @@ no_live_objects;
 no_live_objects;
 
 {
-    $dir->linker->lazy(0);
-
     my @ids = do{
         my $shared = { foo => "shared", object => Foo->new( foo => "shared child" ) };
 
@@ -211,8 +185,6 @@ no_live_objects;
 no_live_objects;
 
 {
-    $dir->linker->lazy(0);
-
     my $id = do{
         my $shared = { foo => "hippies" };
 

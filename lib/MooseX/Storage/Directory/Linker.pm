@@ -23,12 +23,6 @@ has backend => (
     required => 1,
 );
 
-has lazy => (
-    isa => "Bool",
-    is  => "rw",
-    default => 0,
-);
-
 sub expand_object {
     my ( $self, $entry, %args ) = @_;
 
@@ -38,7 +32,7 @@ sub expand_object {
         my $instance = $meta->get_meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
-        $self->live_objects->insert( $entry => $instance ) unless $args{no_register};
+        $self->live_objects->insert( $entry => $instance );
 
         my $data = $entry->data;
 
@@ -51,21 +45,17 @@ sub expand_object {
 
         return $instance;
     } else {
-        if ( $args{no_register} ) {
-            return $self->visit($entry->data);
-        } else {
-            # FIXME remove Data::Swap
-            # make sure we have some sort of refaddr in case of circular refs to simple structures
-            # after visiting $entry->data we swap it
-            # the alternative (no Data::Swap) approach is to register the object by subclassing
-            # the visitor such that _register_mapping registers with the live
-            # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
-            my $placeholder = {};
-            $self->live_objects->insert( $entry => $placeholder );
-            my $data = $self->visit( $entry->data );
-            swap($data, $placeholder);
-            return $placeholder;
-        }
+        # FIXME remove Data::Swap
+        # make sure we have some sort of refaddr in case of circular refs to simple structures
+        # after visiting $entry->data we swap it
+        # the alternative (no Data::Swap) approach is to register the object by subclassing
+        # the visitor such that _register_mapping registers with the live
+        # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
+        my $placeholder = {};
+        $self->live_objects->insert( $entry => $placeholder );
+        my $data = $self->visit( $entry->data );
+        swap($data, $placeholder);
+        return $placeholder;
     }
 }
 
@@ -98,26 +88,8 @@ sub get_or_load_object {
     if ( defined( my $obj = $self->live_objects->id_to_object($id) ) ) {
         return $obj;
     } else {
-        return $self->lazy
-            ? $self->lazy_load_object($id)
-            : $self->load_object($id);
+        $self->load_object($id);
     }
-}
-
-sub lazy_load_object {
-    my ( $self, $id ) = @_;
-
-    require Data::Thunk;
-
-    my $obj = Data::Thunk::lazy_object(sub {
-        $self->load_object( $id, no_register => 1 );
-    });
-
-    # pre-register the thunk as if it were the object
-    # hence the no_register to expand_object
-    $self->live_objects->insert( $id => $obj );
-
-    return $obj;
 }
 
 sub load_object {
