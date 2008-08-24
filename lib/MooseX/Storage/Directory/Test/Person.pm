@@ -10,6 +10,11 @@ has name => (
     is  => "rw",
 );
 
+has job => (
+    isa => "Str",
+    is  => "rw",
+);
+
 has so => (
     isa => "MooseX::Storage::Directory::Test::Person",
     is  => "rw",

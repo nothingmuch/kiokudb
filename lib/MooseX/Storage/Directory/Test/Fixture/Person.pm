@@ -166,6 +166,13 @@ sub verify {
         "Putin is a dead object",
     );
 
+    $junior->job("Warlord");
+    $junior->parents->[0]->job("Puppet Master");
+    $junior->friends->[0]->job("Secretary of State");
+    $junior->so->job("Prima Donna, Author, Teacher, Librarian");
+
+    $self->directory->update($self->live_objects->live_objects);
+
     circular_off($junior);
     undef($junior);
     is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
@@ -182,6 +189,8 @@ sub verify {
 
         is( $marge->so->name, "Homer J. Simpson", "inter object rels" );
     }
+
+    $homer->job("Safety Inspector, Sector 7-G");
 
     $self->directory->update($homer);
 
