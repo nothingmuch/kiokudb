@@ -35,12 +35,7 @@ use namespace::clean -except => 'meta';
 
 with qw(MooseX::Storage::Directory::Test::Fixture);
 
-has dubya => (
-    isa => "Str",
-    is  => "rw",
-);
-
-has homer => (
+has [qw(homer dubya putin)] => (
     isa => "Str",
     is  => "rw",
 );
@@ -83,10 +78,11 @@ sub populate {
 
     push @{ $junior->friends }, $putin;
 
-    my @roots = $self->directory->store( $junior, $homer );
+    my @roots = $self->directory->store( $junior, $putin, $homer );
 
     $self->dubya($roots[0]);
-    $self->homer($roots[1]);
+    $self->putin($roots[1]);
+    $self->homer($roots[2]);
 
     circular_off($junior);
     circular_off($homer);
@@ -207,6 +203,23 @@ sub verify {
     undef $homer;
     is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
+    my $putin = $self->directory->lookup($self->putin);
+
+    is_deeply( [ $self->live_objects->live_objects ], [ $putin ], "one live object" );
+
+    foreach my $job ("President", "Prime Minister", "BDFL", "DFL") {
+        $putin->job($job);
+        $self->directory->update($putin);
+    }
+
+    $self->directory->delete($putin);
+
+    undef $putin;
+
+    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+
+    $putin = $self->directory->lookup($self->putin);
+    ok(!$putin, "putin has been deleted");
 }
 
 __PACKAGE__->meta->make_immutable;

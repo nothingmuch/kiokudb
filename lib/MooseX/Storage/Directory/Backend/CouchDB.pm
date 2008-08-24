@@ -22,7 +22,7 @@ sub delete {
 
     my @docs = map { ref($_) ? $_->backend_data : $self->document($_) } @ids_or_entries;
 
-    $self->db->bulk({ delete => @docs });
+    $self->db->bulk({ delete => \@docs });
 }
 
 sub insert {
@@ -31,7 +31,6 @@ sub insert {
     my ( @update, @insert, @insert_entries );
 
     foreach my $entry ( @entries ) {
-        
         my $collapsed = $self->collapse_jspon($entry);
         $collapsed->{_id} = delete $collapsed->{id}; # FIXME
         $collapsed->{class} = delete $collapsed->{__CLASS__};
@@ -39,6 +38,7 @@ sub insert {
         if ( my $prev = $entry->prev ) {
             my $doc = $prev->backend_data;
             %$doc = %$collapsed;
+            $entry->backend_data($prev->backend_data);
             push @update, $doc;
         } else {
             push @insert, $collapsed;
@@ -57,12 +57,11 @@ sub insert {
 
 sub get {
     my ( $self, $uid ) = @_;
-    my $doc = $self->document($uid);
+    my $doc = $self->document($uid) || return;
     my %doc = %$doc;
     $doc{__CLASS__} = delete $doc{class};
     $doc{id} = $doc->id;
-    my $entry = $self->expand_jspon(\%doc);
-    $entry->backend_data($doc);
+    my $entry = $self->expand_jspon(\%doc, backend_data => $doc);
     return $entry;
 }
 

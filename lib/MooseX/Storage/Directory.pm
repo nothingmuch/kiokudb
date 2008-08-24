@@ -96,10 +96,12 @@ sub lookup {
     };
 
     if ( $e ) {
-        if ( ref $e and $e->{missing} ) {
+        if ( ref($e) and $e->{missing} ) {
             return;
         }
 
+        use Data::Dumper;
+        warn Dumper($e);
         die $e;
     }
 
