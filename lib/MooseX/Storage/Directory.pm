@@ -21,6 +21,7 @@ use MooseX::Storage::Directory::Linker;
 use MooseX::Storage::Directory::LiveObjects;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
+use Carp qw(croak);
 
 use namespace::clean -except => [qw(meta SERIAL_IDS RUNTIME_BINARY_UUIDS)];
 
@@ -149,6 +150,9 @@ sub insert {
 sub update {
     my ( $self, @objects ) = @_;
 
+    croak "Object not in storage"
+        if grep { not defined } $self->live_objects->objects_to_entries(@objects);
+
     $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
 
@@ -179,14 +183,16 @@ sub store_objects {
 sub delete {
     my ( $self, @objects ) = @_;
 
-    my @ids = (
-        $self->live_objects->objects_to_ids(grep { ref } @objects),
+    my @ids_or_entries = (
+        $self->live_objects->objects_to_entries(grep { ref } @objects),
         grep { not ref } @objects,
     );
 
-    # FIXME update index
+    for ( @ids_or_entries ) {
+        croak "Object not in storage" unless defined;
+    }
 
-    $self->backend->delete(@ids);
+    $self->backend->delete(@ids_or_entries);
 }
 
 __PACKAGE__->meta->make_immutable;

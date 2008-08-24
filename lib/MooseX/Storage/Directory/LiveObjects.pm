@@ -62,6 +62,20 @@ sub object_to_id {
     return undef;
 }
 
+sub objects_to_entries {
+    my ( $self, @objects ) = @_;
+
+    return $self->object_to_entry($objects[0])
+        if @objects == 1;
+
+    my $o = $self->_objects;
+
+    return map {
+        my $ent = $o->{$_};
+        $ent && $ent->{entry};
+    } @objects;
+}
+
 sub object_to_entry {
     my ( $self, $obj ) = @_;
 
