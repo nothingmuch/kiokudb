@@ -35,13 +35,36 @@ use namespace::clean -except => 'meta';
 
 with qw(MooseX::Storage::Directory::Test::Fixture);
 
-has root => ( # as in "of the problem"
+has dubya => (
+    isa => "Str",
+    is  => "rw",
+);
+
+has homer => (
     isa => "Str",
     is  => "rw",
 );
 
 sub populate {
     my $self = shift;
+
+    my $bart     = p("Bart Simpson");
+    my $lisa     = p("Lisa Simpson");
+    my $maggie   = p("Maggie Simpson");
+    my $marge    = p("Marge Simpson");
+    my $homer    = p("Homer Simpson");
+    my $grandpa  = p("Abe Simpson");
+    my $mona     = p("Mona Simpson");
+    my $milhouse = p("Milhouse");
+    my $patty    = p("Patty Bouvier");
+    my $selma    = p("Selma Bouvier");
+    my $jaquelin = p("Jacqueline Bouvier");
+    my $clancy   = p("Clancy Bouvier");
+
+    married($marge, $homer, $bart, $lisa, $maggie);
+    married($grandpa, $mona, $homer);
+    married($jaquelin, $clancy, $marge, $selma, $patty);
+    clique($bart, $milhouse);
 
     my $junior    = p("Geroge W. Bush");
     my $laura     = p("Laura Bush");
@@ -60,9 +83,13 @@ sub populate {
 
     push @{ $junior->friends }, $putin;
 
-    $self->root( $self->directory->store( $junior ) );
-    
+    my @roots = $self->directory->store( $junior, $homer );
+
+    $self->dubya($roots[0]);
+    $self->homer($roots[1]);
+
     circular_off($junior);
+    circular_off($homer);
 }
 
 sub verify {
@@ -70,7 +97,7 @@ sub verify {
 
     is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    my $junior = $self->directory->lookup( $self->root );
+    my $junior = $self->directory->lookup( $self->dubya );
 
     isa_ok( $junior, "MooseX::Storage::Directory::Test::Person" );
 
@@ -117,7 +144,7 @@ sub verify {
     undef $junior;
     is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    $junior = $self->directory->lookup( $self->root );
+    $junior = $self->directory->lookup( $self->dubya );
 
     isa_ok( $junior, "MooseX::Storage::Directory::Test::Person" );
 
@@ -126,6 +153,50 @@ sub verify {
         [ "Condoleezza Rice", "Dick Cheney" ],
         "Georgia got plastered",
     );
+
+    is_deeply(
+        [ sort map { $_->name } $self->live_objects->live_objects ],
+        [ sort map { $_->name } $junior, $junior->so, @{ $junior->friends }, @{ $junior->kids }, @{ $junior->parents }, $junior->parents->[0]->kids->[-1] ],
+        "live objects",
+    );
+
+    is(
+        scalar(grep { /Putin/ } map { $_->name } $self->live_objects->live_objects),
+        0,
+        "Putin is a dead object",
+    );
+
+    circular_off($junior);
+    undef($junior);
+    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+
+    my $homer = $self->directory->lookup($self->homer);
+
+    isa_ok( $homer, "MooseX::Storage::Directory::Test::Person" );
+    is( $homer->name, "Homer Simpson", "name" );
+
+    {
+        my $marge = $homer->so;
+
+        $homer->name("Homer J. Simpson");
+
+        is( $marge->so->name, "Homer J. Simpson", "inter object rels" );
+    }
+
+    $self->directory->update($homer);
+
+    circular_off($homer);
+    undef $homer;
+    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+
+    $homer = $self->directory->lookup($self->homer);
+
+    isa_ok( $homer, "MooseX::Storage::Directory::Test::Person" );
+    is( $homer->name, "Homer J. Simpson", "name" );
+
+    circular_off($homer);
+    undef $homer;
+    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
 }
 
