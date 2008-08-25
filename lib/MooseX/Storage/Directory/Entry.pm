@@ -19,7 +19,7 @@ has data => (
 );
 
 has class => (
-    isa => "ClassName",
+    isa => "Str",
     is  => "rw",
     predicate => "has_class",
 );
