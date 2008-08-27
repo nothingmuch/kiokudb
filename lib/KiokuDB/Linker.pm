@@ -27,6 +27,9 @@ sub expand_object {
     my ( $self, $entry, %args ) = @_;
 
     if ( my $class = $entry->class ) {
+        # FIXME fix thawing for alternatively mapped classes
+        # (px_thaw, naive, etc)
+
         my $meta = Class::MOP::get_metaclass_by_name($class);
 
         my $instance = $meta->get_meta_instance->create_instance();
@@ -46,11 +49,13 @@ sub expand_object {
         return $instance;
     } else {
         # FIXME remove Data::Swap
-        # make sure we have some sort of refaddr in case of circular refs to simple structures
-        # after visiting $entry->data we swap it
-        # the alternative (no Data::Swap) approach is to register the object by subclassing
-        # the visitor such that _register_mapping registers with the live
-        # object cache if the refaddr() of the mapping source is equal to refaddr($entry->data)
+
+        # for simple structures with circular refs we need to have the UUID
+        # already pointing to a refaddr
+
+        # a better way to do this is to hijack _register_mapping so that when
+        # it maps from $entry->data to the new value, we register that with the live object set
+
         my $placeholder = {};
         $self->live_objects->insert( $entry => $placeholder );
         my $data = $self->visit( $entry->data );
