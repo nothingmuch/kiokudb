@@ -22,7 +22,7 @@ sub get_object_id {
     my ( $self, $object ) = @_;
 
     # FIXME Objects of this sort will probably do their own pre-resolution,
-    # with an MXSD instance belonging to the metaclass. I don't think we can do
+    # with an KiokuDB instance belonging to the metaclass. I don't think we can do
     # any of this yet, and that it will emerge from the first real moose poop
     # impl.
 

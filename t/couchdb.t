@@ -3,7 +3,7 @@
 use Test::More;
 
 BEGIN {
-    plan skip_all => 'Please set NET_COUCHDB_URI to a CouchDB instance URI' unless $ENV{TEST_COUCHDB_URI};
+    plan skip_all => 'Please set NET_COUCHDB_URI to a CouchDB instance URI' unless $ENV{KIOKU_COUCHDB_URI};
     plan 'no_plan';
 }
 
@@ -14,11 +14,13 @@ use ok 'KiokuDB::Backend::CouchDB';
 
 use Net::CouchDB;
 
-my $couch = Net::CouchDB->new($ENV{TEST_COUCHDB_URI});
+my $couch = Net::CouchDB->new($ENV{KIOKU_COUCHDB_URI});
 
-eval { $couch->db("mxsd")->delete };
+my $name = $ENV{KIOKU_COUCHDB_NAME} || "kioku";
 
-my $db = $couch->create_db("mxsd");
+eval { $couch->db($name)->delete };
+
+my $db = $couch->create_db($name);
 
 my $dir = KiokuDB->new(
     backend => KiokuDB::Backend::CouchDB->new(
