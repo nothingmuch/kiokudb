@@ -34,3 +34,5 @@
     * Backend::TXN
     * Backend::Locking
         * TXN::Exclusive
+
+* Moose::XS immutable style expansion

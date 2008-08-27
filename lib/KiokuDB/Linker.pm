@@ -122,20 +122,10 @@ KiokuDB::Linker - Relinks live objects from storage entries
 
 =head1 DESCRIPTION
 
-This object reconnects and blesses entry data using the MOP to recreate the
-connected graph in memory.
+This object reconnects entry data using the MOP, constructing the connected
+object graph in memory.
 
 If a live object already exists for a UID then that object will be reused.
-
-=head1 TODO
-
-=over 4
-
-=item *
-
-Ultra-sleazy L<Data::Thunk> based lazy loading of references
-
-=back
 
 =cut
 
