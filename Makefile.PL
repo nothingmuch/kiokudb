@@ -8,7 +8,7 @@ require 5.008; # utf8 and what not
 
 WriteMakefile(
     NAME         => 'KiokuDB',
-    VERSION_FROM => 'lib/MooseX/Storage/Directory.pm',
+    VERSION_FROM => 'lib/KiokuDB.pm',
     INSTALLDIRS  => 'site',
     SIGN         => 1,
     PL_FILES     => { },
@@ -20,11 +20,12 @@ WriteMakefile(
         # misc dev shit
         'Check::ISA' => 0,
         'Scalar::Util' => 0,
-        'Devel::PartialDump' => 0,
+        'Devel::PartialDump' => '0.07',
         'namespace::clean' => '0.08',
 
         # Identity is important
         'Data::GUID' => 0,
+        #'Data::UUID::LibUUID' => 0, # reccomended
 
         # visits are also important
         'Data::Visitor' => '0.19',
@@ -33,14 +34,20 @@ WriteMakefile(
         'JSON' => 0,
         'File::NFSLock' => 0,
         'IO::AtomicFile' => 0,
+        'Path::Class' => 0,
+        'MooseX::Types::Path::Class' => 0,
+
+        # CouchDB backend
+        'Net::CouchDB' => 0,
+
+        'BerkeleyDB' => 0,
 
         # live objects
         'Hash::Util::FieldHash::Compat' => 0,
         'Data::Swap' => 0,
         'Scope::Guard' => 0,
 
-        # lazy linker
-        'Data::Thunk' => 0,
+        'Set::Object' => 0,
 
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
