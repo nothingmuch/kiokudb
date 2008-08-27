@@ -183,6 +183,24 @@ sub compact_entries {
     }
 }
 
+sub make_entry {
+    my ( $self, %args ) = @_;
+
+    my $object = $args{object};
+
+    my $live_objects = $self->_options->{live_objects};
+
+    my $prev = $live_objects->object_to_entry($object);
+
+    my $id = $args{id} || die "No id";
+
+    return $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
+        live_objects => $live_objects,
+        ( $prev ? ( prev => $prev ) : () ),
+        %args,
+    );
+}
+
 sub make_ref {
     my ( $self, $id, $value ) = @_;
 
@@ -230,14 +248,10 @@ sub visit_ref {
 
         push @{ $self->_simple_entries }, $id;
 
-        my $live_objects = $self->_options->{live_objects};
-        my $prev = $live_objects->object_to_entry($ref);
-
-        $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
-            live_objects => $live_objects,
-            id           => $id,
-            data         => $self->SUPER::visit_ref($_[1]),
-            ( $prev ? ( prev => $prev ) : () ),
+        $self->make_entry(
+            id     => $id,
+            object => $ref,
+            data   => $self->SUPER::visit_ref($_[1]),
         );
 
         $self->make_ref( $id => $_[1] );
@@ -267,60 +281,81 @@ sub _ref_id {
 sub visit_object {
     my ( $self, $object ) = @_;
 
-    # FIXME allow breaking out early if $object is in the live object cache
-    # that is object_to_id is live_objects, not resolver
-    # this is required for shallow updates, and of course much more efficient
+    # Data::Visitor stuff for circular refs
+    $self->_register_mapping( $object, $object );
+
+    my $id = $self->_object_id($object) || return;
+
+    if ( my $only = $self->_options->{only} ) {
+        unless ( $only->contains($object) ) {
+            return $self->make_ref( $id => $_[1] );
+        }
+    }
 
     my $class = ref $object;
 
-    if ( my $meta = Class::MOP::get_metaclass_by_name($class) ) {
-        my $id = $self->_object_id($object) || return;
+    my @args = (
+        object => $object,
+        id     => $id,
+        class  => $class
+    );
 
-        if ( my $only = $self->_options->{only} ) {
-            unless ( $only->contains($object) ) {
-                return $self->make_ref( $id => $_[1] );
-            }
-        }
+    my $meta = Class::MOP::get_metaclass_by_name($class);
 
-        # Data::Visitor stuff for circular refs
-        $self->_register_mapping( $object, $object );
+    my $data = $meta
+        ? $self->collapse_object_with_meta( @args, meta => $meta )
+        : $self->collapse_object_without_meta(@args);
 
-        my @attrs = $meta->compute_all_applicable_attributes;
+    # FIXME implement intrinsic values (unregister $object, return $data
+    # instead of make_ref)
 
-        my $hash = {
-            map {
-                my $attr = $_;
-                # FIXME readd MooseX::Storage::Engine type mappings here
-                # need to refactor Engine, or go back to subclassing it
-                my $value = $attr->get_value($object);
-                my $collapsed = $self->visit($value);
-                ( $attr->name => $collapsed );
-            } grep {
-                $_->has_value($object)
-            } @attrs
-        };
+    $self->make_entry(
+        @args,
+        data => $data,
+    );
 
-        my $live_objects = $self->_options->{live_objects};
-        my $prev = $live_objects->object_to_entry($object);
-
-        $self->_entries->{$id} = MooseX::Storage::Directory::Entry->new(
-            live_objects => $live_objects,
-            data         => $hash,
-            id           => $id,
-            class        => $class,
-            ( $prev ? ( prev => $prev ) : () ),
-        );
-
-        # we pass $_[1], an alias, so that isweak works
-        return $self->make_ref( $id => $_[1] );
-    } else {
-        croak "FIXME non moose objects";
-    }
+    # we pass $_[1], an alias, so that isweak works
+    return $self->make_ref( $id => $_[1] );
 }
 
 sub _object_id {
     my ( $self, $object ) = @_;
     $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
+}
+
+sub collapse_object_with_meta {
+    my ( $self, %args ) = @_;
+
+    my ( $object, $meta ) = @args{qw(object meta)};
+
+    my @attrs = $meta->compute_all_applicable_attributes;
+
+    return {
+        map {
+            my $attr = $_;
+            # FIXME readd MooseX::Storage::Engine type mappings here
+            # need to refactor Engine, or go back to subclassing it
+            my $value = $attr->get_value($object);
+            my $collapsed = $self->visit($value);
+            ( $attr->name => $collapsed );
+        } grep {
+            $_->has_value($object)
+        } @attrs
+    };
+}
+
+sub collapse_object_without_meta {
+    my ( $self, %args ) = @_;
+
+    die "TODO";
+}
+
+sub collapse_object_naive {
+    my ( $self, %args ) = @_;
+
+    my $object = $args{object};
+
+    return $self->SUPER::visit_ref($object);
 }
 
 __PACKAGE__->meta->make_immutable;
