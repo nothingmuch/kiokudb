@@ -238,6 +238,23 @@ Many features important for proper Perl space semantics are supported,
 including shared data, circular structures, weak references, tied structures,
 etc.
 
+L<KiokuDB> is meant to solve two related persistence problems:
+
+=over 4
+
+=item Transparent persistence
+
+Store arbitrary objects without changing their class definitions or worrying
+about schema details.
+
+=item Interoperability
+
+Persisting arbitrary objects in a way that is compatible with existing
+data/code (for example interoprating with another app using CouchDB with JSPON
+semantics).
+
+=back
+
 =head1 TECHNICAL DETAILS
 
 In order to use any persistence framework it is important to understand what it
@@ -273,6 +290,103 @@ the live object is used. This way references to shared objects are shared in
 memory regardless of the order the objects were stored or loaded.
 
 This process is explained in detail in L<KiokuDB::Linker>.
+
+=head1 ATTRIBUTES
+
+L<KiokuDB> uses a number of delegates which do the actual work.
+
+Of these only C<backend> is required, the rest have default definitions.
+
+=over 4
+
+=item backend
+
+This attribute is required.
+
+L<KiokuDB::Backend>.
+
+The backend handles storage and retrieval of entries.
+
+=item collapser
+
+L<KiokuDB::Collapser>
+
+The collapser prepares objects for storage.
+
+=item linker
+
+L<KiokuDB::Linker>
+
+The linker links retrieved entries into functioning instances.
+
+=item resolver
+
+L<KiokuDB::Resolver>
+
+The resolver swizzles memory addresses to UIDs and back.
+
+=item live_objects
+
+L<KiokuDB::LiveObjects>
+
+The live object set keeps track of objects for the linker and the resolver.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item new %args
+
+Creates a new directory object.
+
+See L</ATTRIBUTES>
+
+=item connect $dsn, %args
+
+DWIM initialization.
+
+=item lookup @ids
+
+Fetches the objects for the specified IDs from the live object set or from
+storage.
+
+=item store @objects
+
+Recursively collapses C<@objects> and inserts or updates the entries.
+
+=item update @objects
+
+Performs a shallow update of @objects.
+
+It is an error to update an object not in the database.
+
+=item insert @objects
+
+Inserts objects to the database.
+
+It is an error to insert objects that are already in the database.
+
+=item delete @objects_or_ids
+
+Deletes the specified objects from the store.
+
+=back
+
+=head1 GLOBALS
+
+=over 4
+
+=item C<$SERIAL_IDS>
+
+If set at compile time, the default UUID generation role will use serial IDs,
+instead of UUIDs.
+
+This is useful for testing, since the same IDs will be issued each run, but is
+utterly broken in the face of concurrency.
+
+=back
 
 =head1 VERSION CONTROL
 
