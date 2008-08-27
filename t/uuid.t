@@ -3,7 +3,9 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More tests => 41;
+
+use ok 'KiokuDB'; # constants
 
 sub check_role ($) {
     my $role = shift;
@@ -18,10 +20,10 @@ sub check_role ($) {
         uuid_to_string
     ));
 
-    ok( my $id = $role->generate_uuid, "$role generates UUIDs" );
+    ok( my $id = eval { $role->generate_uuid }, "$role generates UUIDs" );
 
-    is( $role->binary_to_uuid( $role->uuid_to_binary( $id ) ), $id, "round trip binary" );
-    is( $role->string_to_uuid( $role->uuid_to_string( $id ) ), $id, "round trip string" );
+    is( eval { $role->binary_to_uuid( $role->uuid_to_binary( $id ) ) }, $id, "round trip binary" );
+    is( eval { $role->string_to_uuid( $role->uuid_to_string( $id ) ) }, $id, "round trip string" );
 }
 
 check_role 'KiokuDB::Role::UUIDs::SerialIDs';
