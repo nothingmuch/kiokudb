@@ -5,16 +5,16 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use ok 'MooseX::Storage::Directory::Resolver';
-use ok 'MooseX::Storage::Directory::LiveObjects';
+use ok 'KiokuDB::Resolver';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
     use Moose;
 }
 
-my $r = MooseX::Storage::Directory::Resolver->new(
-    live_objects => MooseX::Storage::Directory::LiveObjects->new
+my $r = KiokuDB::Resolver->new(
+    live_objects => KiokuDB::LiveObjects->new
 );
 
 {

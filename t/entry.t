@@ -8,7 +8,7 @@ use Test::More 'no_plan';
 
 use Storable qw(nfreeze thaw);
 
-use ok 'MooseX::Storage::Directory::Entry';
+use ok 'KiokuDB::Entry';
 
 {
     package Foo;
@@ -19,13 +19,13 @@ use ok 'MooseX::Storage::Directory::Entry';
 
 {
     foreach my $ent (
-        MooseX::Storage::Directory::Entry->new(
+        KiokuDB::Entry->new(
             id => "foo",
             root => 1,
             class => "Foo",
             data => { oi => "vey" },
         ),
-        MooseX::Storage::Directory::Entry->new(
+        KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],
         ),

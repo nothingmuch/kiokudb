@@ -7,9 +7,9 @@ use Test::More 'no_plan';
 
 use Scalar::Util qw(weaken isweak);
 
-use ok 'MooseX::Storage::Directory::Collapser';
-use ok 'MooseX::Storage::Directory::Resolver';
-use ok 'MooseX::Storage::Directory::LiveObjects';
+use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Resolver';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
@@ -31,9 +31,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 }
 
 {
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -92,7 +92,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     is_deeply(
         $entries[0]->data,
         {
-            bar => MooseX::Storage::Directory::Reference->new( id => $other_id ),
+            bar => KiokuDB::Reference->new( id => $other_id ),
             id  => "oink",
             zot => "zot",
         },
@@ -112,9 +112,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 }
 
 {
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -138,8 +138,8 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         {
             id => 5,
             blah => [
-                MooseX::Storage::Directory::Reference->new( id => $other_id ),
-                MooseX::Storage::Directory::Reference->new( id => $other_id ),
+                KiokuDB::Reference->new( id => $other_id ),
+                KiokuDB::Reference->new( id => $other_id ),
             ],
         },
         "parent object",
@@ -156,9 +156,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 
 {
     # circular ref
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -184,7 +184,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     is_deeply(
         $entries[0]->data,
         {
-            bar => MooseX::Storage::Directory::Reference->new( id => $other_id ),
+            bar => KiokuDB::Reference->new( id => $other_id ),
             id  => "oink",
             zot => "zot",
         },
@@ -195,16 +195,16 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         $entries[1]->data,
         {
             id => 3,
-            blah => MooseX::Storage::Directory::Reference->new( id => $id ),
+            blah => KiokuDB::Reference->new( id => $id ),
         },
         "Bar object",
     );
 }
 
 {
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -230,8 +230,8 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         {
             id => 5,
             blah => [
-                MooseX::Storage::Directory::Reference->new( id => $other_id, is_weak => 1 ),
-                MooseX::Storage::Directory::Reference->new( id => $other_id ),
+                KiokuDB::Reference->new( id => $other_id, is_weak => 1 ),
+                KiokuDB::Reference->new( id => $other_id ),
             ],
         },
         "parent object",
@@ -247,9 +247,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 }
 
 {
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -276,8 +276,8 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
         {
             id => 5,
             blah => [
-                MooseX::Storage::Directory::Reference->new( id => $other_id ),
-                MooseX::Storage::Directory::Reference->new( id => $other_id, is_weak => 1 ),
+                KiokuDB::Reference->new( id => $other_id ),
+                KiokuDB::Reference->new( id => $other_id, is_weak => 1 ),
             ],
         },
         "parent object",
@@ -293,9 +293,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 }
 
 {
-    my $v = MooseX::Storage::Directory::Collapser->new(
-        resolver => MooseX::Storage::Directory::Resolver->new(
-            live_objects => MooseX::Storage::Directory::LiveObjects->new
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => KiokuDB::LiveObjects->new
         ),
     );
 
@@ -315,9 +315,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     my $obj = Foo->new( bar => { foo => "hello" } );
 
     {
-        my $v = MooseX::Storage::Directory::Collapser->new(
-            resolver => MooseX::Storage::Directory::Resolver->new(
-                live_objects => MooseX::Storage::Directory::LiveObjects->new
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => KiokuDB::LiveObjects->new
             ),
             compact => 0,
         );
@@ -327,9 +327,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     }
 
     {
-        my $v = MooseX::Storage::Directory::Collapser->new(
-            resolver => MooseX::Storage::Directory::Resolver->new(
-                live_objects => MooseX::Storage::Directory::LiveObjects->new
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => KiokuDB::LiveObjects->new
             ),
             compact => 1,
         );
@@ -343,9 +343,9 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     my $obj = Foo->new( foo => "one", bar => Foo->new( foo => "two" ) );
 
     {
-        my $v = MooseX::Storage::Directory::Collapser->new(
-            resolver => MooseX::Storage::Directory::Resolver->new(
-                live_objects => MooseX::Storage::Directory::LiveObjects->new
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => KiokuDB::LiveObjects->new
             ),
         );
 

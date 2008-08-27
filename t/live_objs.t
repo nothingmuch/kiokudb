@@ -8,7 +8,7 @@ use Test::Exception;
 
 use Data::GUID;
 
-use ok 'MooseX::Storage::Directory::LiveObjects';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
@@ -19,7 +19,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
 }
 
 {
-    my $l = MooseX::Storage::Directory::LiveObjects->new;
+    my $l = KiokuDB::LiveObjects->new;
 
     is_deeply(
         [ $l->live_objects ],

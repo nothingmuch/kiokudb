@@ -8,14 +8,14 @@ use Test::Memory::Cycle;
 
 use Scalar::Util qw(blessed weaken isweak refaddr);
 
-BEGIN { $MooseX::Storage::Directory::SERIAL_IDS = 1 }
+BEGIN { $KiokuDB::SERIAL_IDS = 1 }
 
-use ok 'MooseX::Storage::Directory';
-use ok 'MooseX::Storage::Directory::Backend::Hash';
+use ok 'KiokuDB';
+use ok 'KiokuDB::Backend::Hash';
 
-my $dir = MooseX::Storage::Directory->new(
-    backend => MooseX::Storage::Directory::Backend::Hash->new,
-    #backend => MooseX::Storage::Directory::Backend::JSPON->new(
+my $dir = KiokuDB->new(
+    backend => KiokuDB::Backend::Hash->new,
+    #backend => KiokuDB::Backend::JSPON->new(
     #    dir    => temp_root,
     #    pretty => 1,
     #    lock   => 0,
@@ -112,7 +112,7 @@ no_live_objects;
     is( $dir->live_objects->id_to_object($ids[1]), $y, "second is still alive" );
 
     my @objects = map { $dir->lookup($_) } @ids;
-    
+
     isa_ok( $objects[0], "Foo" );
     is( $objects[0]->foo, "oink oink", "object retrieved" );
     is( $objects[1], $y, "object is already live" );
@@ -139,7 +139,7 @@ no_live_objects;
     is( $first->foo, "first", "normal attr" );
     isa_ok( $first->bar, "Foo", "shared object" );
     is( $first->bar->foo, "shared", "normal attr of shared" );
-    
+
     my $second = $dir->lookup($ids[1]);
 
     isa_ok( $second, "Foo" );
@@ -173,7 +173,7 @@ no_live_objects;
     is( $first->bar->{foo}, "shared", "hash data" );
 
     isa_ok( $first->bar->{object}, "Foo", "indirect shared child" );
-    
+
     my $second = $dir->lookup($ids[1]);
 
     isa_ok( $second, "Foo" );

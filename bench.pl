@@ -9,9 +9,9 @@ use Storable qw(nstore retrieve);
 use YAML qw(DumpFile LoadFile);
 use DBM::Deep;
 
-use MooseX::Storage::Directory;
-use MooseX::Storage::Directory::Backend::JSPON;
-use MooseX::Storage::Directory::Backend::BDB;
+use KiokuDB;
+use KiokuDB::Backend::JSPON;
+use KiokuDB::Backend::BDB;
 
 # no long running tests
 my $large = 0;
@@ -85,15 +85,15 @@ sub bench {
     my $storable = $dir->file("foo.storable")->stringify;
     my $yaml = $dir->file("foo.yaml")->stringify;
 
-    my $mxsd_jspon = MooseX::Storage::Directory->new(
-        backend => MooseX::Storage::Directory::Backend::JSPON->new(
+    my $mxsd_jspon = KiokuDB->new(
+        backend => KiokuDB::Backend::JSPON->new(
             dir  => $dir->subdir("mxsd_jspon"),
             lock => 0,
         ),
     );
 
-    my $mxsd_bdb = MooseX::Storage::Directory->new(
-        backend => MooseX::Storage::Directory::Backend::BDB->new(
+    my $mxsd_bdb = KiokuDB->new(
+        backend => KiokuDB::Backend::BDB->new(
             dir => $dir->subdir("mxsd_bdb"),
         ),
     );

@@ -7,9 +7,9 @@ use Test::More 'no_plan';
 
 use Storable qw(nfreeze thaw);
 
-use ok 'MooseX::Storage::Directory::Reference';
+use ok 'KiokuDB::Reference';
 
-my $ref = MooseX::Storage::Directory::Reference->new(
+my $ref = KiokuDB::Reference->new(
     id => "foo",
     weak => 1,
 );

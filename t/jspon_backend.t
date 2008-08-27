@@ -10,10 +10,10 @@ use Test::TempDir;
 
 use JSON;
 
-use ok 'MooseX::Storage::Directory::Backend::JSPON';
-use ok 'MooseX::Storage::Directory::Collapser';
-use ok 'MooseX::Storage::Directory::Resolver';
-use ok 'MooseX::Storage::Directory::LiveObjects';
+use ok 'KiokuDB::Backend::JSPON';
+use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Resolver';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
@@ -35,7 +35,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     );
 }
 
-my $b = MooseX::Storage::Directory::Backend::JSPON->new( dir => temp_root, pretty => 1, lock => 0 );
+my $b = KiokuDB::Backend::JSPON->new( dir => temp_root, pretty => 1, lock => 0 );
 
 my $obj = Foo->new(
     id => "shlomo",
@@ -48,9 +48,9 @@ my $obj = Foo->new(
 
 $obj->friend->friend($obj);
 
-my $c = MooseX::Storage::Directory::Collapser->new(
-    resolver => MooseX::Storage::Directory::Resolver->new(
-        live_objects => MooseX::Storage::Directory::LiveObjects->new,   
+my $c = KiokuDB::Collapser->new(
+    resolver => KiokuDB::Resolver->new(
+        live_objects => KiokuDB::LiveObjects->new,
     ),
 );
 

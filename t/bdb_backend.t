@@ -8,10 +8,10 @@ use Test::TempDir;
 
 use Storable qw(thaw);
 
-use ok 'MooseX::Storage::Directory::Backend::BDB';
-use ok 'MooseX::Storage::Directory::Collapser';
-use ok 'MooseX::Storage::Directory::Resolver';
-use ok 'MooseX::Storage::Directory::LiveObjects';
+use ok 'KiokuDB::Backend::BDB';
+use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Resolver';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
@@ -33,7 +33,7 @@ use ok 'MooseX::Storage::Directory::LiveObjects';
     );
 }
 
-my $b = MooseX::Storage::Directory::Backend::BDB->new( dir => temp_root, binary_uuids => 1 );
+my $b = KiokuDB::Backend::BDB->new( dir => temp_root, binary_uuids => 1 );
 
 my $obj = Foo->new(
     id => "shlomo",
@@ -46,9 +46,9 @@ my $obj = Foo->new(
 
 $obj->friend->friend($obj);
 
-my $c = MooseX::Storage::Directory::Collapser->new(
-    resolver => MooseX::Storage::Directory::Resolver->new(
-        live_objects => MooseX::Storage::Directory::LiveObjects->new,   
+my $c = KiokuDB::Collapser->new(
+    resolver => KiokuDB::Resolver->new(
+        live_objects => KiokuDB::LiveObjects->new,
     ),
 );
 
@@ -73,7 +73,7 @@ is_deeply(
 foreach my $entry ( @entries ) {
     ok( $b->dbm->db_get($entry->id, my $data) == 0, "got from db" );
 
-    isa_ok( $data, "MooseX::Storage::Directory::Entry" );
+    isa_ok( $data, "KiokuDB::Entry" );
     is( ref $data->data, 'HASH', "hash loaded" );
 
     is( $data->id, $entry->id, "id is correct" );

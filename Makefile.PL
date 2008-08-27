@@ -7,7 +7,7 @@ use ExtUtils::MakeMaker;
 require 5.008; # utf8 and what not
 
 WriteMakefile(
-    NAME         => 'MooseX::Storage::Directory',
+    NAME         => 'KiokuDB',
     VERSION_FROM => 'lib/MooseX/Storage/Directory.pm',
     INSTALLDIRS  => 'site',
     SIGN         => 1,
@@ -16,7 +16,7 @@ WriteMakefile(
         'Moose' => 0,
         'MooseX::AttributeHelpers' => 0,
         'MooseX::Types::Path::Class' => 0,
-        
+
         # misc dev shit
         'Check::ISA' => 0,
         'Scalar::Util' => 0,
