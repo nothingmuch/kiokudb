@@ -5,10 +5,6 @@ use Moose;
 
 our $VERSION = "0.01_01";
 
-# set $BINARY_UUIDS before loading to use string UUIDs in memory (eases
-# debugging), while retaining storage compat
-# for even easier debugging, $SERIAL_IDs are not UUIDs at all, but this is not
-# compatible
 our ( $BINARY_UUIDS, $SERIAL_IDS );
 
 use constant SERIAL_IDS           => not not our $SERIAL_IDS;
@@ -207,7 +203,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB - The Great New magic data KiokuDB!
+KiokuDB - Promiscuous, schema-free, graph based persistence
 
 =head1 SYNOPSIS
 
@@ -219,13 +215,64 @@ KiokuDB - The Great New magic data KiokuDB!
         ),
     );
 
+    # takes a snapshot of $some_object
     my $uid = $d->store( $some_object );
 
+    # ... some other place/time:
     my $some_object = $d->lookup($uid);
 
 =head1 DESCRIPTION
 
+Kioku is a Moose based frontend to various databases, somewhere in between
+L<Tangram> and L<Pixie>. It builds on L<Class::MOP>'s solid foundation.
 
+Its purpose is to provide persistence for "regular" objects with as little
+effort as possible, without sacrificing control over how persistence is
+actually done.
+
+Kioku is also non-invasive: it does not use ties, AUTOLOAD, proxy objects,
+C<sv_magic> or any other type of trickery to get its job done, to avoid
+unwanted surprises.
+
+Many features important for proper Perl space semantics are supported,
+including shared data, circular structures, weak references, tied structures,
+etc.
+
+=head1 TECHNICAL DETAILS
+
+In order to use any persistence framework it is important to understand what it
+does and how it does it.
+
+Systems like L<Tangram> or L<DBIx::Class> generally require explicit meta data
+and use a schema, which makes them fairly predictable.
+
+When using transparent systems like L<KiokuDB> or L<Pixie> it is more important
+to understand what's going on behind the scenes in order to avoid surprises and
+limitations.
+
+=head2 Collapsing
+
+When an object is introduced to L<KiokuDB> it's collapsed into an
+L<KiokDB::Entry|Entry>.
+
+An entry is a simplified representation of the object, allowing the data to be
+saved independently of other objects in formats as simple as JSON.
+
+References to other objects are converted to symbolic references in the entry.
+
+Collapsing is explained in detail in L<KiokuDB::Collapser>. The way an entry is
+created varies with the object's class.
+
+=head2 Linking
+
+When objects are loaded, entries are retrieved from the backend using their
+UIDs.
+
+When a UID is already loaded (in the live object set of a L<KiokuDB> instance)
+the live object is used. This way references to shared objects are shared in
+memory regardless of the order the objects were stored or loaded.
+
+This process is explained in detail in L<KiokuDB::Linker>.
 
 =head1 VERSION CONTROL
 

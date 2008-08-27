@@ -375,9 +375,66 @@ data
 
 =head1 DESCRIPTION
 
-This object walks object structures using L<Data::Visitor> and produces
-simple standalone entries (no shared data, no circular references, no blessed
-structures) with symbolic (UUID based) links.
+The collapser simplifies real objects into L<KiokuDB::Entry> objects to pass to
+the backend.
+
+Non object data is collapsed by walking it with L<Data::Visitor>.
+
+Object collapsing is detailed in L</"COLLAPSING STRATEGIES">.
+
+The object's data will be copied into the L<KiokuDB::Entry> with references to
+other data structures translated into L<KiokuDB::Reference> objects.
+
+Reference addresses are resolved to UIDs by L<KiokuDB::Resolver>.
+
+=head2 Compacting
+
+If C<compact> is disabled then every reference is symbolic, and every data
+structure has an entry.
+
+If compacting is enabled (the default) the minimum number of entry objects
+required for consistency is created.
+
+Every blessed, shared or tied data structure requires an entry object, as does
+every target of a weak reference. "Simple" structures, such as plain
+hashes/arrays will be left inline as data intrinsic to the object it was found in.
+
+Compacting is usually desirable, but sometimes isn't (for instance with an RDF
+like store).
+
+=head1 COLLAPSING STRATEGIES
+
+Collapsing strategies are chosen based on the type of the object being
+collapsed.
+
+=head2 MOP
+
+When the object has a L<Class::MOP> registered metaclass (any L<Moose> object,
+but not only), the MOP is used to walk the object's attributes and construct
+the simplified version without breaking encapsulation.
+
+Annotations on the meta attributes, like L<MooseX::Storarge> meta traits
+can precisely control which attributes get serialized and how.
+
+=head2 Type Map
+
+A type map is consulted for objects without a meta class.
+
+The default type map contains entries for a number of fairly standard classes
+(e.g. L<Path::Class>, L<DateTime>, etc).
+
+=head2 L<Pixie::Complicity> / L<Tangram::Complicity>
+
+The C<px_thaw> and C<px_freeze> methods can be defined on your object to
+convert them to "pure" perl data structures.
+
+=head2 Naive
+
+If desired, naive collaping will simply walk the object's reference using
+L<Data::Visitor>.
+
+This is disabled by default and should be enabled on a case by case basis, but
+can be done for all unknown objects too.
 
 =head1 TODO
 
