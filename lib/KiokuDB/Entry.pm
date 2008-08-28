@@ -13,6 +13,12 @@ has root => (
     is  => "rw",
 );
 
+has deleted => (
+    isa => "Bool",
+    is  => "rw",
+    default => 0,
+);
+
 has data => (
     isa => "Ref",
     is  => "rw",
@@ -38,17 +44,22 @@ has prev => (
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "rw",
-    predicate => "has_live_object",
-    clearer   => "clear_live_objects",
     weak_ref  => 1,
 );
+
+has object => (
+    isa => "Any",
+    is  => "rw",
+    weak_ref => 1,
+    predicate => "has_object",
+);
+
 
 sub update_live_objects {
     my $self = shift;
 
     if ( my $l = $self->live_objects ) {
         $l->update_entry($self);
-        $self->clear_live_objects; # FIXME should this really be called? Not doing this might be useful when rolling back a failed transaction after a nested transaction succeeded
     }
 }
 

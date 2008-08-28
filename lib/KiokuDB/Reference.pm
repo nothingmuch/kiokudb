@@ -41,8 +41,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Reference - A reference to another
-L<KiokuDB::Entry>.
+KiokuDB::Reference - A symbolic reference to another L<KiokuDB::Entry>.
 
 =head1 SYNOPSIS
 
@@ -64,6 +63,10 @@ loading entries from the backend as necessary.
 =item id
 
 The ID this entry refers to
+
+=item is_weak
+
+This reference is weak.
 
 =back
 
