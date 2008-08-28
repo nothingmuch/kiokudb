@@ -48,7 +48,7 @@ sub update_live_objects {
 
     if ( my $l = $self->live_objects ) {
         $l->update_entry($self);
-        $self->clear_live_objects;
+        $self->clear_live_objects; # FIXME should this really be called? Not doing this might be useful when rolling back a failed transaction after a nested transaction succeeded
     }
 }
 
@@ -119,6 +119,38 @@ address space.
 =item class
 
 If the entry is an object this contains the metaclass of that object.
+
+=item prev
+
+Contains a link to a L<KiokuDB::Entry> objects that precedes this one.
+
+The last entry that was loaded from the store, or successfully written to the
+store for a given UUID is kept in the live object set.
+
+The collapser creates transient Entry objects, which if written to the store
+successfully are replace the previous one.
+
+=item live_objects
+
+Used by transient entries to promote themselves using the
+C<update_live_objects> method.
+
+=item backend_data
+
+Backends can use this to store additional meta data as they see fit.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item update_live_objects
+
+If C<live_objects> is set, invoking this method will set this entry as the
+current entry for an ID.
+
+This should be called by the backend after an entry is successfully written.
 
 =back
 
