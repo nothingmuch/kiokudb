@@ -241,6 +241,14 @@ __END__
 KiokuDB::Backend::JSPON - JSON file backend with JSPON
 reference semantics
 
+=head1 DESCRIPTION
+
+L<http://www.jspon.org/|JSPON> is a standard for encoding object graphs in
+JSON.
+
+The representation is based on explicit ID based references, and so is simple
+enough to be stored in JSON.
+
 =head1 TODO
 
 =over 4

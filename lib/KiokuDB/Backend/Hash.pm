@@ -51,3 +51,23 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Backend::Hash - In memory backend for testing purposes.
+
+=head1 SYNOPSIS
+
+    my $dir = KiokuDB->new(
+        backend => KiokuDB::Backend::Hash->new(),
+    );
+
+=head1 DESCRIPTION
+
+This L<KiokuDB> backend provides in memory storage and retrieval of
+L<KiokuDB::Enty> objects using L<Storable>'s C<dclone> to make dumps of the
+backend clear.
+
+=cut

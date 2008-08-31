@@ -125,7 +125,8 @@ KiokuDB::Linker - Relinks live objects from storage entries
 This object reconnects entry data using the MOP, constructing the connected
 object graph in memory.
 
-If a live object already exists for a UID then that object will be reused.
+If a live object already exists for a UID then that object will be reused
+instead of being loaded a second time.
 
 =cut
 
