@@ -3,7 +3,7 @@
 use Test::More;
 
 BEGIN {
-    plan skip_all => 'Please set NET_COUCHDB_URI to a CouchDB instance URI' unless $ENV{KIOKU_COUCHDB_URI};
+    plan skip_all => 'Please set KIOKU_COUCHDB_URI to a CouchDB instance URI' unless $ENV{KIOKU_COUCHDB_URI};
     plan 'no_plan';
 }
 
