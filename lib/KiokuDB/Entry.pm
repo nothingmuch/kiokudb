@@ -22,6 +22,7 @@ has deleted => (
 has data => (
     isa => "Ref",
     is  => "rw",
+    predicate => "has_data",
 );
 
 has class => (
@@ -73,7 +74,7 @@ sub STORABLE_freeze {
             $self->class || '',
             !!$self->deleted,
         ),
-        $self->data,
+        $self->has_data ? $self->data : (),
     );
 }
 
@@ -85,7 +86,7 @@ sub STORABLE_thaw {
     $self->id($id);
     $self->root(1) if $root;;
     $self->class( $class) if $class;
-    $self->data($data);
+    $self->data($data) if ref $data;
     $self->deleted($deleted);
 
     return $self;
