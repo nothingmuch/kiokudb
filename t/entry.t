@@ -9,6 +9,7 @@ use Test::More 'no_plan';
 use Storable qw(nfreeze thaw);
 
 use ok 'KiokuDB::Entry';
+use ok 'KiokuDB::LiveObjects';
 
 {
     package Foo;
@@ -17,6 +18,9 @@ use ok 'KiokuDB::Entry';
     has oi => ( is => "rw" );
 }
 
+my $x = Foo->new( oi => "vey" );
+my $l = KiokuDB::LiveObjects->new;
+
 {
     foreach my $ent (
         KiokuDB::Entry->new(
@@ -24,16 +28,44 @@ use ok 'KiokuDB::Entry';
             root => 1,
             class => "Foo",
             data => { oi => "vey" },
+            object => $x,
         ),
         KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],
+        ),
+        KiokuDB::Entry->new(
+            id => "goner",
+            deleted => 1
+        ),
+        KiokuDB::Entry->new(
+            id => "bar",
+            data => [ 1 .. 3 ],
+            backend_data => "lalalal",
+        ),
+        KiokuDB::Entry->new(
+            id => "bar",
+            data => [ 1 .. 3 ],
+            live_objects => $l,
+        ),
+        KiokuDB::Entry->new(
+            id => "bar",
+            data => [ 1 .. 3 ],
+            prev => KiokuDB::Entry->new( id => "bar" ),
         ),
     ) {
         my $f = nfreeze($ent);
 
         my $copy = thaw($f);
 
-        is_deeply( $copy, $ent );
+        foreach my $transient ( qw(backend_data live_objects object prev) ) {
+            my $attr = KiokuDB::Entry->meta->find_attribute_by_name($transient);
+            ok( !$attr->has_value($copy), "no $transient in copy" );
+            $attr->clear_value($ent);
+        }
+
+        is_deeply( $copy, $ent, "copy is_deeply orig" );
+
+        is_deeply( thaw(nfreeze($copy)), $copy, "round trip of copy" );
     }
 }
