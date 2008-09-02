@@ -30,6 +30,9 @@ WriteMakefile(
         # visits are also important
         'Data::Visitor' => '0.19',
 
+        # scanning and searching
+        'Data::Stream::Bulk' => "0.02",
+
         # JSPON backend
         'JSON' => 0,
         'File::NFSLock' => 0,
