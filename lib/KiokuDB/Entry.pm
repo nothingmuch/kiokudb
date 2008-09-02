@@ -16,7 +16,7 @@ has root => (
 has deleted => (
     isa => "Bool",
     is  => "rw",
-    default => 0,
+    default => !1,
 );
 
 has data => (
@@ -71,6 +71,7 @@ sub STORABLE_freeze {
             $self->id,
             !!$self->root,
             $self->class || '',
+            !!$self->deleted,
         ),
         $self->data,
     );
@@ -79,12 +80,13 @@ sub STORABLE_freeze {
 sub STORABLE_thaw {
     my ( $self, $cloning, $attrs, $data ) = @_;
 
-    my ( $id, $root, $class ) = split ',', $attrs;
+    my ( $id, $root, $class, $deleted ) = split ',', $attrs;
 
     $self->id($id);
     $self->root(1) if $root;;
     $self->class( $class) if $class;
     $self->data($data);
+    $self->deleted($deleted);
 
     return $self;
 }

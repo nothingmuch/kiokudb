@@ -96,8 +96,6 @@ sub lookup {
             return;
         }
 
-        use Data::Dumper;
-        warn Dumper($e);
         die $e;
     }
 
