@@ -3,11 +3,15 @@
 package KiokuDB::Backend::Hash;
 use Moose;
 
+use Data::Stream::Bulk::Util qw(bulk);
+
 use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Backend::Serialize::Memory
     KiokuDB::Backend
+    KiokuDB::Backend::Query::Simple
+    KiokuDB::Backend::Scan
 );
 
 has storage => (
@@ -44,6 +48,43 @@ sub exists {
     my ( $self, @uids ) = @_;
 
     map { exists $self->storage->{$_} } @uids;
+}
+
+sub scan {
+    my $self = shift;
+
+    my @ret;
+
+    foreach my $entry ( values %{ $self->storage } ) {
+        push @ret, $self->deserialize($entry) if $entry->root;
+    }
+
+    return bulk(@ret);
+}
+
+sub simple_search {
+    my ( $self, $proto ) = @_;
+
+    # FIXME $proto is sql::abstract 2? or...?
+
+    my $root_set = $self->scan;
+
+    return $root_set->filter(sub {
+        return [ grep {
+            my $entry = $_;
+            $self->_compare($entry->data, $proto);
+        } @$_ ]
+    });
+}
+
+sub _compare {
+    my ( $self, $got, $exp ) = @_;
+
+    foreach my $key ( keys %$exp ) {
+        return unless overload::StrVal($got->{$key}) eq overload::StrVal($exp->{$key});
+    }
+
+    return 1;
 }
 
 __PACKAGE__->meta->make_immutable;

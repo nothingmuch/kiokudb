@@ -10,6 +10,11 @@ use MooseX::Types::Path::Class qw(Dir);
 
 use namespace::clean -except => 'meta';
 
+# TODO use a secondary DB to keep track of the root set
+# integrate with the Search::GIN bdb backend for additional secondary indexing
+
+# this will require storing GIN extracted data in the database, too
+
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::Storable
@@ -107,5 +112,4 @@ KiokuDB::Backend::BDB -
 =head1 DESCRIPTION
 
 =cut
-
 

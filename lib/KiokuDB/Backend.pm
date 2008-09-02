@@ -53,13 +53,13 @@ L<KiokuDB::Entry> objects.
 
 =head1 QUERYING
 
-This role is supplemented by L<KiokuDB::Backend::Querying>, a role for
+This role is supplemented by L<KiokuDB::Backend::Query>, a role for
 backend specific queries.
 
-L<KiokuDB::Backend::Querying::Simple> provides a universal query api for
+L<KiokuDB::Backend::Query::Simple> provides a universal query api for
 backends that can perform property based lookup.
 
-L<KiokuDB::Backend::Querying::GIN> is a role for using L<Search::GIN> based
+L<KiokuDB::Backend::Query::GIN> is a role for using L<Search::GIN> based
 indexing/querying with backends that do not natively support querying.
 
 =head1 METHODS
