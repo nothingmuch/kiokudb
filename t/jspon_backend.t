@@ -55,15 +55,16 @@ my $c = KiokuDB::Collapser->new(
     ),
 );
 
-my @entries = $c->collapse_objects($obj);
+my @entries = $c->collapse_objects($obj, { blah => "blah" });
 
 $entries[0]->root(1);
+$entries[1]->root(1);
 
-is( scalar(@entries), 2, "two entries" );
+is( scalar(@entries), 3, "two entries" );
 
 is_deeply(
     [ map { !$_ } $b->exists(map { $_->id } @entries) ],
-    [ 1, 1 ],
+    [ 1, 1, 1 ],
     "none exist yet",
 );
 
@@ -71,7 +72,7 @@ $b->insert(@entries);
 
 is_deeply(
     [ $b->exists(map { $_->id } @entries) ],
-    [ 1, 1 ],
+    [ 1, 1, 1 ],
     "both exist",
 );
 
@@ -89,7 +90,8 @@ foreach my $entry ( @entries ) {
 }
 
 ok(  -e $b->root_set_file($entries[0]->id), "root is in root set" );
-ok( !-e $b->root_set_file($entries[1]->id), "other is not in root set" );
+ok(  -e $b->root_set_file($entries[1]->id), "root is in root set" );
+ok( !-e $b->root_set_file($entries[2]->id), "child is not in root set" );
 
 
 my @clones = map { dclone($_) } @entries;
@@ -105,6 +107,6 @@ $b->delete($entries[0]->id);
 
 is_deeply(
     [ map { !$_ } $b->exists(map { $_->id } @entries) ],
-    [ 1, !1 ],
+    [ 1, !1, !1 ],
     "deleted",
 );

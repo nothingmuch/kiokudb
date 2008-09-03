@@ -72,19 +72,9 @@ sub simple_search {
     return $root_set->filter(sub {
         return [ grep {
             my $entry = $_;
-            $self->_compare($entry->data, $proto);
+            $self->compare_naive($entry->data, $proto);
         } @$_ ]
     });
-}
-
-sub _compare {
-    my ( $self, $got, $exp ) = @_;
-
-    foreach my $key ( keys %$exp ) {
-        return unless overload::StrVal($got->{$key}) eq overload::StrVal($exp->{$key});
-    }
-
-    return 1;
 }
 
 __PACKAGE__->meta->make_immutable;

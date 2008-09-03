@@ -20,8 +20,6 @@ sub simple_search_filter {
 sub compare_naive {
     my ( $self, $got, $exp ) = @_;
 
-    return unless keys %$got == keys %$exp;
-
     foreach my $key ( keys %$exp ) {
         return unless overload::StrVal($got->{$key}) eq overload::StrVal($exp->{$key});
     }
