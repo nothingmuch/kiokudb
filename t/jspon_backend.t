@@ -8,6 +8,7 @@ use utf8;
 use Test::More 'no_plan';
 use Test::TempDir;
 
+use Storable qw(dclone);
 use JSON;
 
 use ok 'KiokuDB::Backend::JSPON';
@@ -61,8 +62,8 @@ $entries[0]->root(1);
 is( scalar(@entries), 2, "two entries" );
 
 is_deeply(
-    [ map { !!$_ } $b->exists(map { $_->id } @entries) ],
-    [ '', '' ],
+    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+    [ 1, 1 ],
     "none exist yet",
 );
 
@@ -90,3 +91,20 @@ foreach my $entry ( @entries ) {
 ok(  -e $b->root_set_file($entries[0]->id), "root is in root set" );
 ok( !-e $b->root_set_file($entries[1]->id), "other is not in root set" );
 
+
+my @clones = map { dclone($_) } @entries;
+
+is_deeply(
+    [ $b->get(map { $_->id } @entries) ],
+    [ @clones ],
+    "loaded",
+);
+
+$b->delete($entries[0]->id);
+
+
+is_deeply(
+    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+    [ 1, !1 ],
+    "deleted",
+);
