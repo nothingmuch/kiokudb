@@ -42,7 +42,7 @@ has environment => (
         $db->mkpath;
         return BerkeleyDB::Env->new(
             -Home  => $db->stringify,
-            -Flags => DB_CREATE | DB_INIT_MPOOL | DB_INIT_TXN, 
+            -Flags => DB_CREATE | DB_INIT_MPOOL | DB_REGISTER | DB_RECOVER | DB_INIT_TXN, 
         ) || die $BerkeleyDB::Error;
     },
 );
