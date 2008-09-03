@@ -45,7 +45,7 @@ has environment => (
             # we need all this for transactions
             -Flags => DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG |
                       DB_INIT_TXN | DB_INIT_MPOOL,
-        );
+        ) || die $BerkeleyDB::Error;
     },
 );
 
@@ -59,7 +59,7 @@ has dbm => (
             -Env      => $self->environment,
             -Filename => 'objects.db',
             -Flags    => DB_CREATE,
-        );
+        ) || die $BerkeleyDB::Error;
 
         weaken $self;
 
