@@ -89,9 +89,15 @@ is_deeply(
 
 $b->delete($entries[0]->id);
 
-
 is_deeply(
     [ map { !$_ } $b->exists(map { $_->id } @entries) ],
     [ 1, !1 ],
     "deleted",
 );
+
+is_deeply(
+    [ map { !$_ } $b->get(map { $_->id } @entries) ],
+    [ ],
+    "get for with some non-existent entries returns nothing",
+);
+
