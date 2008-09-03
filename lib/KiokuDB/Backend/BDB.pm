@@ -85,9 +85,18 @@ sub insert {
 }
 
 sub get {
-    my ( $self, $uid ) = @_;
-    $self->dbm->db_get($uid, my $var) == 0 || return;
-    return $var;
+    my ( $self, @uids ) = @_;
+
+    my ( $var, @ret );
+
+    my $dbm = $self->dbm;
+
+    foreach my $uid ( @uids ) {
+        $dbm->db_get($uid, $var) == 0 || return;
+        push @ret, $var;
+    }
+
+    return @ret;
 }
 
 sub exists {

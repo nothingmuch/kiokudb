@@ -6,7 +6,7 @@ use warnings;
 use Test::More 'no_plan';
 use Test::TempDir;
 
-use Storable qw(thaw);
+use Storable qw(thaw dclone);
 
 use ok 'KiokuDB::Backend::BDB';
 use ok 'KiokuDB::Collapser';
@@ -57,8 +57,8 @@ my @entries = $c->collapse_objects($obj);
 is( scalar(@entries), 2, "two entries" );
 
 is_deeply(
-    [ map { !!$_ } $b->exists(map { $_->id } @entries) ],
-    [ '', '' ],
+    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+    [ 1, 1 ],
     "none exist yet",
 );
 
@@ -79,3 +79,19 @@ foreach my $entry ( @entries ) {
     is( $data->id, $entry->id, "id is correct" );
 }
 
+my @clones = map { dclone($_) } @entries;
+
+is_deeply(
+    [ $b->get(map { $_->id } @entries) ],
+    [ @clones ],
+    "loaded",
+);
+
+$b->delete($entries[0]->id);
+
+
+is_deeply(
+    [ map { !$_ } $b->exists(map { $_->id } @entries) ],
+    [ 1, !1 ],
+    "deleted",
+);
