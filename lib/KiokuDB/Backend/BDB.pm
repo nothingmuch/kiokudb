@@ -42,9 +42,7 @@ has environment => (
         $db->mkpath;
         return BerkeleyDB::Env->new(
             -Home  => $db->stringify,
-            # we need all this for transactions
-            -Flags => DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG |
-                      DB_INIT_TXN | DB_INIT_MPOOL,
+            -Flags => DB_CREATE | DB_INIT_MPOOL | DB_INIT_TXN, 
         ) || die $BerkeleyDB::Error;
     },
 );
@@ -58,7 +56,7 @@ has dbm => (
         my $hash = BerkeleyDB::Btree->new(
             -Env      => $self->environment,
             -Filename => 'objects.db',
-            -Flags    => DB_CREATE,
+            -Flags    => DB_CREATE | DB_AUTO_COMMIT,
         ) || die $BerkeleyDB::Error;
 
         weaken $self;
