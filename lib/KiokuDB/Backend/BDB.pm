@@ -15,6 +15,10 @@ use namespace::clean -except => 'meta';
 
 # this will require storing GIN extracted data in the database, too
 
+# also port Search::GIN's Data::Stream::Bulk/BDB cursor code
+# this should be generic (work with both c_get and c_pget, and the various
+# flags)
+
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::Storable
