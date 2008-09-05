@@ -93,7 +93,11 @@ sub get_or_load_object {
     if ( defined( my $obj = $self->live_objects->id_to_object($id) ) ) {
         return $obj;
     } else {
-        $self->load_object($id);
+        my $obj = $self->load_object($id);
+
+        # FIXME insert to live object *cache* too (if any)
+
+        return $obj;
     }
 }
 
