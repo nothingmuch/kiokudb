@@ -34,18 +34,13 @@ has class => (
 has backend_data => (
     isa => "Any",
     is  => "rw",
+    predicate => "has_backend_data",
 );
 
 has prev => (
     isa => __PACKAGE__,
     is  => "rw",
     predicate => "has_prev",
-);
-
-has live_objects => (
-    isa => "KiokuDB::LiveObjects",
-    is  => "rw",
-    weak_ref  => 1,
 );
 
 has object => (
@@ -55,13 +50,16 @@ has object => (
     predicate => "has_object",
 );
 
-
-sub update_live_objects {
+sub deletion_entry {
     my $self = shift;
 
-    if ( my $l = $self->live_objects ) {
-        $l->update_entry($self);
-    }
+    ( ref $self )->new(
+        id   => $self->id,
+        prev => $self,
+        deleted => 1,
+        ( $self->has_object       ? ( object       => $self->object       ) : () ),
+        ( $self->has_backend_data ? ( backend_data => $self->backend_data ) : () ),
+    );
 }
 
 sub STORABLE_freeze {

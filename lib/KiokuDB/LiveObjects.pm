@@ -86,19 +86,26 @@ sub object_to_entry {
     return undef;
 }
 
-sub update_entry {
-    my ( $self, $entry ) = @_;
+sub update_entries {
+    my ( $self, @entries ) = @_;
 
-    my $id = $entry->id;
+    my @ret;
 
-    my $obj = $self->_ids->{$id};
+    foreach my $entry ( @entries ) {
+        my $id = $entry->id;
 
-    croak "The object doesn't exist"
-        unless defined $obj;
+        my $obj = $self->_ids->{$id};
 
-    my $ent = $self->_objects->{$obj};
+        croak "The object doesn't exist"
+            unless defined $obj;
 
-    $ent->{entry} = $entry;
+        my $ent = $self->_objects->{$obj};
+
+        push @ret, $ent->{entry} if defined wantarray;
+        $ent->{entry} = $entry;
+    }
+
+    @ret;
 }
 
 sub remove {

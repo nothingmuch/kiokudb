@@ -46,11 +46,6 @@ my $l = KiokuDB::LiveObjects->new;
         KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],
-            live_objects => $l,
-        ),
-        KiokuDB::Entry->new(
-            id => "bar",
-            data => [ 1 .. 3 ],
             prev => KiokuDB::Entry->new( id => "bar" ),
         ),
     ) {
@@ -58,7 +53,7 @@ my $l = KiokuDB::LiveObjects->new;
 
         my $copy = thaw($f);
 
-        foreach my $transient ( qw(backend_data live_objects object prev) ) {
+        foreach my $transient ( qw(backend_data object prev) ) {
             my $attr = KiokuDB::Entry->meta->find_attribute_by_name($transient);
             ok( !$attr->has_value($copy), "no $transient in copy" );
             $attr->clear_value($ent);

@@ -71,6 +71,14 @@ my $id;
 
     $id = $dir->store($x);
 
+    my $entry = $dir->live_objects->objects_to_entries($x);
+
+    ok( $entry, "got an entry for $id" );
+
+    is( $entry->id, $id, "with the right entry" );
+
+    is( $entry->object, $x, "and the right object" );
+
     memory_cycle_ok($x, "store did not introduce cycles");
 
     is_deeply(
@@ -397,7 +405,21 @@ no_live_objects;
 
         $obj->foo("goddamn");
 
+        my $entry = $dir->live_objects->objects_to_entries($obj);
+
+        ok( $entry, "got an entry" );
+
+        is( $entry->id, $id, "right id" );
+
         $dir->update($obj);
+
+        my $update_entry = $dir->live_objects->objects_to_entries($obj);
+
+        ok( $update_entry, "got an update entry" );
+
+        is( $update_entry->id, $id, "right id" );
+
+        is( $update_entry->prev, $entry, "prev entry" );
     }
 
     no_live_objects;
@@ -478,6 +500,31 @@ no_live_objects;
     no_live_objects;
 
     is( $dir->lookup($id), undef, "deleted" );
+};
+
+no_live_objects;
+
+{
+     my $id = $dir->store(
+        my $foo = Foo->new(
+            foo => "dancing",
+            bar => Foo->new(
+                foo => "oh",
+            ),
+        ),
+    );
+
+    my $entry = $dir->live_objects->objects_to_entries($foo);
+
+    is( $entry->object, $foo, "entry object" );
+
+    $dir->delete($foo);
+
+    my $del_entry = $dir->live_objects->objects_to_entries($foo);
+
+    ok( $del_entry->deleted, "entry updated in live objects" );
+
+    is( $del_entry->prev, $entry, "prev entry" )
 };
 
 no_live_objects;

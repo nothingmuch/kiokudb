@@ -100,10 +100,11 @@ If this backend implements some form of garbage collection, C<root> denotes
 that the objects is part of the root set.
 
 After all entries have been successfully written, C<backend_data> should be set
-if necessary just as in C<get>, and C<update_live_objects> should be called on
-every entry signifying that it has been successfully written.
+if necessary just as in C<get>.
 
 Has no return value.
+
+If C<insert> does not die the write is assumed to be successful.
 
 =item delete @ids_or_entries
 
@@ -118,6 +119,8 @@ entry passed in is the same one as was loaded by C<get> or last written by
 C<insert>, so it is already up to date in the live objects.
 
 Has no return value.
+
+If C<delete> does not die the write is assumed to be successful.
 
 =item exists @ids
 

@@ -51,8 +51,6 @@ sub insert {
     foreach my $entry ( @insert_entries ) {
         $entry->backend_data(shift @new_docs);
     }
-
-    $_->update_live_objects for @entries;
 }
 
 sub get {

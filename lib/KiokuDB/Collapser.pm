@@ -195,7 +195,6 @@ sub make_entry {
     my $id = $args{id} || die "No id";
 
     return $self->_entries->{$id} = KiokuDB::Entry->new(
-        live_objects => $live_objects,
         ( $prev ? ( prev => $prev ) : () ),
         %args,
     );

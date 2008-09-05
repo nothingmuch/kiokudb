@@ -146,8 +146,10 @@ sub insert {
 sub update {
     my ( $self, @objects ) = @_;
 
+    my $l = $self->live_objects;
+
     croak "Object not in storage"
-        if grep { not defined } $self->live_objects->objects_to_entries(@objects);
+        if grep { not defined } $l->objects_to_entries(@objects);
 
     $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
@@ -159,7 +161,9 @@ sub store_objects {
 
     my $entries = $self->collapser->collapse(%args);
 
-    my @ids = $self->live_objects->objects_to_ids(@$objects);
+    my $l = $self->live_objects;
+
+    my @ids = $l->objects_to_ids(@$objects);
 
     if ( $args{root_set} ) {
         $_->root(1) for grep { defined } @{$entries}{@ids};
@@ -167,7 +171,8 @@ sub store_objects {
 
     $self->backend->insert(values %$entries);
 
-    # FIXME update index
+    # FIXME do something with prev for nested txns?
+    $l->update_entries(values %$entries);
 
     if ( @$objects == 1 ) {
         return $ids[0];
@@ -177,18 +182,30 @@ sub store_objects {
 }
 
 sub delete {
-    my ( $self, @objects ) = @_;
+    my ( $self, @ids_or_objects ) = @_;
 
-    my @ids_or_entries = (
-        $self->live_objects->objects_to_entries(grep { ref } @objects),
-        grep { not ref } @objects,
-    );
+    my $l = $self->live_objects;
 
-    for ( @ids_or_entries ) {
+    my ( @ids, @objects );
+
+    push @{ ref($_) ? \@objects : \@ids }, $_ for @ids_or_objects;
+
+    my @entries;
+
+    push @entries, $l->objects_to_entries(@objects) if @objects;
+
+    for ( @entries ) {
         croak "Object not in storage" unless defined;
     }
 
+    @entries = map { $_->deletion_entry } @entries;
+
+    #push @entries, $l->ids_to_entries(@ids) if @ids;
+    my @ids_or_entries = ( @entries, @ids );
+
     $self->backend->delete(@ids_or_entries);
+
+    $l->update_entries(@entries);
 }
 
 __PACKAGE__->meta->make_immutable;
