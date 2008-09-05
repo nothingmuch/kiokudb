@@ -508,23 +508,28 @@ no_live_objects;
      my $id = $dir->store(
         my $foo = Foo->new(
             foo => "dancing",
-            bar => Foo->new(
+            bar => my $bar = Foo->new(
                 foo => "oh",
             ),
         ),
     );
 
-    my $entry = $dir->live_objects->objects_to_entries($foo);
+    my @entries = $dir->live_objects->objects_to_entries($foo, $bar);
 
-    is( $entry->object, $foo, "entry object" );
+    is( scalar(@entries), 2, "two entries" );
+    is( $entries[0]->object, $foo, "entry object" );
+    is( $entries[1]->object, $bar, "entry object" );
 
-    $dir->delete($foo);
+    $dir->delete($foo, $bar);
 
-    my $del_entry = $dir->live_objects->objects_to_entries($foo);
+    my @del_entries = $dir->live_objects->objects_to_entries($foo, $bar);
 
-    ok( $del_entry->deleted, "entry updated in live objects" );
+    is( scalar(@del_entries), 2, "two deletion entries" );
 
-    is( $del_entry->prev, $entry, "prev entry" )
+    for ( 0 .. 1 ) {
+        ok( $del_entries[$_]->deleted, "entry updated in live objects" );
+        is( $del_entries[$_]->prev, $entries[$_], "prev entry" )
+    }
 };
 
 no_live_objects;
