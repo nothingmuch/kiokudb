@@ -200,6 +200,7 @@ sub delete {
 
     @entries = map { $_->deletion_entry } @entries;
 
+    # FIXME ideally if ID is pointing at a live object we should use its entry
     #push @entries, $l->ids_to_entries(@ids) if @ids;
     my @ids_or_entries = ( @entries, @ids );
 
