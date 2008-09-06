@@ -20,14 +20,14 @@ my $backend = KiokuDB::Backend::Hash->new;
 
 $backend->insert(@entries);
 
-my $root_set = $backend->scan;
+can_ok( $backend, qw(root_set scan simple_search) );
 
-can_ok( $backend, qw(scan simple_search) );
+my $root_entries = $backend->scan;
 
-isa_ok( $root_set, "Data::Stream::Bulk::Array" );
+isa_ok( $root_entries, "Data::Stream::Bulk::Array" );
 
 is_deeply(
-    [ sort { $a->id <=> $b->id } $root_set->all ],
+    [ sort { $a->id <=> $b->id } $root_entries->all ],
     [ sort { $a->id <=> $b->id } @entries[0 .. 2] ],
     "root set",
 );

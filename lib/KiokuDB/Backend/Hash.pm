@@ -12,6 +12,7 @@ with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Query::Simple
     KiokuDB::Backend::Scan
+    KiokuDB::Backend::Clear
 );
 
 has storage => (
@@ -19,6 +20,11 @@ has storage => (
     is  => "rw",
     default => sub { {} },
 );
+
+sub clear {
+    my $self = shift;
+    %{ $self->storage } = ();
+}
 
 sub get {
     my ( $self, @uids ) = @_;
@@ -52,16 +58,9 @@ sub exists {
     map { exists $self->storage->{$_} } @uids;
 }
 
-sub scan {
+sub root_set {
     my $self = shift;
-
-    my @ret;
-
-    foreach my $entry ( values %{ $self->storage } ) {
-        push @ret, $self->deserialize($entry) if $entry->root;
-    }
-
-    return bulk(@ret);
+    return bulk(map { $_->root ? $_->id : () } values %{ $self->storage });
 }
 
 sub simple_search {
