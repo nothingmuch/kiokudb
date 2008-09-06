@@ -39,7 +39,9 @@ sub insert {
 }
 
 sub delete {
-    my ( $self, @uids ) = @_;
+    my ( $self, @ids_or_entries ) = @_;
+
+    my @uids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
 
     delete @{ $self->storage }{@uids};
 }
