@@ -88,15 +88,11 @@ sub store_ok {
 sub update_ok {
     my ( $self, @objects ) = @_;
 
-    local $Test::Builder::Level = 1;
-
     _lives_and_ret { $self->update( @objects ) } "updated " . scalar(@objects) . " objects";
 }
 
 sub delete_ok {
     my ( $self, @objects ) = @_;
-
-    local $Test::Builder::Level = 1;
 
     _lives_and_ret { $self->delete( @objects ) } "deleted " . scalar(@objects) . " objects";
 }
@@ -104,7 +100,7 @@ sub delete_ok {
 sub exists_ok {
     my ( $self, @ids ) = @_;
 
-    local $Test::Builder::Level = 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is( scalar(grep { defined } $self->exists(@ids)), scalar(@ids), "@ids exist in DB" );
 }
@@ -112,7 +108,7 @@ sub exists_ok {
 sub deleted_ok {
     my ( $self, @ids ) = @_;
 
-    local $Test::Builder::Level = 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is( scalar(grep { !$_ } $self->exists(@ids)), scalar(@ids), "@ids do not exist in DB" );
 }
@@ -120,7 +116,7 @@ sub deleted_ok {
 sub lookup_ok {
     my ( $self, $id, $class ) = @_;
 
-    local $Test::Builder::Level = 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     ok( my $obj = $self->lookup($id), "lookup $id" );
 
@@ -132,7 +128,7 @@ sub lookup_ok {
 sub no_live_objects {
     my $self = shift;
 
-    local $Test::Builder::Level = 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is_deeply( [ $self->live_objects ], [ ], "no live objects" );
 }
@@ -140,7 +136,7 @@ sub no_live_objects {
 sub live_objects_are {
     my ( $self, @objects ) = @_;
 
-    local $Test::Builder::Level = 1;
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is_deeply( [ sort $self->live_objects ], [ sort @objects ], "correct live objects" );
 }
