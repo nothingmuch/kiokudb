@@ -13,6 +13,7 @@ with qw(
     KiokuDB::Role::StorageUUIDs
     KiokuDB::Backend::Clear
     KiokuDB::Backend::Scan
+    KiokuDB::Backend::Query::Simple::Linear
 );
 
 has db => (
