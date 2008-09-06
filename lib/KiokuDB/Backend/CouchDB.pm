@@ -3,12 +3,16 @@
 package KiokuDB::Backend::CouchDB;
 use Moose;
 
+use Data::Stream::Bulk::Util qw(bulk);
+
 use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::JSPON
     KiokuDB::Role::StorageUUIDs
+    KiokuDB::Backend::Clear
+    KiokuDB::Backend::Scan
 );
 
 has db => (
@@ -16,6 +20,14 @@ has db => (
     is  => "ro",
     handles => [qw(document)],
 );
+
+sub root_set {
+    my $self = shift;
+
+    bulk( map { $_->id } $self->db->all_documents ); # FIXME iterate IDs (using a view), also override scan to use all documents as well... wait for Net::CouchDB to support Data::Stream::Bulk though
+}
+
+sub clear { shift->db->clear } # FIXME handles does not satisfy roles yet
 
 sub delete {
     my ( $self, @ids_or_entries ) = @_;
