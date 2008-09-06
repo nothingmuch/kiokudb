@@ -111,11 +111,46 @@ sub lookup {
 
 sub search { }
 
-sub scan { }
+sub root_set {
+    my ( $self ) = @_;
 
-sub grep { }
+    my $stream = $self->backend->root_set;
 
-sub all { }
+    $stream->filter(sub { [ $self->lookup(@$_) ] });
+}
+
+# FIXME remove?
+sub all {
+    my $self = shift;
+
+    my $root_set = $self->root_set;
+
+    if ( wantarray ) {
+        return $root_set->all;
+    } else {
+        return $root_set;
+    }
+}
+
+sub grep {
+    my ( $self, $filter ) = @_;
+
+    my $stream = $self->root_set;
+
+    $stream->filter(sub { [ grep { $filter->($_) } @$_ ] });
+}
+
+sub scan {
+    my ( $self, $filter ) = @_;
+
+    my $stream = $self->root_set;
+
+    while ( my $items = $stream->next ) {
+        foreach my $item ( @$items ) {
+            $item->$filter();
+        }
+    }
+}
 
 sub store {
     my ( $self, @objects ) = @_;
