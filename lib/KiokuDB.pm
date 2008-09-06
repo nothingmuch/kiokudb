@@ -109,7 +109,23 @@ sub lookup {
     }
 }
 
-sub search { }
+sub search {
+    my ( $self, @args ) = @_;
+
+    if ( @args == 1 && ref $args[0] eq 'HASH' ) {
+        return $self->simple_search(@args);
+    } else {
+        return $self->backend_search(@args);
+    }
+}
+
+sub simple_search {
+
+}
+
+sub backend_search {
+
+}
 
 sub root_set {
     my ( $self ) = @_;
