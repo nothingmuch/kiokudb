@@ -21,7 +21,7 @@ extends qw(Data::Visitor);
 
 has resolver => (
     isa => "KiokuDB::Resolver",
-    is  => "rw",
+    is  => "ro",
     required => 1,
 );
 

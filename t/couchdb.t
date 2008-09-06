@@ -12,6 +12,8 @@ BEGIN {
 use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::CouchDB';
 
+use KiokuDB::Test;
+
 use Net::CouchDB;
 
 my $couch = Net::CouchDB->new($ENV{KIOKU_COUCHDB_URI});
@@ -22,22 +24,10 @@ eval { $couch->db($name)->delete };
 
 my $db = $couch->create_db($name);
 
-my $dir = KiokuDB->new(
-    backend => KiokuDB::Backend::CouchDB->new(
-        db => $db,
-    ),
-    #backend => KiokuDB::Backend::JSPON->new(
-    #    dir    => temp_root,
-    #    pretty => 1,
-    #    lock   => 0,
-    #),
+run_all_fixtures(
+    KiokuDB->new(
+        backend => KiokuDB::Backend::CouchDB->new(
+            db => $db,
+        ),
+    )
 );
-
-use ok 'KiokuDB::Test::Fixture::Person';
-
-my $f = KiokuDB::Test::Fixture::Person->new( directory => $dir );
-
-$f->populate;
-
-$f->verify;
-

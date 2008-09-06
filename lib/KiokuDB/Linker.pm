@@ -13,13 +13,13 @@ extends qw(Data::Visitor);
 
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
-    is  => "rw",
+    is  => "ro",
     required => 1,
 );
 
 has backend => (
     does => "KiokuDB::Backend",
-    is  => "rw",
+    is  => "ro",
     required => 1,
 );
 

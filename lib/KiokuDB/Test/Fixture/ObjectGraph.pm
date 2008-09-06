@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Test::Fixture::Person;
+package KiokuDB::Test::Fixture::ObjectGraph;
 use Moose;
 
 use Test::More;
@@ -40,7 +40,9 @@ has [qw(homer dubya putin)] => (
     is  => "rw",
 );
 
-sub populate {
+sub sort { 100 }
+
+sub create {
     my $self = shift;
 
     my $bart     = p("Bart Simpson");
@@ -78,7 +80,15 @@ sub populate {
 
     push @{ $junior->friends }, $putin;
 
-    my @roots = $self->directory->store( $junior, $putin, $homer );
+    return ( $junior, $putin, $homer );
+}
+
+sub populate {
+    my $self = shift;
+
+    my ( $junior, $putin, $homer ) = $self->create;
+
+    my @roots = $self->store_ok( $junior, $putin, $homer );
 
     $self->dubya($roots[0]);
     $self->putin($roots[1]);
@@ -91,11 +101,9 @@ sub populate {
 sub verify {
     my $self = shift;
 
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+    $self->no_live_objects;
 
-    my $junior = $self->directory->lookup( $self->dubya );
-
-    isa_ok( $junior, "KiokuDB::Test::Person" );
+    my $junior = $self->lookup_ok( $self->dubya, "KiokuDB::Test::Person" );
 
     is( $junior->so->name, "Laura Bush", "ref to other object" );
     is( $junior->so->so, $junior, "mututal ref" );
@@ -134,15 +142,14 @@ sub verify {
 
     pop @{ $junior->friends };
 
-    $self->directory->update($junior);
+    $self->update_ok($junior);
 
     circular_off($junior);
     undef $junior;
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    $junior = $self->directory->lookup( $self->dubya );
+    $self->no_live_objects();
 
-    isa_ok( $junior, "KiokuDB::Test::Person" );
+    $junior = $self->lookup_ok( $self->dubya, "KiokuDB::Test::Person" );
 
     is_deeply(
         [ map { $_->name } @{ $junior->friends } ],
@@ -150,14 +157,17 @@ sub verify {
         "Georgia got plastered",
     );
 
-    is_deeply(
-        [ sort map { $_->name } $self->live_objects->live_objects ],
-        [ sort map { $_->name } $junior, $junior->so, @{ $junior->friends }, @{ $junior->kids }, @{ $junior->parents }, $junior->parents->[0]->kids->[-1] ],
-        "live objects",
+    $self->live_objects_are( 
+        $junior,
+        $junior->so,
+        @{ $junior->friends },
+        @{ $junior->kids },
+        @{ $junior->parents },
+        $junior->parents->[0]->kids->[-1], # jeb
     );
 
     is(
-        scalar(grep { /Putin/ } map { $_->name } $self->live_objects->live_objects),
+        scalar(grep { /Putin/ } map { $_->name } $self->live_objects),
         0,
         "Putin is a dead object",
     );
@@ -167,16 +177,14 @@ sub verify {
     $junior->friends->[0]->job("Secretary of State");
     $junior->so->job("Prima Donna, Author, Teacher, Librarian");
 
-    $self->directory->update($self->live_objects->live_objects);
+    $self->update_live_objects;
 
     circular_off($junior);
     undef($junior);
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    my $homer = $self->directory->lookup($self->homer);
+    $self->no_live_objects;
 
-    isa_ok( $homer, "KiokuDB::Test::Person" );
-    is( $homer->name, "Homer Simpson", "name" );
+    my $homer = $self->lookup_ok( $self->homer, "KiokuDB::Test::Person" );
 
     {
         my $marge = $homer->so;
@@ -188,38 +196,47 @@ sub verify {
 
     $homer->job("Safety Inspector, Sector 7-G");
 
-    $self->directory->update($homer);
+    $self->update_ok($homer);
 
     circular_off($homer);
     undef $homer;
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    $homer = $self->directory->lookup($self->homer);
+    $self->no_live_objects;
 
-    isa_ok( $homer, "KiokuDB::Test::Person" );
+    $homer = $self->lookup_ok( $self->homer, "KiokuDB::Test::Person" );
+
     is( $homer->name, "Homer J. Simpson", "name" );
 
     circular_off($homer);
     undef $homer;
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
 
-    my $putin = $self->directory->lookup($self->putin);
+    $self->no_live_objects;
 
-    is_deeply( [ $self->live_objects->live_objects ], [ $putin ], "one live object" );
+    my $putin = $self->lookup_ok($self->putin);
+
+    $self->live_objects_are( $putin );
 
     foreach my $job ("President", "Prime Minister", "BDFL", "DFL") {
         $putin->job($job);
-        $self->directory->update($putin);
+        $self->update_ok($putin);
     }
 
-    $self->directory->delete($putin);
+    undef $putin;
+    $self->no_live_objects;
+
+    $putin = $self->lookup_ok($self->putin);
+
+    is( $putin->job, "DFL", "updated in storage" );
+
+    $self->delete_ok($putin);
 
     undef $putin;
 
-    is_deeply( [ $self->live_objects->live_objects ], [], "no live objects" );
+    $self->no_live_objects;
 
-    $putin = $self->directory->lookup($self->putin);
-    ok(!$putin, "putin has been deleted");
+    $self->no_live_objects;
+
+    $self->deleted_ok( $self->putin );
 }
 
 __PACKAGE__->meta->make_immutable;

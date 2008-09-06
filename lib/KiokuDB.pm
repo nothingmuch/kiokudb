@@ -24,7 +24,9 @@ use namespace::clean -except => [qw(meta SERIAL_IDS RUNTIME_BINARY_UUIDS)];
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "ro",
-    lazy_build => 1,
+    lazy => 1,
+    builder => "_build_live_objects", # lazy_build => 1 sets clearer
+    handles => { clear_live_objects => "clear" },
 );
 
 sub _build_live_objects { KiokuDB::LiveObjects->new }
@@ -61,6 +63,7 @@ has backend => (
     does => "KiokuDB::Backend",
     is   => "ro",
     required => 1,
+    handles => [qw(exists)],
 );
 
 has linker => (
@@ -118,7 +121,6 @@ sub store {
     my ( $self, @objects ) = @_;
 
     $self->store_objects( root_set => 1, objects => \@objects );
-
 }
 
 sub insert {

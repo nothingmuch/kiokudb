@@ -165,7 +165,7 @@ sub insert {
     }
 }
 
-sub DEMOLISH {
+sub clear {
     my $self = shift;
 
     foreach my $ent ( values %{ $self->_objects } ) {
@@ -177,6 +177,11 @@ sub DEMOLISH {
     # avoid the now needless weaken magic, should be faster
     %{ $self->_objects } = ();
     %{ $self->_ids }     = ();
+}
+
+sub DEMOLISH {
+    my $self = shift;
+    $self->clear;
 }
 
 __PACKAGE__->meta->make_immutable;
