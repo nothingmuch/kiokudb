@@ -132,7 +132,7 @@ sub root_set {
 
     my $stream = $self->backend->root_set;
 
-    $stream->filter(sub { [ $self->lookup(@$_) ] });
+    $stream->filter(sub { [ grep { ref } $self->lookup(@$_) ] }); # grep ref is in case a scan  or something deleted an ID in a prev page
 }
 
 # FIXME remove?
