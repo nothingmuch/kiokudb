@@ -26,6 +26,8 @@ has backend => (
 sub expand_object {
     my ( $self, $entry, %args ) = @_;
 
+    #confess($entry) unless blessed($entry);
+
     if ( my $class = $entry->class ) {
         # FIXME fix thawing for alternatively mapped classes
         # (px_thaw, naive, etc)
@@ -103,7 +105,10 @@ sub get_or_load_object {
 
 sub load_object {
     my ( $self, $id, @args ) = @_;
-    if ( my $entry = $self->backend->get($id) ) {
+
+    my ( $entry ) = $self->backend->get($id);
+
+    if ( $entry ) {
         $self->expand_object( $entry, @args );
     } else {
         die { missing => $id };
