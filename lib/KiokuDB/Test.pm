@@ -29,7 +29,7 @@ sub run_all_fixtures {
             require     => 1,
         );
 
-        foreach my $fixture ( reverse sort { $a->sort <=> $b->sort } $mp->plugins ) {
+        foreach my $fixture ( sort { $a->sort <=> $b->sort } $mp->plugins ) {
             $fixture->new( directory => $fixture->$get_dir )->run;
         }
     }
