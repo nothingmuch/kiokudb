@@ -26,7 +26,7 @@ my $keep = exists $ENV{KIOKU_COUCHDB_KEEP} ? $ENV{KIOKU_COUCHDB_KEEP} : exists $
 eval { $couch->db($name)->delete };
 
 my $db = $couch->create_db($name);
-my $sg = $keep && Scope::Guard->new(sub { $db->delete });
+my $sg = $keep || Scope::Guard->new(sub { $db->delete });
 
 run_all_fixtures(
     KiokuDB->new(
