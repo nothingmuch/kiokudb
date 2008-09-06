@@ -5,7 +5,15 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-requires "scan";
+requires "root_set";
+
+sub scan {
+    my $self = shift;
+
+    my $stream = $self->root_set;
+
+    $stream->filter(sub { [ $self->get(@$_) ] });
+}
 
 __PACKAGE__
 
