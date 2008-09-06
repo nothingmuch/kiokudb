@@ -97,7 +97,7 @@ sub get {
         push @ret, $var;
     }
 
-    return ( @ret == 1 ? $ret[0] : @ret );
+    return @ret;
 }
 
 sub exists {
