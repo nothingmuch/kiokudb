@@ -15,8 +15,6 @@ sub p {
     KiokuDB::Test::Person->new(@args);
 }
 
-use Data::Structure::Util qw(circular_off);
-
 with qw(KiokuDB::Test::Fixture);
 
 sub sort { -100 }
@@ -61,7 +59,7 @@ sub populate {
 sub verify {
     my $self = shift;
 
-    my $person = $self->lookup_ok( $self->person );
+    my $person = $self->lookup_obj_ok( $self->person );
 
     isa_ok( $person, "KiokuDB::Test::Person" );
     isa_ok( $person, "KiokuDB::Test::Employee" );

@@ -22,15 +22,42 @@ sub _lives_and_ret (&;$) {
 
 use namespace::clean -except => 'meta';
 
-requires qw(create populate verify);
+requires qw(create verify);
 
 sub sort { 0 }
+
+has populate_ids => (
+    isa => "ArrayRef[Str]",
+    is  => "rw",
+    predicate => "has_populate_ids",
+    clearer   => "clear_populate_ids",
+);
+
+sub populate {
+    my $self = shift;
+
+    {
+        my @objects = $self->create;
+
+        my @ids = $self->store_ok(@objects);
+
+        $self->populate_ids(\@ids);
+    }
+
+    $self->no_live_objects;
+}
 
 sub name {
     my $self = shift;
     my $class = ref($self) || $self;
     $class =~ s{KiokuDB::Test::Fixture::}{};
     return $class;
+}
+
+sub skip_fixture {
+    my ( $self, $reason, $count ) = @_;
+
+    skip $self->name . " fixture ($reason)", $count || 1
 }
 
 sub precheck {
@@ -47,7 +74,7 @@ sub run {
 
         $self->clear_live_objects;
 
-        is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name );
+        is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name . " fixture" );
 
         lives_ok {
             local $Test::Builder::Level = $Test::Builder::Level - 1;
@@ -55,7 +82,7 @@ sub run {
             $self->verify;
         } "no error in fixture";
 
-        is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name );
+        is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name . " fixture" );
 
         $self->clear_live_objects;
     }
@@ -64,7 +91,26 @@ sub run {
 has directory => (
     is  => "ro",
     isa => "KiokuDB",
-    handles => [qw(insert store update lookup exists delete clear_live_objects)],
+    handles => [qw(
+        lookup exists
+        store
+        insert update delete
+        
+        clear_live_objects
+        
+        backend
+        resolver
+        linker
+        collapser
+
+        search
+        simple_search
+        backend_search
+
+        root_set
+        scan
+        grep
+    )],
 );
 
 sub live_objects {
@@ -97,6 +143,19 @@ sub delete_ok {
     _lives_and_ret { $self->delete( @objects ) } "deleted " . scalar(@objects) . " objects";
 }
 
+sub lookup_ok {
+    my ( $self, @ids ) = @_;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    my @ret;
+    _lives_and_ret { @ret = $self->lookup( @ids ) } "lookup " . scalar(@ids) . " objects";
+
+    is( scalar(grep { ref } @ret), scalar(@ids), "all lookups succeeded" );
+
+    return ( ( @ret == 1 ) ? $ret[0] : @ret );
+}
+
 sub exists_ok {
     my ( $self, @ids ) = @_;
 
@@ -113,7 +172,7 @@ sub deleted_ok {
     is( scalar(grep { !$_ } $self->exists(@ids)), scalar(@ids), "@ids do not exist in DB" );
 }
 
-sub lookup_ok {
+sub lookup_obj_ok {
     my ( $self, $id, $class ) = @_;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;

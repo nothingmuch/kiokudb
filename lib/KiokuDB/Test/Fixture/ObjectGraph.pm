@@ -103,7 +103,7 @@ sub verify {
 
     $self->no_live_objects;
 
-    my $junior = $self->lookup_ok( $self->dubya, "KiokuDB::Test::Person" );
+    my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
     is( $junior->so->name, "Laura Bush", "ref to other object" );
     is( $junior->so->so, $junior, "mututal ref" );
@@ -149,7 +149,7 @@ sub verify {
 
     $self->no_live_objects();
 
-    $junior = $self->lookup_ok( $self->dubya, "KiokuDB::Test::Person" );
+    $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
     is_deeply(
         [ map { $_->name } @{ $junior->friends } ],
@@ -184,7 +184,7 @@ sub verify {
 
     $self->no_live_objects;
 
-    my $homer = $self->lookup_ok( $self->homer, "KiokuDB::Test::Person" );
+    my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
     {
         my $marge = $homer->so;
@@ -203,7 +203,7 @@ sub verify {
 
     $self->no_live_objects;
 
-    $homer = $self->lookup_ok( $self->homer, "KiokuDB::Test::Person" );
+    $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
     is( $homer->name, "Homer J. Simpson", "name" );
 
@@ -212,7 +212,7 @@ sub verify {
 
     $self->no_live_objects;
 
-    my $putin = $self->lookup_ok($self->putin);
+    my $putin = $self->lookup_obj_ok($self->putin);
 
     $self->live_objects_are( $putin );
 
@@ -224,7 +224,7 @@ sub verify {
     undef $putin;
     $self->no_live_objects;
 
-    $putin = $self->lookup_ok($self->putin);
+    $putin = $self->lookup_obj_ok($self->putin);
 
     is( $putin->job, "DFL", "updated in storage" );
 
