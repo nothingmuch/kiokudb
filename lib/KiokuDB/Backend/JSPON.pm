@@ -142,7 +142,9 @@ sub insert {
 }
 
 sub delete {
-    my ( $self, @uids ) = @_;
+    my ( $self, @ids_or_entries ) = @_;
+
+    my @uids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
 
     foreach my $uid ( @uids ) {
         foreach my $file ( $self->object_file($uid), $self->root_set_file($uid) ) {
