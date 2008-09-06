@@ -3,6 +3,13 @@
 package KiokuDB::Linker;
 use Moose;
 
+# perf improvements:
+# use a queue of required objects, queue up references, and bulk fetch
+# bulk fetch arrays
+# could support a Backend::Queueing which allows queuing of IDs for fetching,
+# to help clump or start a request and only read it when it's actually needed
+
+
 use Carp qw(croak);
 use Check::ISA;
 use Data::Swap qw(swap);
