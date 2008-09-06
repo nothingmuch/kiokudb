@@ -54,13 +54,21 @@ sub insert {
 }
 
 sub get {
-    my ( $self, $uid ) = @_;
-    my $doc = $self->document($uid) || return;
-    my %doc = %$doc;
-    $doc{__CLASS__} = delete $doc{class};
-    $doc{id} = $doc->id;
-    my $entry = $self->expand_jspon(\%doc, backend_data => $doc);
-    return $entry;
+    my ( $self, @uids ) = @_;
+
+    my @ret;
+
+    # FIXME bulk, and test
+    foreach my $uid ( @uids ) {
+        my $doc = $self->document($uid) || return;
+        my %doc = %$doc;
+        $doc{__CLASS__} = delete $doc{class};
+        $doc{id} = $doc->id;
+        my $entry = $self->expand_jspon(\%doc, backend_data => $doc);
+        push @ret, $entry;
+    }
+
+    return @ret;
 }
 
 sub exists {
