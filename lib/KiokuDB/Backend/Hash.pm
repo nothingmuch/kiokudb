@@ -10,7 +10,7 @@ use namespace::clean -except => 'meta';
 with qw(
     KiokuDB::Backend::Serialize::Memory
     KiokuDB::Backend
-    KiokuDB::Backend::Query::Simple
+    KiokuDB::Backend::Query::Simple::Linear
     KiokuDB::Backend::Scan
     KiokuDB::Backend::Clear
 );
@@ -61,21 +61,6 @@ sub exists {
 sub root_set {
     my $self = shift;
     return bulk(map { $_->root ? $_->id : () } values %{ $self->storage });
-}
-
-sub simple_search {
-    my ( $self, $proto ) = @_;
-
-    # FIXME $proto is sql::abstract 2? or...?
-
-    my $root_set = $self->scan;
-
-    return $root_set->filter(sub {
-        return [ grep {
-            my $entry = $_;
-            $self->compare_naive($entry->data, $proto);
-        } @$_ ]
-    });
 }
 
 __PACKAGE__->meta->make_immutable;
