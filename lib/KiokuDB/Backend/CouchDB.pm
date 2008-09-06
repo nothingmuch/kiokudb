@@ -25,7 +25,7 @@ has db => (
 sub root_set {
     my $self = shift;
 
-    bulk( map { $_->id } $self->db->all_documents ); # FIXME iterate IDs (using a view), also override scan to use all documents as well... wait for Net::CouchDB to support Data::Stream::Bulk though
+    bulk( map { $_->id } $self->db->all_documents ); # all_documents returns docs with no data
 }
 
 sub clear { shift->db->clear } # FIXME handles does not satisfy roles yet
