@@ -3,6 +3,10 @@
 package KiokuDB::Collapser;
 use Moose;
 
+# perf improvements:
+# cache of expansders keyed by ref($data)
+# could use this to do short/long term immutable style collapsers
+
 use Scope::Guard;
 use Carp qw(croak);
 use Scalar::Util qw(isweak);
