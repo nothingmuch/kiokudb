@@ -71,7 +71,10 @@ has dbm => (
 );
 
 sub delete {
-    my ( $self, @uids ) = @_;
+    my ( $self, @ids_or_entries ) = @_;
+
+    my @uids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
+
     my $dbm = $self->dbm;
     $dbm->db_del($_) for @uids;
 }
@@ -94,7 +97,7 @@ sub get {
         push @ret, $var;
     }
 
-    return @ret;
+    return ( @ret == 1 ? $ret[0] : @ret );
 }
 
 sub exists {
