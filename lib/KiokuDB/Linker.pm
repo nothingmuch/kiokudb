@@ -11,7 +11,6 @@ use Moose;
 
 
 use Carp qw(croak);
-use Check::ISA;
 use Data::Swap qw(swap);
 
 use namespace::clean -except => 'meta';
@@ -30,8 +29,34 @@ has backend => (
     required => 1,
 );
 
+has live_object_cache => (
+    isa => "KiokuDB::LiveObjects::Cache",
+    is  => "rw",
+    clearer => "clear_live_object_cache",
+);
+
+has _live_entries => (
+    isa => "HashRef",
+    clearer => "_clear_live_entries",
+);
+
+sub register_object {
+    my ( $self, $entry, $object ) = @_;
+
+    $self->live_objects->insert( $entry => $object );
+
+    if ( my $live_object_cache = $self->live_object_cache ) {
+        $live_object_cache->insert( $entry => $object );
+    }
+}
+
+sub expand_objects {
+    my ( $self, @entries ) = @_;
+    map { $self->expand_object($_) } @entries;
+}
+
 sub expand_object {
-    my ( $self, $entry, %args ) = @_;
+    my ( $self, $entry ) = @_;
 
     #confess($entry) unless blessed($entry);
 
@@ -44,7 +69,7 @@ sub expand_object {
         my $instance = $meta->get_meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
-        $self->live_objects->insert( $entry => $instance );
+        $self->register_object( $entry => $instance );
 
         my $data = $entry->data;
 
@@ -66,7 +91,7 @@ sub expand_object {
         # it maps from $entry->data to the new value, we register that with the live object set
 
         my $placeholder = {};
-        $self->live_objects->insert( $entry => $placeholder );
+        $self->register_object( $entry => $placeholder );
         my $data = $self->visit( $entry->data );
         swap($data, $placeholder);
         return $placeholder;
@@ -76,7 +101,7 @@ sub expand_object {
 sub visit_object {
     my ( $self, $object ) = @_;
 
-    if ( obj $object, "KiokuDB::Reference" ) {
+    if ( $object->isa("KiokuDB::Reference") ) {
         # FIXME if $object->is_weak then we need a Data::Visitor api to make
         # sure the container this gets put in is weakened
         # not a huge issue because usually we'll encounter attrs with weak_ref
@@ -93,7 +118,36 @@ sub visit_object {
 sub get_or_load_objects {
     my ( $self, @ids ) = @_;
 
-    map { $self->get_or_load_object($_) } @ids;
+    return $self->get_or_load_object($ids[0]) if @ids == 1;
+
+    my %objects;
+    @objects{@ids} = $self->live_objects->ids_to_objects(@ids);
+
+    my @missing = grep { not defined $objects{$_} } @ids;
+
+    @objects{@missing} = $self->load_objects(@missing);
+
+    return @objects{@ids};
+}
+
+sub load_objects {
+    my ( $self, @ids ) = @_;
+
+    my %entries;
+    @entries{@ids} = $self->live_objects->ids_to_entries(@ids);
+
+    if ( my @load = grep { !$entries{$_} } @ids ) {
+        #confess if @load == 1;
+        @entries{@load} = $self->backend->get(@load);
+
+        if ( my @missing = grep { !$entries{$_} } @load ) {
+            die { missing => \@missing };
+        }
+
+        $self->live_objects->insert_entries( @entries{@load} );
+    }
+
+    return $self->expand_objects( @entries{@ids} );
 }
 
 sub get_or_load_object {
@@ -102,24 +156,21 @@ sub get_or_load_object {
     if ( defined( my $obj = $self->live_objects->id_to_object($id) ) ) {
         return $obj;
     } else {
-        my $obj = $self->load_object($id);
-
-        # FIXME insert to live object *cache* too (if any)
-
-        return $obj;
+        return $self->load_object($id);
     }
 }
 
 sub load_object {
-    my ( $self, $id, @args ) = @_;
+    my ( $self, $id ) = @_;
 
-    my ( $entry ) = $self->backend->get($id);
+    my ( $entry ) = $self->live_objects->ids_to_entries($id);
 
-    if ( $entry ) {
-        $self->expand_object( $entry, @args );
-    } else {
-        die { missing => $id };
+    unless ( $entry ) {
+        $entry = ( $self->backend->get($id) )[0] || die { missing => [ $id ] };
+        $self->live_objects->insert_entries($entry );
     }
+
+    $self->expand_object($entry);
 }
 
 __PACKAGE__->meta->make_immutable;

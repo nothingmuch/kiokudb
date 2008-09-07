@@ -19,21 +19,27 @@ with qw(KiokuDB::Test::Fixture);
 
 sub sort { -100 }
 
-has person => (
+has [qw(joe oscar)] => (
     isa => "Str",
     is  => "rw",
 );
 
 sub create {
-    return KiokuDB::Test::Employee->new(
-        name    => "joe",
-        age     => 52,
-        parents => [ KiokuDB::Test::Person->new(
-            name => "mum",
-            age  => 78,
-        ) ],
-        company => KiokuDB::Test::Company->new(
-            name => "OHSOME SOFTWARE KTHX"
+    return (
+        KiokuDB::Test::Employee->new(
+            name    => "joe",
+            age     => 52,
+            parents => [ KiokuDB::Test::Person->new(
+                name => "mum",
+                age  => 78,
+            ) ],
+            company => KiokuDB::Test::Company->new(
+                name => "OHSOME SOFTWARE KTHX"
+            ),
+        ),
+        KiokuDB::Test::Person->new(
+            name => "oscar",
+            age => 3,
         ),
     );
 }
@@ -41,17 +47,25 @@ sub create {
 sub populate {
     my $self = shift;
 
-    my $person = $self->create;
+    my ( $joe, $oscar ) = $self->create;
 
-    isa_ok( $person, "KiokuDB::Test::Person" );
+    isa_ok( $joe, "KiokuDB::Test::Person" );
+    isa_ok( $joe, "KiokuDB::Test::Employee" );
 
-    my $id = $self->store_ok($person);
+    isa_ok( $oscar, "KiokuDB::Test::Person" );
 
-    $self->person($id);
+    my ( $joe_id, $oscar_id ) = $self->store_ok($joe, $oscar);
 
-    $self->live_objects_are($person, $person->company, @{ $person->parents });
+    $self->joe($joe_id);
+    $self->oscar($oscar_id);
 
-    undef $person;
+    $self->live_objects_are($joe, $joe->company, @{ $joe->parents }, $oscar);
+
+    undef $joe;
+
+    $self->live_objects_are($oscar);
+
+    undef $oscar;
 
     $self->no_live_objects;
 }
@@ -59,14 +73,16 @@ sub populate {
 sub verify {
     my $self = shift;
 
-    my $person = $self->lookup_obj_ok( $self->person );
+    my ( $joe, $oscar ) = my @objs = $self->lookup_ok( $self->joe, $self->oscar );
 
-    isa_ok( $person, "KiokuDB::Test::Person" );
-    isa_ok( $person, "KiokuDB::Test::Employee" );
+    isa_ok( $joe, "KiokuDB::Test::Person" );
+    isa_ok( $joe, "KiokuDB::Test::Employee" );
 
-    is( $person->name, "joe", "name" );
+    isa_ok( $oscar, "KiokuDB::Test::Person" );
 
-    ok( my $parents = $person->parents, "parents" );
+    is( $joe->name, "joe", "name" );
+
+    ok( my $parents = $joe->parents, "parents" );
 
     is( ref($parents), "ARRAY", "array ref" );
     
@@ -76,9 +92,11 @@ sub verify {
 
     is( $parents->[0]->name, "mum", "parent name" );
 
-    ok( my $company = $person->company, "company" );
+    ok( my $company = $joe->company, "company" );
 
     isa_ok( $company, "KiokuDB::Test::Company" );
+
+    is( $oscar->name, "oscar", "name" );
 }
 __PACKAGE__
 
