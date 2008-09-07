@@ -18,8 +18,8 @@ sub create {
     my $self = shift;
 
     return (
-        KiokuDB::Test::Person->new( name => "foo" ), 
-        KiokuDB::Test::Person->new( name => "bar" ), 
+        KiokuDB::Test::Person->new( name => "foo" ),
+        KiokuDB::Test::Person->new( name => "bar" ),
     );
 }
 
