@@ -9,6 +9,7 @@ use Test::Exception;
 use Data::GUID;
 
 use ok 'KiokuDB::LiveObjects';
+use ok 'KiokuDB::Entry';
 
 {
     package Foo;
@@ -90,8 +91,39 @@ use ok 'KiokuDB::LiveObjects';
         [ ],
         "live object set is now empty"
     );
-
-    # FIXME test ( $entry => $object )
 }
 
+{
+    my $l = KiokuDB::LiveObjects->new;
+
+    is( $l->objects_to_ids(Foo->new), undef, "random object has undef ID" );
+    is_deeply( [ $l->objects_to_ids(Foo->new, Foo->new) ], [ undef, undef ], "random objects have undef IDs" );
+}
+
+{
+    my $l = KiokuDB::LiveObjects->new;
+
+    {
+        my $entry = KiokuDB::Entry->new( id => "oink" );
+        $l->insert_entries($entry);
+
+        is_deeply( [ $l->loaded_ids ], ["oink"], "loaded IDs" );
+
+        is_deeply( [ $l->ids_to_entries("oink") ], [ $entry ], "ids_to_entries" );
+    }
+
+    is_deeply( [ $l->loaded_ids ], [], "loaded IDs" );
+}
+
+{
+    my $l = KiokuDB::LiveObjects->new;
+
+    my $entry = KiokuDB::Entry->new( id => "blah" );
+    my $blah = Foo->new;
+    $l->insert( $entry => $blah );
+
+    is_deeply( [ $l->objects_to_entries($blah) ], [ $entry ], "objects to entries" );
+
+    is_deeply( [ $l->ids_to_entries("blah") ], [ $entry ], "ids to entries" );
+}
 
