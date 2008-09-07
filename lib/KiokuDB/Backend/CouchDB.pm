@@ -10,6 +10,7 @@ use namespace::clean -except => 'meta';
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::JSPON
+    KiokuDB::Backend::UnicodeSafe
     KiokuDB::Role::StorageUUIDs
     KiokuDB::Backend::Clear
     KiokuDB::Backend::Scan

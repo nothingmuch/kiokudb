@@ -7,6 +7,12 @@ use Storable qw(dclone);
 
 use namespace::clean -except => 'meta';
 
+with qw(
+    KiokuDB::Backend::Serialize
+    KiokuDB::Backend::UnicodeSafe
+    KiokuDB::Backend::BinarySafe
+);
+
 sub serialize {
     my ( $self, $entry ) = @_;
 
