@@ -26,6 +26,8 @@ requires qw(create verify);
 
 sub sort { 0 }
 
+sub required_backend_roles { return () }
+
 has populate_ids => (
     isa => "ArrayRef[Str]",
     is  => "rw",
@@ -62,6 +64,19 @@ sub skip_fixture {
 
 sub precheck {
     my $self = shift;
+
+    my $backend = $self->backend;
+
+    my @missing;
+
+    foreach my $role ( $self->required_backend_roles ) {
+        push @missing, $role unless $backend->does($role) or $backend->does("KiokuDB::Backend::$role");
+    }
+
+    if ( @missing ) {
+        $_ =~ s/^KiokuDB::Backend::// for @missing;
+        $self->skip_fixture("Backend does not implement required roles (@missing)")
+    }
 }
 
 sub run {

@@ -12,6 +12,8 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::Test::Fixture);
 
+use constant required_backend_roles => qw(Clear Scan);
+
 sub create {
     my $self = shift;
 
@@ -20,16 +22,6 @@ sub create {
         { name => "bar", age => 3 },
         { name => "gorch", age => 5 },
     );
-}
-
-sub precheck {
-    my $self = shift;
-
-    $self->skip_fixture(ref($self->backend) . " does not implement Clear")
-        unless $self->backend->does("KiokuDB::Backend::Clear");
-
-    $self->skip_fixture(ref($self->backend) . " does not implement Scan")
-        unless $self->backend->does("KiokuDB::Backend::Scan");
 }
 
 before populate => sub {

@@ -10,6 +10,8 @@ use KiokuDB::Test::Person;
 
 use namespace::clean -except => 'meta';
 
+use constant required_backend_roles => qw(Clear);
+
 with qw(KiokuDB::Test::Fixture);
 
 sub sort { -10 }
@@ -21,13 +23,6 @@ sub create {
         KiokuDB::Test::Person->new( name => "foo" ),
         KiokuDB::Test::Person->new( name => "bar" ),
     );
-}
-
-sub precheck {
-    my $self = shift;
-
-    $self->skip_fixture(ref($self->backend) . " does not implement Clear")
-        unless $self->backend->does("KiokuDB::Backend::Clear");
 }
 
 sub verify {
