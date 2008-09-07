@@ -52,7 +52,22 @@ sub register_object {
 
 sub expand_objects {
     my ( $self, @entries ) = @_;
-    map { $self->expand_object($_) } @entries;
+
+    my $l = $self->live_objects;
+
+    my @objects;
+
+    foreach my $entry ( @entries ) {
+        # if the object was referred to in some other entry in @entries, it may
+        # have already been loaded.
+        if ( defined ( my $obj = $l->id_to_object($entry->id) ) ) {
+            push @objects, $obj;
+        } else {
+            push @objects, $self->expand_object($entry);
+        }
+    }
+
+    return @objects;
 }
 
 sub expand_object {
