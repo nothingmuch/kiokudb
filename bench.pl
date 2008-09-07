@@ -6,84 +6,39 @@ use warnings;
 use Test::TempDir;
 use Path::Class;
 use Storable qw(nstore retrieve);
-use YAML qw(DumpFile LoadFile);
 use DBM::Deep;
 
 use KiokuDB;
+use KiokuDB::Backend::Hash;
 use KiokuDB::Backend::JSPON;
 use KiokuDB::Backend::BDB;
+#use KiokuDB::Backend::CouchDB;
+
+use Data::Structure::Util qw(circular_off);
 
 # no long running tests
 my $large = 0;
 
-{
-    package Person;
-    use Moose;
-
-    use MooseX::Storage;
-
-    with Storage(format => "JSON", io => "File" );
-
-    has name => (
-        isa => "Str",
-        is  => "rw",
-    );
-
-    has age => (
-        isa => "Int",
-        is  => "rw",
-    );
-
-    has parent => (
-        isa => "Person",
-        is  => "rw",
-    );
-
-    package Employee;
-    use Moose;
-
-    extends qw(Person);
-
-    has company => (
-        isa => "Company",
-        is  => "rw",
-    );
-
-    package Company;
-    use Moose;
-
-    use MooseX::Storage;
-
-    with Storage(format => "JSON", io => "File" );
-
-    has name => (
-        isa => "Str",
-        is  => "rw",
-    );
-}
-
 use Benchmark qw(cmpthese);
 
+use KiokuDB::Test::Fixture::ObjectGraph;
+
+my $f = KiokuDB::Test::Fixture::ObjectGraph->new;
+
+BEGIN { *uuid = \&KiokuDB::Role::UUIDs::generate_uuid }
+
 sub construct {
-    return Employee->new(
-        name    => "joe",
-        age     => 52,
-        parent  => Person->new(
-            name => "mum",
-            age  => 78,
-        ),
-        company => Company->new(
-            name => "OHSOME SOFTWARE KTHX"
-        ),
-    );
+    $f->create;
 }
 
 sub bench {
     my $dir = dir(tempdir);
 
-    my $json = $dir->file("foo.json")->stringify;
     my $storable = $dir->file("foo.storable")->stringify;
-    my $yaml = $dir->file("foo.yaml")->stringify;
+
+    my $mxsd_hash = KiokuDB->new(
+        backend => KiokuDB::Backend::Hash->new,
+    );
 
     my $mxsd_jspon = KiokuDB->new(
         backend => KiokuDB::Backend::JSPON->new(
@@ -98,51 +53,63 @@ sub bench {
         ),
     );
 
-    my $dbm_deep = DBM::Deep->new( $dir->file("foo.db")->stringify );
+    my $mxsd_couch;
+
+    if ( my $uri = $ENV{KIOKU_COUCHDB_URI} ) {
+        require KiokuDB::Backend::CouchDB;
+        require Net::CouchDB;
+
+        my $couch = Net::CouchDB->new($uri);
+
+        my $name = $ENV{KIOKU_COUCHDB_NAME} || "kioku-$$";
+
+        eval { $couch->db($name)->delete };
+
+        my $db = $couch->create_db($name);
+
+        $mxsd_couch = KiokuDB->new(
+            backend => KiokuDB::Backend::CouchDB->new(
+                db => $db,
+            ),
+        );
+
+        $mxsd_couch->{__guard} = Scope::Guard->new(sub { $db->delete });
+    }
+
+    #my $dbm_deep = DBM::Deep->new( $dir->file("foo.db")->stringify );
 
     warn "\nwriting...\n";
 
-    cmpthese(-2, {
-        null       => sub { construct() },
-        mxsd_jspon => sub { $mxsd_jspon->store(construct()) },
-        mxsd_bdb   => sub { $mxsd_bdb->store(construct()) },
-        mxstorage  => sub { construct->store($json) },
-        storable   => sub { nstore(construct(), $storable) },
-        yaml       => sub { DumpFile($yaml, construct()) },
-        dbmdeep    => sub { $dbm_deep->{Data::GUID->new->as_string} = construct() },
+    cmpthese(-0.5, {
+        null       => sub { my @objs = construct(); circular_off(\@objs) },
+        mxsd_hash  => sub { my @objs = construct(); $mxsd_hash->store(@objs); circular_off(\@objs) },
+        mxsd_jspon => sub { my @objs = construct(); $mxsd_jspon->store(@objs); circular_off(\@objs) },
+        mxsd_bdb   => sub { my @objs = construct(); $mxsd_bdb->store(@objs); circular_off(\@objs) },
+        ( $mxsd_couch ? ( mxsd_couch => sub { my @objs = construct(); $mxsd_couch->store(@objs); circular_off(\@objs) } ) : () ),
+        storable   => sub { my @objs = construct(); nstore(\@objs, $storable); circular_off(\@objs) },
+        #dbmdeep    => sub { my @objs = construct(); @{ $dbm_deep }{uuid(), uuid()} = @objs; circular_off(\@objs) }, # bus errors on large object graph
     });
-
-    if ( $large ) {
-        warn "\nlarge object set...\n";
-        cmpthese(-10, {
-            mxsd_jspon => sub { $mxsd_jspon->store(construct()) },
-            mxsd_bdb   => sub { $mxsd_bdb->store(construct()) },
-            dbmdeep   => sub { $dbm_deep->{Data::GUID->new->as_string} = construct() },
-        });
-    }
 
     warn "\nreading...\n";
 
-    my @jspon_ids = $mxsd_jspon->store(map { construct() } 1 .. 5);
-    my @bdb_ids   = $mxsd_bdb->store(map { construct() } 1 .. 5);
+    my @hash_ids  = $mxsd_hash->store(construct());
+    my @jspon_ids = $mxsd_jspon->store(construct());
+    my @bdb_ids   = $mxsd_bdb->store(construct());
+    my @couch_ids = $mxsd_couch ? $mxsd_couch->store(construct()) : ();
 
-    my @dbmd_ids  = map { Data::GUID->new->as_string } 1 .. 5;
-    $dbm_deep->{$_} = construct() for @dbmd_ids;
+    #my @dbmd = construct();
+    #my @dbmd_ids  = map { uuid() } @dbmd;;
+    #@{ $dbm_deep }{@dbmd_ids} = @dbmd;
 
-    cmpthese(-2, {
-        mxsd_jspon => sub { my @objs = $mxsd_jspon->lookup(@jspon_ids) },
-        mxsd_bdb   => sub { my @objs = $mxsd_bdb->lookup(@bdb_ids) },
-        mxstorage  => sub { my @objs = map { Employee->load($json) } 1 .. 5 },
-        storable   => sub { my @objs = map { retrieve($storable) } 1 .. 5 },
-        storable   => sub { my @objs = map { LoadFile($yaml) } 1 .. 5 },
-        dbmdeep    => sub { my @objs = map { $dbm_deep->{$_} } @dbmd_ids },
+    cmpthese(-0.5, {
+        mxsd_hash  => sub { my @objs = $mxsd_hash->lookup(@hash_ids); circular_off(\@objs) },
+        mxsd_jspon => sub { my @objs = $mxsd_jspon->lookup(@jspon_ids); circular_off(\@objs) },
+        mxsd_bdb   => sub { my @objs = $mxsd_bdb->lookup(@bdb_ids); circular_off(\@objs) },
+        ( $mxsd_couch ? ( mxsd_couch => sub { my @objs = $mxsd_couch->lookup(@couch_ids); circular_off(\@objs) } ) : () ),
+        storable   => sub { my $objs = retrieve($storable); circular_off($objs) },
+        #dbmdeep    => sub { my @objs = @{ $dbm_deep }{@dbmd_ids}; circular_off(\@objs) },
     });
 }
 
-warn "timing mutable...\n";
 bench();
 
-$_->meta->make_immutable for qw(Person Employee Company);
-
-warn "\n\ntiming immutable...\n";
-bench();
