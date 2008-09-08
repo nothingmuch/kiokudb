@@ -228,7 +228,7 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
 }
 
 {
-    # typemap inheritence conflicts
+    # typemap conflicts
 
     my $ca = KiokuDB::TypeMap::Entry::Naive->new;
 
