@@ -239,11 +239,7 @@ sub store_objects {
 
     my $objects = $args{objects};
 
-    my $entries = $self->collapser->collapse(%args);
-
-    my $l = $self->live_objects;
-
-    my @ids = $l->objects_to_ids(@$objects);
+    my ( $entries, @ids ) = $self->collapser->collapse(%args);
 
     if ( $args{root_set} ) {
         $_->root(1) for grep { defined } @{$entries}{@ids};
@@ -252,7 +248,7 @@ sub store_objects {
     $self->backend->insert(values %$entries);
 
     # FIXME do something with prev for nested txns?
-    $l->update_entries(values %$entries);
+    $self->live_objects->update_entries(values %$entries);
 
     if ( @$objects == 1 ) {
         return $ids[0];

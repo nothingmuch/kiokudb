@@ -92,10 +92,9 @@ sub clear_temp_structs {
 sub collapse_objects {
     my ( $self, @objects ) = @_;
 
-    my $entries = $self->collapse( objects => \@objects );
+    my ( $entries, @ids ) = $self->collapse( objects => \@objects );
 
     # compute the root set
-    my @ids = $self->resolver->live_objects->objects_to_ids(@objects);
     my @root_set = delete @{ $entries }{@ids};
 
     # return the root set and all additional necessary entries
@@ -105,14 +104,11 @@ sub collapse_objects {
 sub collapse_known_objects {
     my ( $self, @objects ) = @_;
 
-    my $live_objects = $self->resolver->live_objects;
-
-    my $entries = $self->collapse(
+    my ( $entries, @ids ) = $self->collapse(
         objects    => \@objects,
         only_known => 1,
     );
 
-    my @ids = $self->resolver->live_objects->objects_to_ids(@objects);
     my @root_set = map { $_ and delete $entries->{$_} } @ids;
 
     # return the root set and all additional necessary entries
@@ -125,12 +121,24 @@ sub collapse {
 
     my $objects = delete $args{objects};
 
+    my $r;
+
     if ( $args{only_known} ) {
-        $args{live_objects} ||= $self->resolver->live_objects;
-        $args{resolver}     ||= $args{live_objects};
+        $args{live_objects}  ||= $self->resolver->live_objects;
+        $r = $args{resolver} ||= $args{live_objects};
     } else {
-        $args{resolver}     ||= $self->resolver;
-        $args{live_objects} ||= $args{resolver}->live_objects;
+        $r = $args{resolver} ||= $self->resolver;
+        $args{live_objects}  ||= $args{resolver}->live_objects;
+    }
+
+    my @ids = $r->objects_to_ids(@$objects);
+    foreach my $id ( @ids ) {
+        unless ( $id ) {
+            foreach my $object ( @$objects ) {
+                next if shift @ids;
+                die { unknown => $object };
+            }
+        }
     }
 
     if ( $args{shallow} ) {
@@ -141,10 +149,12 @@ sub collapse {
         $self->clear_temp_structs;
     });
 
-    my %entries;
+    my ( %entries, %fc );
+    @fc{@ids} = ();
+
     $self->_set_entries(\%entries);
     $self->_set_options(\%args);
-    $self->_set_first_class({});
+    $self->_set_first_class(\%fc);
     $self->_set_simple_entries([]);
 
     # recurse through the object, accumilating entries
@@ -154,7 +164,7 @@ sub collapse {
     # deep entry
     $self->compact_entries() if $self->compact;
 
-    return \%entries;
+    return ( \%entries, @ids );
 }
 
 sub compact_entries {

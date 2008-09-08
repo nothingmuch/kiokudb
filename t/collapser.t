@@ -381,13 +381,15 @@ use ok 'KiokuDB::TypeMap::Resolver';
         );
 
         {
-            my $entries = $v->collapse( objects => [ $obj ] );
+            my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
             is( scalar(keys %$entries), 2, "two entries for deep collapse" );
+            is( scalar(@ids), 1, "one root set ID" );
         }
 
         {
-            my $entries = $v->collapse( objects => [ $obj ], shallow => 1 );
+            my ( $entries, @ids ) = $v->collapse( objects => [ $obj ], shallow => 1 );
             is( scalar(keys %$entries), 1, "one entry for shallow collapse" );
+            is( scalar(@ids), 1, "one root set ID" );
         }
     }
 }
