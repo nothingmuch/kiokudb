@@ -23,10 +23,10 @@ has db => (
     handles => [qw(document)],
 );
 
-sub root_set {
+sub root_entries {
     my $self = shift;
 
-    bulk( map { $_->id } $self->db->all_documents ); # all_documents returns docs with no data
+    bulk( map { $self->deserialize($_) } $self->db->all_documents ); # all_documents returns docs with no data
 }
 
 sub clear { shift->db->clear } # FIXME handles does not satisfy roles yet
@@ -75,14 +75,21 @@ sub get {
     # FIXME bulk, and test
     foreach my $uid ( @uids ) {
         my $doc = $self->document($uid) || return;
-        my %doc = %$doc;
-        $doc{__CLASS__} = delete $doc{class};
-        $doc{id} = $doc->id;
-        my $entry = $self->expand_jspon(\%doc, backend_data => $doc);
-        push @ret, $entry;
+        push @ret, $self->deserialize($doc);
     }
 
     return @ret;
+}
+
+sub deserialize {
+    my ( $self, $doc ) = @_;
+
+    my %doc = %{ $doc->data };
+
+    $doc{__CLASS__} = delete $doc{class};
+    $doc{id} = $doc->id;
+
+    return $self->expand_jspon(\%doc, backend_data => $doc);
 }
 
 sub exists {

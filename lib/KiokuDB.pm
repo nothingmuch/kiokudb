@@ -157,9 +157,9 @@ sub backend_search {
 sub root_set {
     my ( $self ) = @_;
 
-    my $stream = $self->backend->root_set;
+    my $entries = $self->backend->root_entries;
 
-    $stream->filter(sub { [ grep { ref } $self->lookup(@$_) ] }); # grep ref is in case a scan  or something deleted an ID in a prev page
+    $entries->filter(sub {[ $self->linker->load_entries(@$_) ]});
 }
 
 # FIXME remove?

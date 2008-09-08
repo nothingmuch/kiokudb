@@ -5,15 +5,7 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-requires "root_set";
-
-sub scan {
-    my $self = shift;
-
-    my $stream = $self->root_set;
-
-    $stream->filter(sub { [ $self->get(@$_) ] });
-}
+requires "root_entries";
 
 __PACKAGE__
 
@@ -29,7 +21,7 @@ KiokuDB::Backend::Scan - Root set iteration
 
 	with qw(KiokuDB::Backend::Scan);
 
-    sub scan {
+    sub root_entries {
         my $self = shift;
 
         # return all root set entries

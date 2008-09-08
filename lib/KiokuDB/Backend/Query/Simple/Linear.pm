@@ -7,14 +7,14 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::Backend::Query::Simple);
 
-requires "scan";
+requires "root_entries";
 
 sub simple_search {
     my ( $self, $proto ) = @_;
 
     # FIXME $proto is sql::abstract 2? or...?
 
-    my $root_set = $self->scan;
+    my $root_set = $self->root_entries;
 
     return $root_set->filter(sub {
         return [ grep {

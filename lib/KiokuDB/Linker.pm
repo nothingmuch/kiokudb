@@ -167,6 +167,13 @@ sub load_objects {
     return $self->expand_objects( @entries{@ids} );
 }
 
+sub load_entries {
+    my ( $self, @entries ) = @_;
+
+    $self->live_objects->insert_entries(@entries),
+    $self->expand_objects(@entries);
+}
+
 sub get_or_load_object {
     my ( $self, $id ) = @_;
 

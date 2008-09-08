@@ -7,8 +7,9 @@ use Data::Stream::Bulk::Util qw(bulk);
 
 use namespace::clean -except => 'meta';
 
+#KiokuDB::Backend::Serialize::Memory
 with qw(
-    KiokuDB::Backend::Serialize::Memory
+    KiokuDB::Backend::Serialize::Storable
     KiokuDB::Backend
     KiokuDB::Backend::Query::Simple::Linear
     KiokuDB::Backend::Scan
@@ -58,9 +59,9 @@ sub exists {
     map { exists $self->storage->{$_} } @uids;
 }
 
-sub root_set {
+sub root_entries {
     my $self = shift;
-    return bulk(map { $_->root ? $_->id : () } map { $self->deserialize($_) } values %{ $self->storage });
+    return bulk(grep { $_->root } map { $self->deserialize($_) } values %{ $self->storage });
 }
 
 __PACKAGE__->meta->make_immutable;

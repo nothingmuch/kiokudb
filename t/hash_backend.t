@@ -20,9 +20,9 @@ my $backend = KiokuDB::Backend::Hash->new;
 
 $backend->insert(@entries);
 
-can_ok( $backend, qw(root_set scan simple_search) );
+can_ok( $backend, qw(root_entries simple_search) );
 
-my $root_entries = $backend->scan;
+my $root_entries = $backend->root_entries;
 
 isa_ok( $root_entries, "Data::Stream::Bulk::Array" );
 
