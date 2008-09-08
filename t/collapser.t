@@ -24,6 +24,8 @@ use ok 'KiokuDB::TypeMap::Resolver';
 
     has zot => ( is => "rw" );
 
+    __PACKAGE__->meta->make_immutable;
+
     package Bar;
     use Moose;
 
@@ -79,7 +81,7 @@ use ok 'KiokuDB::TypeMap::Resolver';
 
     {
         my @partial = eval { $v->collapse_known_objects($foo->bar) };
-        ok( !$@, "no error" );
+        is( $@, "", "no error" );
         is( scalar(grep { defined } @partial), 1, "one entry for known obj collapse" );
     }
 
