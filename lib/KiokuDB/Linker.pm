@@ -35,11 +35,6 @@ has live_object_cache => (
     clearer => "clear_live_object_cache",
 );
 
-has _live_entries => (
-    isa => "HashRef",
-    clearer => "_clear_live_entries",
-);
-
 sub register_object {
     my ( $self, $entry, $object ) = @_;
 
