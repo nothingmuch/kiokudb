@@ -15,7 +15,6 @@ use KiokuDB::Entry;
 use KiokuDB::Reference;
 
 use Data::Visitor 0.18;
-use Data::Visitor::Callback;
 
 use Set::Object qw(set);
 
@@ -173,34 +172,40 @@ sub compact_entries {
     my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
 
     # unify non shared simple references
-    # FIXME hashes and arrays should be registered in a Set::Object
     if ( my @flatten = grep { not exists $fc->{$_} } @$simple ) {
-        my %flatten = map { $_ => undef } @flatten;
+        my $flatten = {};
+        @{$flatten}{@flatten} = delete @{$entries}{@flatten};
 
-        my %purged;
+        $options->{resolver}->remove(@flatten);
 
-        # FIXME for performance reasons make this more naïve, no need for full
-        # Data::Visitor since the structures are very simple
-        Data::Visitor::Callback->new(
-            ignore_return_values => 1,
-            'KiokuDB::Reference' => sub {
-                my ( $v, $ref ) = @_;
+        $self->compact_entry($_, $flatten) for values %$flatten, values %$entries;
+    }
+}
 
-                my $id = $ref->id;
+sub compact_entry {
+    my ( $self, $entry, $flatten ) = @_;
+    $self->compact_data($entry->data, $flatten);
+}
 
-                if ( exists $flatten{$id} ) {
-                    # replace reference with data from entry, so that the
-                    # simple data is inlined, and mark that entry for removal
-                    $_ = $entries->{$id}->data;
-                    $purged{$id} = undef;
-                }
-            }
-        )->visit([ map { $_->data } values %$entries ]);
+sub compact_data {
+    my ( $self, $data, $flatten ) = @_;
 
-        # FIXME only remove if we allocated the ID
-        # remove from the live objects and entries to store list
-        delete @{$entries}{keys %purged};
-        $options->{resolver}->remove(keys %purged);
+    return unless ref $data;
+
+    if ( ref $data eq 'KiokuDB::Reference' ) {
+        my $id = $data->id;
+
+        if ( my $entry = $flatten->{$id} ) {
+            # replace reference with data from entry, so that the
+            # simple data is inlined, and mark that entry for removal
+            $_[1] = $entry->data;
+        }
+    } elsif ( ref($data) eq 'ARRAY' ) {
+        $self->compact_data($_, $flatten) for @$data;
+    } elsif ( ref($data) eq 'HASH' ) {
+        $self->compact_data($_, $flatten) for values %$data;
+    } else {
+        die "unsupported reftype: " . ref $data;
     }
 }
 
