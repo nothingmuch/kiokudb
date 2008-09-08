@@ -58,12 +58,10 @@ sub compile_collapser {
 sub compile_expander {
     my ( $self, $meta ) = @_;
 
-    my ( @names, %writers );
+    my %writers;
 
     foreach my $attr ( $meta->compute_all_applicable_attributes ) {
         my $name = $attr->name;
-
-        push @names, $name;
         $writers{$name} = $attr->get_write_method_ref->body || sub { $attr->set_value($_[0]) };
     }
 
@@ -77,14 +75,13 @@ sub compile_expander {
 
         my $data = $entry->data;
 
-        foreach my $name ( @names ) {
-            next unless exists $data->{$name};
-
+        foreach my $name ( keys %$data ) {
             my $value = $data->{$name};
+
             $value = $self->inflate_data($value) if ref $value;
 
             my $writer = $writers{$name};
-            $instance->$writer($value); # FIXME avoid trigger
+            $instance->$writer($value); # FIXME avoid trigger, type constraint etc
         }
 
         return $instance;
@@ -101,7 +98,9 @@ sub compile_mappings_immutable {
 
 sub compile_mappings_mutable {
     my ( $self, $meta ) = @_;
-    warn "Mutable: " . $meta->name;
+
+    #warn "Mutable: " . $meta->name;
+
     return (
         sub {
             my $collapser = $self->compile_collapser($meta);

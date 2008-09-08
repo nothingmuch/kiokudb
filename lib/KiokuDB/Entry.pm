@@ -72,7 +72,7 @@ sub STORABLE_freeze {
             $self->class || '',
             !!$self->deleted,
         ),
-        $self->has_data ? $self->data : (),
+        ( $self->has_data ? $self->data : () ),
     );
 }
 
@@ -84,10 +84,9 @@ sub STORABLE_thaw {
     $self->id($id);
     $self->root(1) if $root;;
     $self->class( $class) if $class;
-    $self->data($data) if ref $data;
     $self->deleted($deleted);
 
-    return $self;
+    $self->data($data) if ref $data;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -142,27 +141,9 @@ store for a given UUID is kept in the live object set.
 The collapser creates transient Entry objects, which if written to the store
 successfully are replace the previous one.
 
-=item live_objects
-
-Used by transient entries to promote themselves using the
-C<update_live_objects> method.
-
 =item backend_data
 
 Backends can use this to store additional meta data as they see fit.
-
-=back
-
-=head1 METHODS
-
-=over 4
-
-=item update_live_objects
-
-If C<live_objects> is set, invoking this method will set this entry as the
-current entry for an ID.
-
-This should be called by the backend after an entry is successfully written.
 
 =back
 
