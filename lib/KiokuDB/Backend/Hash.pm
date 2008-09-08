@@ -60,7 +60,7 @@ sub exists {
 
 sub root_set {
     my $self = shift;
-    return bulk(map { $_->root ? $_->id : () } values %{ $self->storage });
+    return bulk(map { $_->root ? $_->id : () } map { $self->deserialize($_) } values %{ $self->storage });
 }
 
 __PACKAGE__->meta->make_immutable;
