@@ -5,7 +5,12 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry);
+with qw(KiokuDB::TypeMap::Entry::Std);
+
+sub compile_mappings {
+    my ( $self, @args ) = @_;
+    return qw(collapse_naive expand_naive);
+}
 
 __PACKAGE__->meta->make_immutable;
 

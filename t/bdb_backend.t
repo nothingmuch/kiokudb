@@ -50,6 +50,9 @@ my $c = KiokuDB::Collapser->new(
     resolver => KiokuDB::Resolver->new(
         live_objects => KiokuDB::LiveObjects->new,
     ),
+    typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+        typemap => KiokuDB::TypeMap->new
+    ),
 );
 
 my @entries = $c->collapse_objects($obj);

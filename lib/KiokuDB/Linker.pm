@@ -29,6 +29,13 @@ has backend => (
     required => 1,
 );
 
+has typemap_resolver => (
+    isa => "KiokuDB::TypeMap::Resolver",
+    is  => "ro",
+    handles => [qw(expand_method)],
+    required => 1,
+);
+
 has live_object_cache => (
     isa => "KiokuDB::LiveObjects::Cache",
     is  => "rw",
@@ -71,57 +78,57 @@ sub expand_object {
     #confess($entry) unless blessed($entry);
 
     if ( my $class = $entry->class ) {
-        # FIXME fix thawing for alternatively mapped classes
-        # (px_thaw, naive, etc)
-
-        my $meta = Class::MOP::get_metaclass_by_name($class);
-
-        my $instance = $meta->get_meta_instance->create_instance();
-
-        # note, this is registered *before* any other value expansion, to allow circular refs
-        $self->register_object( $entry => $instance );
-
-        my $data = $entry->data;
-
-        foreach my $attr ( $meta->compute_all_applicable_attributes ) {
-            my $name = $attr->name;
-            next unless exists $data->{$name};
-            my $value = $data->{$name};
-            $attr->set_value( $instance, $self->visit($value) );
-        }
-
-        return $instance;
+        my $expand_method = $self->expand_method($class);
+        return $self->$expand_method($entry);
     } else {
-        # FIXME remove Data::Swap
-
-        # for simple structures with circular refs we need to have the UUID
-        # already pointing to a refaddr
-
-        # a better way to do this is to hijack _register_mapping so that when
-        # it maps from $entry->data to the new value, we register that with the live object set
-
-        my $placeholder = {};
-        $self->register_object( $entry => $placeholder );
-        my $data = $self->visit( $entry->data );
-        swap($data, $placeholder);
-        return $placeholder;
+        return $self->expand_naive($entry);
     }
 }
 
-sub visit_object {
-    my ( $self, $object ) = @_;
+sub expand_naive {
+    my ( $self, $entry ) = @_;
 
-    if ( $object->isa("KiokuDB::Reference") ) {
+    # FIXME remove Data::Swap
+
+    # for simple structures with circular refs we need to have the UUID
+    # already pointing to a refaddr
+
+    # a better way to do this is to hijack _register_mapping so that when
+    # it maps from $entry->data to the new value, we register that with the live object set
+
+    my $placeholder = {};
+    $self->register_object( $entry => $placeholder );
+    my $data = $self->inflate_data( $entry->data );
+
+    if ( my $class = $entry->class ) {
+        bless $data, $class;
+    }
+
+    swap($data, $placeholder);
+    return $placeholder;
+}
+
+sub inflate_data {
+    my ( $self, $data ) = @_;
+
+    return unless ref $data;
+
+    if ( ref $data eq 'KiokuDB::Reference' ) {
+        my $id = $data->id;
         # FIXME if $object->is_weak then we need a Data::Visitor api to make
         # sure the container this gets put in is weakened
         # not a huge issue because usually we'll encounter attrs with weak_ref
         # => 1, but this is still needed for correctness
 
         # GAH! just returning the object is broken, gotta find out why
-        my $obj = $self->get_or_load_object( $object->id );
+        my $obj = $self->get_or_load_object($id);
         return $obj;
+    } elsif ( ref($data) eq 'ARRAY' ) {
+        return [ map { ref() ? $self->inflate_data($_) : $_ } @$data ];
+    } elsif ( ref($data) eq 'HASH' ) {
+        return { map { ref() ? $self->inflate_data($_) : $_ } %$data };
     } else {
-        croak "Unexpected object $object in entry";
+        die "unsupported reftype: " . ref $data;
     }
 }
 

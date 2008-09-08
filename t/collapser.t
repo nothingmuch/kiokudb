@@ -10,6 +10,8 @@ use Scalar::Util qw(weaken isweak);
 use ok 'KiokuDB::Collapser';
 use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::LiveObjects';
+use ok 'KiokuDB::TypeMap';
+use ok 'KiokuDB::TypeMap::Resolver';
 
 {
     package Foo;
@@ -34,6 +36,9 @@ use ok 'KiokuDB::LiveObjects';
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
+        ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
         ),
     );
 
@@ -116,6 +121,9 @@ use ok 'KiokuDB::LiveObjects';
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
         ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
+        ),
     );
 
     my $x = { name => "shared" };
@@ -159,6 +167,9 @@ use ok 'KiokuDB::LiveObjects';
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
+        ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
         ),
     );
 
@@ -206,6 +217,9 @@ use ok 'KiokuDB::LiveObjects';
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
         ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
+        ),
     );
 
     my $x = { name => "shared" };
@@ -250,6 +264,9 @@ use ok 'KiokuDB::LiveObjects';
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
+        ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
         ),
     );
 
@@ -297,6 +314,9 @@ use ok 'KiokuDB::LiveObjects';
         resolver => KiokuDB::Resolver->new(
             live_objects => KiokuDB::LiveObjects->new
         ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new
+        ),
     );
 
     my $data = { };
@@ -320,6 +340,9 @@ use ok 'KiokuDB::LiveObjects';
                 live_objects => KiokuDB::LiveObjects->new
             ),
             compact => 0,
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new
+            ),
         );
 
         my @entries = $v->collapse_objects($obj);
@@ -332,6 +355,9 @@ use ok 'KiokuDB::LiveObjects';
                 live_objects => KiokuDB::LiveObjects->new
             ),
             compact => 1,
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new
+            ),
         );
 
         my @entries = $v->collapse_objects($obj);
@@ -346,6 +372,9 @@ use ok 'KiokuDB::LiveObjects';
         my $v = KiokuDB::Collapser->new(
             resolver => KiokuDB::Resolver->new(
                 live_objects => KiokuDB::LiveObjects->new
+            ),
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new
             ),
         );
 

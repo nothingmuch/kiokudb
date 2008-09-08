@@ -29,6 +29,13 @@ has resolver => (
     required => 1,
 );
 
+has typemap_resolver => (
+    isa => "KiokuDB::TypeMap::Resolver",
+    is  => "ro",
+    handles => [qw(collapse_method)],
+    required => 1,
+);
+
 has compact => (
     isa => "Bool",
     is  => "rw",
@@ -284,6 +291,14 @@ sub _ref_id {
 sub visit_object {
     my ( $self, $object ) = @_;
 
+    my $collapse = $self->collapse_method(ref $object);
+
+    $self->$collapse($object);
+}
+
+sub collapse_first_class {
+    my ( $self, $collapse, $object ) = @_;
+
     # Data::Visitor stuff for circular refs
     $self->_register_mapping( $object, $object );
 
@@ -303,11 +318,7 @@ sub visit_object {
         class  => $class
     );
 
-    my $meta = Class::MOP::get_metaclass_by_name($class);
-
-    my $data = $meta
-        ? $self->collapse_object_with_meta( @args, meta => $meta )
-        : $self->collapse_object_without_meta(@args);
+    my $data = $self->$collapse(@args);
 
     # FIXME implement intrinsic values (unregister $object, return $data
     # instead of make_ref)
@@ -326,34 +337,7 @@ sub _object_id {
     $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
 }
 
-sub collapse_object_with_meta {
-    my ( $self, %args ) = @_;
-
-    my ( $object, $meta ) = @args{qw(object meta)};
-
-    my @attrs = $meta->compute_all_applicable_attributes;
-
-    return {
-        map {
-            my $attr = $_;
-            # FIXME readd MooseX::Storage::Engine type mappings here
-            # need to refactor Engine, or go back to subclassing it
-            my $value = $attr->get_value($object);
-            my $collapsed = $self->visit($value);
-            ( $attr->name => $collapsed );
-        } grep {
-            $_->has_value($object)
-        } @attrs
-    };
-}
-
-sub collapse_object_without_meta {
-    my ( $self, %args ) = @_;
-
-    die "TODO";
-}
-
-sub collapse_object_naive {
+sub collapse_naive {
     my ( $self, %args ) = @_;
 
     my $object = $args{object};

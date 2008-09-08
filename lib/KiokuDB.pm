@@ -15,11 +15,36 @@ use KiokuDB::Resolver;
 use KiokuDB::Collapser;
 use KiokuDB::Linker;
 use KiokuDB::LiveObjects;
+use KiokuDB::TypeMap;
+use KiokuDB::TypeMap::Resolver;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
 use Carp qw(croak);
 
 use namespace::clean -except => [qw(meta SERIAL_IDS RUNTIME_BINARY_UUIDS)];
+
+has typemap => (
+    isa => "KiokuDB::TypeMap",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build_typemap {
+    KiokuDB::TypeMap->new;
+}
+
+has typemap_resolver => (
+    isa => "KiokuDB::TypeMap::Resolver",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build_typemap_resolver {
+    my $self = shift;
+    KiokuDB::TypeMap::Resolver->new(
+        typemap => $self->typemap,
+    );
+}
 
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
@@ -56,6 +81,7 @@ sub _build_collapser {
 
     KiokuDB::Collapser->new(
         resolver => $self->resolver,
+        typemap_resolver => $self->typemap_resolver,
     );
 }
 
@@ -78,6 +104,7 @@ sub _build_linker {
     KiokuDB::Linker->new(
         backend => $self->backend,
         live_objects => $self->live_objects,
+        typemap_resolver => $self->typemap_resolver,
     );
 }
 

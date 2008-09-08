@@ -5,10 +5,7 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-has intrinsic => (
-    isa => "Bool",
-    default => 0,
-);
+requires "compile";
 
 __PACKAGE__
 
