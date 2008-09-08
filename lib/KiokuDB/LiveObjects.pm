@@ -224,7 +224,7 @@ sub clear {
         }
     }
 
-    foreach my $guard ( values %{ $self->_entry_objects } ) {
+    foreach my $guard ( grep { $_ } values %{ $self->_entry_objects } ) {
         $guard->dismiss;
     }
 
