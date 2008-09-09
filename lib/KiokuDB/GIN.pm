@@ -8,15 +8,7 @@ use namespace::clean -except => 'meta';
 with qw(
     Search::GIN::Driver
     Search::GIN::Extract
-    KiokuDB::Backend
     KiokuDB::Backend::Query
-);
-
-has backend => (
-    does => "KiokuDB::Backend",
-    is   => "ro",
-    required => 1,
-    # handles => [qw(get exists)],
 );
 
 has root_only => (
@@ -25,13 +17,10 @@ has root_only => (
     default => 1,
 );
 
-sub exists { shift->backend->exist(@_) }
-sub get { shift->backend->exist(@_) }
-
-sub insert {
+after insert => sub {
     my ( $self, @entries ) = @_;
 
-    $self->backend->insert(@entries);
+    @entries = grep { $_->root } @entries if $self->root_only;
 
     my @idx_entries = grep { $_->has_object } @entries;
 
@@ -39,17 +28,15 @@ sub insert {
         my @keys = $self->extract_values( $entry->object );
         $self->insert_entry( $entry->id, @keys );
     }
-}
+};
 
-sub delete {
+after delete => sub {
     my ( $self, @ids_or_entries ) = @_;
-
-    $self->backend->delete(@ids_or_entries);
 
     my @ids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
 
     $self->remove_ids(@ids);
-}
+};
 
 has distinct => (
     isa => "Bool",
@@ -71,7 +58,7 @@ sub search {
 
     $ids = unique($ids) if $args{distinct};
 
-    return $ids->filter(sub {[ $self->backend->get(@$_) ]});
+    return $ids->filter(sub {[ $self->get(@$_) ]});
 }
 
 sub search_filter {
