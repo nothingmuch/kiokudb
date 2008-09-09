@@ -146,12 +146,36 @@ sub search {
     }
 }
 
-sub simple_search {
+sub _load_entry_stream {
+    my ( $self, $entries ) = @_;
 
+    my $linker = $self->linker;
+
+    return $entries->filter(sub {[ $linker->load_entries(@$_) ]});
+}
+
+sub simple_search {
+    my ( $self, @args ) = @_;
+
+    my $b = $self->backend;
+
+    my $entries = $b->simple_search( @args, live_objects => $self->live_objects );
+
+    my $objects = $self->_load_entry_stream($entries);
+
+    return $b->simple_search_filter($objects, @args);
 }
 
 sub backend_search {
+    my ( $self, @args ) = @_;
 
+    my $b = $self->backend;
+
+    my $entries = $b->search( @args, live_objects => $self->live_objects );
+
+    my $objects = $self->_load_entry_stream($entries);
+
+    return $b->search_filter($objects, @args);
 }
 
 sub root_set {
