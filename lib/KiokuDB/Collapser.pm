@@ -360,6 +360,12 @@ sub collapse_naive {
     return $self->SUPER::visit_ref($object);
 }
 
+# we don't reblass in collapse_naive
+sub retain_magic {
+    my ( $self, $proto, $clone ) = @_;
+    return $clone;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
