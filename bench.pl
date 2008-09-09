@@ -6,7 +6,6 @@ use warnings;
 use Test::TempDir;
 use Path::Class;
 use Storable qw(nstore retrieve);
-use DBM::Deep;
 
 use KiokuDB;
 use KiokuDB::Backend::Hash;
@@ -15,15 +14,14 @@ use KiokuDB::Backend::BDB;
 #use KiokuDB::Backend::CouchDB;
 
 use Data::Structure::Util qw(circular_off);
+#sub circular_off {}
 
 # no long running tests
 my $large = 0;
 
 use Benchmark qw(cmpthese);
 
-use KiokuDB::Test::Fixture::ObjectGraph;
-
-my $f = KiokuDB::Test::Fixture::ObjectGraph->new;
+my $f = (require KiokuDB::Test::Fixture::ObjectGraph)->new;
 
 BEGIN { *uuid = \&KiokuDB::Role::UUIDs::generate_uuid }
 
@@ -80,7 +78,7 @@ sub bench {
 
     warn "\nwriting...\n";
 
-    cmpthese(-0.5, {
+    cmpthese(-1, {
         null       => sub { my @objs = construct(); circular_off(\@objs) },
         mxsd_hash  => sub { my @objs = construct(); $mxsd_hash->store(@objs); circular_off(\@objs) },
         mxsd_jspon => sub { my @objs = construct(); $mxsd_jspon->store(@objs); circular_off(\@objs) },
@@ -101,7 +99,7 @@ sub bench {
     #my @dbmd_ids  = map { uuid() } @dbmd;;
     #@{ $dbm_deep }{@dbmd_ids} = @dbmd;
 
-    cmpthese(-0.5, {
+    cmpthese(-1, {
         mxsd_hash  => sub { my @objs = $mxsd_hash->lookup(@hash_ids); circular_off(\@objs) },
         mxsd_jspon => sub { my @objs = $mxsd_jspon->lookup(@jspon_ids); circular_off(\@objs) },
         mxsd_bdb   => sub { my @objs = $mxsd_bdb->lookup(@bdb_ids); circular_off(\@objs) },
