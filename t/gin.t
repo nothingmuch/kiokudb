@@ -6,6 +6,8 @@ use warnings;
 use Test::More 'no_plan';
 use Test::Moose;
 
+use Scalar::Util qw(refaddr);
+
 use ok 'KiokuDB::GIN';
 
 use ok 'KiokuDB';
@@ -59,14 +61,14 @@ my @people = $people->all;
 my @employees = $employees->all;
 
 is_deeply(
-    \@employees,
-    [ $objs[0] ],
+    [ sort map { refaddr($_) } @employees ],
+    [ refaddr($objs[0]) ],
     "employees",
 );
 
 is_deeply(
-    [ sort @people ],
-    [ sort @objs, @{ $objs[0]->parents } ],
+    [ sort map { refaddr($_) } @people ],
+    [ sort map { refaddr($_) } @objs, @{ $objs[0]->parents } ],
     "set of all people",
 );
 
