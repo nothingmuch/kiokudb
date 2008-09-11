@@ -25,15 +25,7 @@ sub compile_mappings {
 sub compile_collapser {
     my ( $self, $meta ) = @_;
 
-    my ( @names, %readers, %predicates );
-
-    foreach my $attr ( $meta->compute_all_applicable_attributes ) {
-        my $name = $attr->name;
-
-        push @names, $name;
-        $readers{$name} = $attr->get_read_method_ref->body || sub { $attr->get_value($_[0]) };
-        $predicates{$name} = $attr->predicate || sub { $attr->has_value($_[0]) }; # FIXME very very slow
-    }
+    my @attrs = $meta->compute_all_applicable_attributes;
 
     return sub {
         my ( $self, %args ) = @_;
@@ -42,12 +34,10 @@ sub compile_collapser {
 
         my %collapsed;
 
-        foreach my $name ( @names ) {
-            my $pred = $predicates{$name};
-            if ( $object->$pred() ) {
-                my $reader = $readers{$name};
-                my $value = $object->$reader();
-                $collapsed{$name} = ref($value) ? $self->visit($value) : $value;
+        foreach my $attr ( @attrs ) {
+            if ( $attr->has_value($object) ) {
+                my $value = $attr->get_value($object);
+                $collapsed{$attr->name} = ref($value) ? $self->visit($value) : $value;
             }
         }
 
@@ -58,11 +48,10 @@ sub compile_collapser {
 sub compile_expander {
     my ( $self, $meta ) = @_;
 
-    my %writers;
+    my %attrs;
 
     foreach my $attr ( $meta->compute_all_applicable_attributes ) {
-        my $name = $attr->name;
-        $writers{$name} = $attr->get_write_method_ref->body || sub { $attr->set_value($_[0]) };
+        $attrs{$attr->name} = $attr;
     }
 
     return sub {
@@ -80,8 +69,7 @@ sub compile_expander {
 
             $value = $self->inflate_data($value) if ref $value;
 
-            my $writer = $writers{$name};
-            $instance->$writer($value); # FIXME avoid trigger, type constraint etc
+            $attrs{$name}->set_value($instance, $value);
         }
 
         return $instance;
