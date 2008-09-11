@@ -123,6 +123,10 @@ sub inflate_data {
         # GAH! just returning the object is broken, gotta find out why
         my $obj = $self->get_or_load_object($id);
         return $obj;
+    } elsif ( ref $data eq 'KiokuDB::Entry' ) {
+        # intrinsic entry
+        my $obj = $self->inflate_data($data->data);
+        return bless $obj, $data->class;
     } elsif ( ref($data) eq 'ARRAY' ) {
         return [ map { ref() ? $self->inflate_data($_) : $_ } @$data ];
     } elsif ( ref($data) eq 'HASH' ) {
