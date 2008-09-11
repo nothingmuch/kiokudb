@@ -9,7 +9,7 @@ use Moose;
 
 use Scope::Guard;
 use Carp qw(croak);
-use Scalar::Util qw(isweak);
+use Scalar::Util qw(isweak refaddr);
 
 use KiokuDB::Entry;
 use KiokuDB::Reference;
@@ -216,14 +216,17 @@ sub make_entry {
 
     my $live_objects = $self->_options->{live_objects};
 
-    my $prev = $live_objects->object_to_entry($object);
+    if ( my $id = $args{id} ) {
+        my $prev = $live_objects->object_to_entry($object);
 
-    my $id = $args{id} || die "No id";
-
-    return $self->_entries->{$id} = KiokuDB::Entry->new(
-        ( $prev ? ( prev => $prev ) : () ),
-        %args,
-    );
+        return $self->_entries->{$id} = KiokuDB::Entry->new(
+            ( $prev ? ( prev => $prev ) : () ),
+            %args,
+        );
+    } else {
+        # intrinsic
+        return KiokuDB::Entry->new(%args);
+    }
 }
 
 sub make_ref {
@@ -335,9 +338,6 @@ sub collapse_first_class {
 
     my $data = $self->$collapse(@args);
 
-    # FIXME implement intrinsic values (unregister $object, return $data
-    # instead of make_ref)
-
     $self->make_entry(
         @args,
         data => $data,
@@ -345,6 +345,24 @@ sub collapse_first_class {
 
     # we pass $_[1], an alias, so that isweak works
     return $self->make_ref( $id => $_[1] );
+}
+
+sub collapse_intrinsic {
+    my ( $self, $collapse, $object ) = @_;
+
+    my $class = ref $object;
+
+    delete $self->{_seen}{ refaddr($object) }; # FIXME Data::Visitor ->_remove_mapping?
+
+    my @args = (
+        object => $object,
+        class  => $class
+    );
+
+    return $self->make_entry(
+        data  => $self->$collapse(@args),
+        class => $class,
+    );
 }
 
 sub _object_id {

@@ -12,6 +12,7 @@ use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
+use ok 'KiokuDB::TypeMap::Entry::Normal';
 
 {
     package Foo;
@@ -391,5 +392,45 @@ use ok 'KiokuDB::TypeMap::Resolver';
             is( scalar(keys %$entries), 1, "one entry for shallow collapse" );
             is( scalar(@ids), 1, "one root set ID" );
         }
+    }
+}
+
+{
+    my $obj = Foo->new(
+        zot => "one",
+        bar => Bar->new( blah => "two" )
+    );
+
+    {
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => KiokuDB::LiveObjects->new
+            ),
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        Bar => KiokuDB::TypeMap::Entry::Normal->new(
+                            intrinsic => 1,
+                        ),
+                    },
+                ),
+            ),
+        );
+
+        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        is( scalar(keys %$entries), 1, "one entries for deep collapse with intrinsic value" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is_deeply(
+            $entries->{$ids[0]}->data,
+            {
+                zot => "one",
+                bar => KiokuDB::Entry->new(
+                    class => "Bar",
+                    data  => { blah => "two" },
+                ),
+            },
+            "intrinsic entry data",
+        );
     }
 }
