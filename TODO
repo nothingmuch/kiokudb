@@ -1,19 +1,4 @@
-* LiveObjects::Cached, using Tie::Cache::LRU (directly as an object, not via
-  the tie interface)
-
-* replace Data::Visitor with a dumb variant for entry visiting (ref
-  simplification & JSPON expansion/collapsing), since they are never
-  circular/weak/whatever
-
-
-* Generic entry caching in the backends, possibly using LiveObjects?
-
-
 * Backend roles:
-    * Serialize ( reusable serialization API )
-        * JSPON
-        * Storable
-        * Protobuf
     * Map ( for all UUID <-> serialized blob mappings )
     * Backend::CAS (content addressible map based on serialize)
     * Backend::Store
@@ -26,13 +11,18 @@
     * SQLite
         * with dynamic alter table statements?
         * audrey style indexing?
-    * Fetching
-        * Scanning
-        * Listing
-        * Iterator
-        * compat API
     * Backend::TXN
     * Backend::Locking
         * TXN::Exclusive
 
-* Moose::XS immutable style expansion
+* lazy loadeding:
+    * Set::Object
+        * insert without loading members
+        * remove without loading members
+        * exists without loading members (object already loaded)
+        * set operations produce ID sets
+    * array
+        * tie and lazy fetch
+    * thunk
+        * what are the degenerate cases?
+        * how to break circular dependencies?
