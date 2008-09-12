@@ -67,7 +67,7 @@ sub STORABLE_freeze {
 
     return (
         join(",",
-            $self->id,
+            $self->id || '',
             !!$self->root,
             $self->class || '',
             !!$self->deleted,
@@ -81,7 +81,7 @@ sub STORABLE_thaw {
 
     my ( $id, $root, $class, $deleted ) = split ',', $attrs;
 
-    $self->id($id);
+    $self->id($id) if $id;
     $self->root(1) if $root;;
     $self->class( $class) if $class;
     $self->deleted($deleted);
