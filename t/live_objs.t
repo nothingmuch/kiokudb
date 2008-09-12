@@ -31,17 +31,19 @@ use ok 'KiokuDB::Entry';
         "no live objects",
     );
 
-    my $x = Foo->new;
+    {
+        my $s = $l->new_scope;
 
-    $l->insert( x => $x );
+        my $x = Foo->new;
 
-    is_deeply(
-        [ $l->live_objects ],
-        [ $x ],
-        "live object set"
-    );
+        $l->insert( x => $x );
 
-    undef $x;
+        is_deeply(
+            [ $l->live_objects ],
+            [ $x ],
+            "live object set"
+        );
+    }
 
     is_deeply(
         [ $l->live_objects ],
@@ -49,45 +51,49 @@ use ok 'KiokuDB::Entry';
         "live object set is weak"
     );
 
-    my %objects = (
-        ( map { $_ => Foo->new } ( 'a' .. 'z' ) ),
-        hash  => { foo => "bar" },
-        array => [ 1 .. 3 ],
-    );
+    {
+        my $s = $l->new_scope;
 
-    $l->insert( %objects );
+        my %objects = (
+            ( map { $_ => Foo->new } ( 'a' .. 'z' ) ),
+            hash  => { foo => "bar" },
+            array => [ 1 .. 3 ],
+        );
 
-    is_deeply(
-        [ sort $l->live_objects ],
-        [ sort values %objects ],
-        "live object set"
-    );
+        $l->insert( %objects );
 
-    $l->remove( 'b', $objects{d} );
+        is_deeply(
+            [ sort $l->live_objects ],
+            [ sort values %objects ],
+            "live object set"
+        );
 
-    is_deeply(
-        [ sort $l->live_objects ],
-        [ sort grep { $_ != $objects{d} and $_ != $objects{b} } values %objects ],
-        "remove",
-    );
+        $l->remove( 'b', $objects{d} );
 
-    is_deeply( [ $l->ids_to_objects(qw(f array)) ], [ @objects{qw(f array)} ], "id to object" );
+        is_deeply(
+            [ sort $l->live_objects ],
+            [ sort grep { $_ != $objects{d} and $_ != $objects{b} } values %objects ],
+            "remove",
+        );
 
-    throws_ok { $l->insert( g => $objects{f} ) } qr/already registered/, "double reg under diff ID is an error";
+        is_deeply( [ $l->ids_to_objects(qw(f array)) ], [ @objects{qw(f array)} ], "id to object" );
 
-    throws_ok { $l->insert( foo => "bar" ) } qr/not a ref/, "can't register non ref";
+        throws_ok { $l->insert( g => $objects{f} ) } qr/already registered/, "double reg under diff ID is an error";
 
-    my @objects = ( $objects{n}, $objects{hash} );
+        throws_ok { $l->insert( foo => "bar" ) } qr/not a ref/, "can't register non ref";
 
-    %objects = ();
+        undef $s;
 
-    is_deeply(
-        [ sort $l->live_objects ],
-        [ sort @objects ],
-        "live object set reduced"
-    );
+        my @objects = ( $objects{n}, $objects{hash} );
 
-    @objects = ();
+        %objects = ();
+
+        is_deeply(
+            [ sort $l->live_objects ],
+            [ sort @objects ],
+            "live object set reduced"
+        );
+    }
 
     is_deeply(
         [ $l->live_objects ],
@@ -121,6 +127,8 @@ use ok 'KiokuDB::Entry';
 {
     my $l = KiokuDB::LiveObjects->new;
 
+    my $s = $l->new_scope;
+
     my $entry = KiokuDB::Entry->new( id => "blah" );
     my $blah = Foo->new;
     $l->insert( $entry => $blah );
@@ -136,6 +144,8 @@ use ok 'KiokuDB::Entry';
     my $foo;
 
     {
+        my $s = $l->new_scope;
+
         my $inner_foo = $foo = Foo->new;
         weaken($foo);
         my $bar = Bar->new;

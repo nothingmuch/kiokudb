@@ -44,47 +44,53 @@ my $dir = KiokuDB->new(
     backend => $gin,
 );
 
-my $f = KiokuDB::Test::Fixture::Small->new;
-
-my $q_person = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Person" );
-my $q_employee = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Employee" );
-
 {
-    my @objs = $f->create;
+    my $f = KiokuDB::Test::Fixture::Small->new;
 
-    $dir->store(@objs);
+    my $q_person = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Person" );
+    my $q_employee = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Employee" );
 
-    my $people = $dir->search($q_person);
-    my $employees = $dir->search($q_employee);
+    {
+        my $s = $dir->new_scope;
 
-    does_ok($_, "Data::Stream::Bulk") for ( $people, $employees );
+        my @objs = $f->create;
 
-    my @people = $people->all;
-    my @employees = $employees->all;
+        $dir->store(@objs);
 
-    is_deeply(
-        [ sort map { refaddr($_) } @employees ],
-        [ refaddr($objs[0]) ],
-        "employees",
-    );
+        my $people = $dir->search($q_person);
+        my $employees = $dir->search($q_employee);
 
-    is_deeply(
-        [ sort map { refaddr($_) } @people ],
-        [ sort map { refaddr($_) } @objs, @{ $objs[0]->parents } ],
-        "set of all people",
-    );
-}
+        does_ok($_, "Data::Stream::Bulk") for ( $people, $employees );
 
-is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+        my @people = $people->all;
+        my @employees = $employees->all;
 
-{
-    my ( $joe, $mum, $oscar ) = sort { $a->name cmp $b->name } $dir->search($q_person)->all;
+        is_deeply(
+            [ sort map { refaddr($_) } @employees ],
+            [ refaddr($objs[0]) ],
+            "employees",
+        );
 
-    is( $joe->name, "joe", "loaded first object" );
-    is( $mum->name, "mum", "loaded second object" );
-    is( $oscar->name, "oscar", "loaded third object" );
+        is_deeply(
+            [ sort map { refaddr($_) } @people ],
+            [ sort map { refaddr($_) } @objs, @{ $objs[0]->parents } ],
+            "set of all people",
+        );
+    }
 
-    is( $joe->parents->[0], $mum, "interrelated objects loaded in one graph" );
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $joe, $mum, $oscar ) = sort { $a->name cmp $b->name } $dir->search($q_person)->all;
+
+        is( $joe->name, "joe", "loaded first object" );
+        is( $mum->name, "mum", "loaded second object" );
+        is( $oscar->name, "oscar", "loaded third object" );
+
+        is( $joe->parents->[0], $mum, "interrelated objects loaded in one graph" );
+    }
 }
 
 # lastly make sure we pass sanity

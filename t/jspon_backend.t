@@ -51,12 +51,14 @@ $obj->friend->friend($obj);
 
 my $c = KiokuDB::Collapser->new(
     resolver => KiokuDB::Resolver->new(
-        live_objects => KiokuDB::LiveObjects->new,
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
     ),
     typemap_resolver => KiokuDB::TypeMap::Resolver->new(
         typemap => KiokuDB::TypeMap->new
     ),
 );
+
+my $s = $lo->new_scope;
 
 my @entries = $c->collapse_objects($obj, { blah => "blah" });
 

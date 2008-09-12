@@ -183,7 +183,9 @@ sub root_set {
 
     my $entries = $self->backend->root_entries;
 
-    $entries->filter(sub {[ $self->linker->load_entries(@$_) ]});
+    my $linker = $self->linker;
+
+    $entries->filter(sub {[ $linker->load_entries(@$_) ]});
 }
 
 # FIXME remove?

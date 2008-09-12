@@ -18,6 +18,8 @@ my $r = KiokuDB::Resolver->new(
 );
 
 {
+    my $s = $r->live_objects->new_scope;
+
     my @objects = map { Foo->new } 1 .. 3;
 
     my @ids = $r->objects_to_ids(@objects);

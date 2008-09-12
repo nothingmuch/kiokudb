@@ -39,11 +39,15 @@ my $v = KiokuDB::Collapser->new(
     typemap_resolver => $tr,
 );
 
+my $sc = $v->resolver->live_objects->new_scope;
+
 my $l = KiokuDB::Linker->new(
     backend => KiokuDB::Backend::Hash->new,
     live_objects => KiokuDB::LiveObjects->new,
     typemap_resolver => $tr,
 );
+
+my $sl = $l->live_objects->new_scope;
 
 my ( $entries ) = $v->collapse( objects => [ $obj ],  );
 is( scalar(keys %$entries), 1, "one entry" );
