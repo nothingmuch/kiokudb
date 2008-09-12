@@ -36,20 +36,10 @@ has typemap_resolver => (
     required => 1,
 );
 
-has live_object_cache => (
-    isa => "KiokuDB::LiveObjects::Cache",
-    is  => "rw",
-    clearer => "clear_live_object_cache",
-);
-
 sub register_object {
     my ( $self, $entry, $object ) = @_;
 
     $self->live_objects->insert( $entry => $object );
-
-    if ( my $live_object_cache = $self->live_object_cache ) {
-        $live_object_cache->insert( $entry => $object );
-    }
 }
 
 sub expand_objects {

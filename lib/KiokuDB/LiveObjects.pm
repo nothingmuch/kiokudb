@@ -12,6 +12,8 @@ use Carp qw(croak);
 use Devel::PartialDump qw(croak);
 use Set::Object;
 
+use KiokuDB::LiveObjects::Scope;
+
 use namespace::clean -except => 'meta';
 
 has _objects => (
@@ -46,7 +48,7 @@ has _entry_ids => (
     isa => "HashRef",
     is  => "ro",
     init_arg => undef,
-    default => sub { return {} },
+    default  => sub { return {} },
     provides => {
         get    => "ids_to_entries",
         keys   => "loaded_ids",
@@ -54,7 +56,28 @@ has _entry_ids => (
     },
 );
 
+has current_scope => (
+    isa => "KiokuDB::LiveObjects::Scope",
+    is  => "ro",
+    writer   => "_set_current_scope",
+    clearer  => "_clear_current_scope",
+    weak_ref => 1,
+);
 
+sub new_scope {
+    my $self = shift;
+
+    my $parent = $self->current_scope;
+
+    my $child = KiokuDB::LiveObjects::Scope->new(
+        ( $parent ? ( parent => $parent ) : () ),
+        live_objects => $self,
+    );
+
+    $self->_set_current_scope($child);
+
+    return $child;
+}
 
 sub id_to_object {
     my ( $self, $id ) = @_;
@@ -167,6 +190,8 @@ sub insert {
 
     my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
 
+    my $s = $self->current_scope;
+
     while ( @pairs ) {
         my ( $id, $object ) = splice @pairs, 0, 2;
         my $entry;
@@ -184,6 +209,8 @@ sub insert {
             croak "An object with the id '$id' is already registered";
         } else {
             weaken($i->{$id} = $object);
+
+            $s->push($object) if $s;
 
             if ( $entry and !$ei->{$id} ) {
                 $ei->{$id} = $entry;
