@@ -80,13 +80,14 @@ sub resolve_fallback {
 sub resolve_fallback_with_meta {
     my ( $self, $class, $meta ) = @_;
 
+    # FIXME only allow with Storage?
     return $self->compile_entry( $class => KiokuDB::TypeMap::Entry::Normal->new );
 }
 
 sub resolve_fallback_without_meta {
-    my ( $self, $class, $meta ) = @_;
+    my ( $self, $class ) = @_;
 
-    die "todo";
+    die "todo ($class has no fallback, no meta)";
 }
 
 __PACKAGE__->meta->make_immutable;
