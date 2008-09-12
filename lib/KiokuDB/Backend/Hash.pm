@@ -8,6 +8,8 @@ use Data::Stream::Bulk::Util qw(bulk);
 use namespace::clean -except => 'meta';
 
 #KiokuDB::Backend::Serialize::Memory
+#KiokuDB::Backend::Serialize::Storable
+#KiokuDB::Backend::Serialize::Null
 with qw(
     KiokuDB::Backend::Serialize::Storable
     KiokuDB::Backend
