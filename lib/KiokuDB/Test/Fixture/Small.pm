@@ -47,25 +47,23 @@ sub create {
 sub populate {
     my $self = shift;
 
-    my ( $joe, $oscar ) = $self->create;
+    {
+        my $s = $self->new_scope;
 
-    isa_ok( $joe, "KiokuDB::Test::Person" );
-    isa_ok( $joe, "KiokuDB::Test::Employee" );
+        my ( $joe, $oscar ) = $self->create;
 
-    isa_ok( $oscar, "KiokuDB::Test::Person" );
+        isa_ok( $joe, "KiokuDB::Test::Person" );
+        isa_ok( $joe, "KiokuDB::Test::Employee" );
 
-    my ( $joe_id, $oscar_id ) = $self->store_ok($joe, $oscar);
+        isa_ok( $oscar, "KiokuDB::Test::Person" );
 
-    $self->joe($joe_id);
-    $self->oscar($oscar_id);
+        my ( $joe_id, $oscar_id ) = $self->store_ok($joe, $oscar);
 
-    $self->live_objects_are($joe, $joe->company, @{ $joe->parents }, $oscar);
+        $self->joe($joe_id);
+        $self->oscar($oscar_id);
 
-    undef $joe;
-
-    $self->live_objects_are($oscar);
-
-    undef $oscar;
+        $self->live_objects_are($joe, $joe->company, @{ $joe->parents }, $oscar);
+    }
 
     $self->no_live_objects;
 }

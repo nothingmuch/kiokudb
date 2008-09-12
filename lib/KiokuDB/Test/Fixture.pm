@@ -39,6 +39,8 @@ sub populate {
     my $self = shift;
 
     {
+        my $s = $self->new_scope;
+
         my @objects = $self->create;
 
         my @ids = $self->store_ok(@objects);
@@ -92,6 +94,7 @@ sub run {
         is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name . " fixture" );
 
         lives_ok {
+            my $s = $self->new_scope;
             local $Test::Builder::Level = $Test::Builder::Level - 1;
             $self->populate;
             $self->verify;
@@ -125,6 +128,8 @@ has directory => (
         root_set
         scan
         grep
+
+        new_scope
     )],
 );
 

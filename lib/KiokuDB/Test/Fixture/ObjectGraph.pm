@@ -4,8 +4,7 @@ package KiokuDB::Test::Fixture::ObjectGraph;
 use Moose;
 
 use Test::More;
-
-use Data::Structure::Util qw(circular_off);
+use Scalar::Util qw(weaken);
 
 use KiokuDB::Test::Person;
 
@@ -19,15 +18,27 @@ sub married {
     my ( $a, $b, @kids ) = @_;
     $a->so($b);
     $b->so($a);
-    $_->kids([ @kids ]) for $a, $b;
-    $_->parents([ $a, $b ]) for @kids;
+
+    foreach my $parent ( $a, $b ) {
+        my @kids_copy = @kids;
+        weaken($_) for @kids_copy;
+        $parent->kids(\@kids_copy);
+    }
+
+    foreach my $child ( @kids ) {
+        my @parents = ( $a, $b );
+        weaken($_) for @parents;
+        $child->parents(\@parents);
+    }
 }
 
 sub clique {
     my ( @buddies ) = @_;
 
     foreach my $member ( @buddies ) {
-        $member->friends([ grep { $_ != $member } @buddies ]);
+        my @rest = grep { $_ != $member } @buddies;
+        $member->friends(\@rest);
+        weaken($_) for @rest;
     }
 }
 
@@ -45,34 +56,36 @@ sub sort { 100 }
 sub create {
     my $self = shift;
 
-    my $bart     = p("Bart Simpson");
-    my $lisa     = p("Lisa Simpson");
-    my $maggie   = p("Maggie Simpson");
-    my $marge    = p("Marge Simpson");
-    my $homer    = p("Homer Simpson");
-    my $grandpa  = p("Abe Simpson");
-    my $mona     = p("Mona Simpson");
-    my $milhouse = p("Milhouse");
-    my $patty    = p("Patty Bouvier");
-    my $selma    = p("Selma Bouvier");
-    my $jaquelin = p("Jacqueline Bouvier");
-    my $clancy   = p("Clancy Bouvier");
+    my @r;
+
+    push @r, my $bart     = p("Bart Simpson");
+    push @r, my $lisa     = p("Lisa Simpson");
+    push @r, my $maggie   = p("Maggie Simpson");
+    push @r, my $marge    = p("Marge Simpson");
+    push @r, my $homer    = p("Homer Simpson");
+    push @r, my $grandpa  = p("Abe Simpson");
+    push @r, my $mona     = p("Mona Simpson");
+    push @r, my $milhouse = p("Milhouse");
+    push @r, my $patty    = p("Patty Bouvier");
+    push @r, my $selma    = p("Selma Bouvier");
+    push @r, my $jaquelin = p("Jacqueline Bouvier");
+    push @r, my $clancy   = p("Clancy Bouvier");
 
     married($marge, $homer, $bart, $lisa, $maggie);
     married($grandpa, $mona, $homer);
     married($jaquelin, $clancy, $marge, $selma, $patty);
     clique($bart, $milhouse);
 
-    my $junior    = p("Geroge W. Bush");
-    my $laura     = p("Laura Bush");
-    my $the_drunk = p("Jenna Bush");
-    my $other_one = p("Barbara Pierce Bush");
-    my $daddy     = p("George H. W. Bush");
-    my $barb      = p("Barbara Bush");
-    my $jeb       = p("Jeb Bush");
-    my $dick      = p("Dick Cheney");
-    my $condie    = p("Condoleezza Rice");
-    my $putin     = p("Vladimir Putin");
+    push @r, my $junior    = p("Geroge W. Bush");
+    push @r, my $laura     = p("Laura Bush");
+    push @r, my $the_drunk = p("Jenna Bush");
+    push @r, my $other_one = p("Barbara Pierce Bush");
+    push @r, my $daddy     = p("George H. W. Bush");
+    push @r, my $barb      = p("Barbara Bush");
+    push @r, my $jeb       = p("Jeb Bush");
+    push @r, my $dick      = p("Dick Cheney");
+    push @r, my $condie    = p("Condoleezza Rice");
+    push @r, my $putin     = p("Vladimir Putin");
 
     married( $junior, $laura, $the_drunk, $other_one );
     married( $daddy, $barb, $junior, $jeb );
@@ -80,159 +93,167 @@ sub create {
 
     push @{ $junior->friends }, $putin;
 
-    return ( $junior, $putin, $homer );
+    return ( \@r, $junior, $putin, $homer );
 }
 
 sub populate {
     my $self = shift;
 
-    my ( $junior, $putin, $homer ) = $self->create;
+    my $s = $self->new_scope;
+
+    my ( $r, $junior, $putin, $homer, $retain ) = $self->create;
 
     my @roots = $self->store_ok( $junior, $putin, $homer );
 
     $self->dubya($roots[0]);
     $self->putin($roots[1]);
     $self->homer($roots[2]);
-
-    circular_off($junior);
-    circular_off($homer);
 }
 
 sub verify {
     my $self = shift;
 
+    my $s = $self->new_scope;
+
     $self->no_live_objects;
 
-    my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
+    {
+        my $s = $self->new_scope;
 
-    is( $junior->so->name, "Laura Bush", "ref to other object" );
-    is( $junior->so->so, $junior, "mututal ref" );
+        my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
-    is_deeply(
-        [ map { $_->name } @{ $junior->parents } ],
-        [ "George H. W. Bush", "Barbara Bush" ],
-        "ref in auxillary structure",
-    );
+        is( $junior->so->name, "Laura Bush", "ref to other object" );
+        is( $junior->so->so, $junior, "mututal ref" );
 
-    is_deeply(
-        [ grep { $_ == $junior } @{ $junior->parents->[0]->kids } ],
-        [ $junior ],
-        "mutual ref in auxillary structure"
-    );
+        is_deeply(
+            [ map { $_->name } @{ $junior->parents } ],
+            [ "George H. W. Bush", "Barbara Bush" ],
+            "ref in auxillary structure",
+        );
 
-    is( $junior->parents->[0]->so, $junior->parents->[1], "mutual refs in nested structure" );
+        is_deeply(
+            [ grep { $_ == $junior } @{ $junior->parents->[0]->kids } ],
+            [ $junior ],
+            "mutual ref in auxillary structure"
+        );
 
-    is_deeply(
-        $junior->kids->[0]->parents,
-        [ $junior, $junior->so ],
-        "mutual refs in nested and non nested structure",
-    );
+        is( $junior->parents->[0]->so, $junior->parents->[1], "mutual refs in nested structure" );
 
-    is_deeply(
-        [ map { $_->name } @{ $junior->friends } ],
-        [ "Condoleezza Rice", "Dick Cheney", "Vladimir Putin" ],
-        "mutual refs in nested and non nested structure",
-    );
+        is_deeply(
+            $junior->kids->[0]->parents,
+            [ $junior, $junior->so ],
+            "mutual refs in nested and non nested structure",
+        );
 
-    is_deeply(
-        $junior->friends->[-1]->friends,
-        [],
-        "Putin is paranoid",
-    );
+        is_deeply(
+            [ map { $_->name } @{ $junior->friends } ],
+            [ "Condoleezza Rice", "Dick Cheney", "Vladimir Putin" ],
+            "mutual refs in nested and non nested structure",
+        );
 
-    pop @{ $junior->friends };
+        is_deeply(
+            $junior->friends->[-1]->friends,
+            [],
+            "Putin is paranoid",
+        );
 
-    $self->update_ok($junior);
+        pop @{ $junior->friends };
 
-    circular_off($junior);
-    undef $junior;
+        $self->update_ok($junior);
+    }
 
     $self->no_live_objects();
 
-    $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
+    {
+        my $s = $self->new_scope;
 
-    is_deeply(
-        [ map { $_->name } @{ $junior->friends } ],
-        [ "Condoleezza Rice", "Dick Cheney" ],
-        "Georgia got plastered",
-    );
+        my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
-    $self->live_objects_are( 
-        $junior,
-        $junior->so,
-        @{ $junior->friends },
-        @{ $junior->kids },
-        @{ $junior->parents },
-        $junior->parents->[0]->kids->[-1], # jeb
-    );
+        is_deeply(
+            [ map { $_->name } @{ $junior->friends } ],
+            [ "Condoleezza Rice", "Dick Cheney" ],
+            "Georgia got plastered",
+        );
 
-    is(
-        scalar(grep { /Putin/ } map { $_->name } $self->live_objects),
-        0,
-        "Putin is a dead object",
-    );
+        $self->live_objects_are( 
+            $junior,
+            $junior->so,
+            @{ $junior->friends },
+            @{ $junior->kids },
+            @{ $junior->parents },
+            $junior->parents->[0]->kids->[-1], # jeb
+        );
 
-    $junior->job("Warlord");
-    $junior->parents->[0]->job("Puppet Master");
-    $junior->friends->[0]->job("Secretary of State");
-    $junior->so->job("Prima Donna, Author, Teacher, Librarian");
+        is(
+            scalar(grep { /Putin/ } map { $_->name } $self->live_objects),
+            0,
+            "Putin is a dead object",
+        );
 
-    $self->update_live_objects;
+        $junior->job("Warlord");
+        $junior->parents->[0]->job("Puppet Master");
+        $junior->friends->[0]->job("Secretary of State");
+        $junior->so->job("Prima Donna, Author, Teacher, Librarian");
 
-    circular_off($junior);
-    undef($junior);
+        $self->update_live_objects;
+    }
 
     $self->no_live_objects;
-
-    my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
     {
-        my $marge = $homer->so;
+        my $s = $self->new_scope;
 
-        $homer->name("Homer J. Simpson");
+        my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
-        is( $marge->so->name, "Homer J. Simpson", "inter object rels" );
+        {
+            my $marge = $homer->so;
+
+            $homer->name("Homer J. Simpson");
+
+            is( $marge->so->name, "Homer J. Simpson", "inter object rels" );
+        }
+
+        $homer->job("Safety Inspector, Sector 7-G");
+
+        $self->update_ok($homer);
     }
 
-    $homer->job("Safety Inspector, Sector 7-G");
-
-    $self->update_ok($homer);
-
-    circular_off($homer);
-    undef $homer;
-
     $self->no_live_objects;
 
-    $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
+    {
+        my $s = $self->new_scope;
 
-    is( $homer->name, "Homer J. Simpson", "name" );
+        my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
-    circular_off($homer);
-    undef $homer;
-
-    $self->no_live_objects;
-
-    my $putin = $self->lookup_obj_ok($self->putin);
-
-    $self->live_objects_are( $putin );
-
-    foreach my $job ("President", "Prime Minister", "BDFL", "DFL") {
-        $putin->job($job);
-        $self->update_ok($putin);
+        is( $homer->name, "Homer J. Simpson", "name" );
     }
 
-    undef $putin;
     $self->no_live_objects;
 
-    $putin = $self->lookup_obj_ok($self->putin);
+    {
+        my $s = $self->new_scope;
 
-    is( $putin->job, "DFL", "updated in storage" );
+        my $putin = $self->lookup_obj_ok($self->putin);
 
-    $self->delete_ok($putin);
+        $self->live_objects_are( $putin );
 
-    undef $putin;
+        foreach my $job ("President", "Prime Minister", "BDFL", "DFL") {
+            $putin->job($job);
+            $self->update_ok($putin);
+        }
+    }
 
     $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $putin = $self->lookup_obj_ok($self->putin);
+
+        is( $putin->job, "DFL", "updated in storage" );
+
+        $self->delete_ok($putin);
+    }
 
     $self->no_live_objects;
 

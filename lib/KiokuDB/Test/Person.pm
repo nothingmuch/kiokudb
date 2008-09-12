@@ -18,6 +18,7 @@ has job => (
 has so => (
     isa => "KiokuDB::Test::Person",
     is  => "rw",
+    weak_ref => 1,
 );
 
 has parents => (
