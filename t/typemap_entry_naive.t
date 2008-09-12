@@ -57,6 +57,8 @@ my $l = KiokuDB::Linker->new(
 );
 
 {
+    my $s = $v->resolver->live_objects->new_scope;
+
     my ( $entries ) = $v->collapse( objects => [ $obj ],  );
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -67,6 +69,8 @@ my $l = KiokuDB::Linker->new(
     is( reftype($entry->data), reftype($obj), "reftype" );
     is_deeply( $entry->data, {%$obj}, "is_deeply" );
 
+    my $sl = $l->live_objects->new_scope;
+
     my $expanded = $l->expand_object($entry);
 
     isa_ok( $expanded, "Foo", "expanded object" );
@@ -76,6 +80,8 @@ my $l = KiokuDB::Linker->new(
 }
 
 {
+    my $s = $v->resolver->live_objects->new_scope;
+
     my $bar = $deep->bar;
 
     my ( $entries ) = $v->collapse( objects => [ $deep ],  );
@@ -91,6 +97,8 @@ my $l = KiokuDB::Linker->new(
         {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar} ) },
         "is_deeply"
     );
+
+    my $sl = $l->live_objects->new_scope;
 
     my $expanded = $l->expand_object($entry);
 

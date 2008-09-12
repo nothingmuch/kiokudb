@@ -95,7 +95,7 @@ sub inflate_data {
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         # intrinsic entry
         my $obj;
-        $self->inflate_data($data->data, \$obj, $data);
+        $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) );
         bless $obj, $data->class if $data->class;
         $$into = $obj;
     } elsif ( ref($data) eq 'HASH' ) {
