@@ -86,6 +86,10 @@ sub expand_naive {
 sub inflate_data {
     my ( $self, $data, $into, $entry ) = @_;
 
+    # Kinda ugly... inflates $data into the scalar ref in $into
+    # but this allows us to handle weakening properly.
+    # god I hate perl's reftypes, why couldn't they be a little more consistent
+
     unless ( ref $data ) {
         $$into = $data;
     } elsif ( ref $data eq 'KiokuDB::Reference' ) {
