@@ -20,18 +20,20 @@ sub compile_mappings {
     my $collapse = sub {
         my ( $self, %args ) = @_;
 
-        return [ map { $self->visit($_) } $args{object}->$collapse_object() ];
+        my @data = $args{object}->$collapse_object;
+
+        return [ map { $self->visit($_) } @data ];
     };
 
     my $expand_object = $self->expand;
     my $expand = sub {
         my ( $self, $entry ) = @_;
 
-        my @args = map { $self->inflate_data($_) } @{ $entry->data };
+        $self->inflate_data($entry->data, \( my $args ));
 
         # does *NOT* support circular refs
         # document it as such
-        my $object = $entry->class->$expand_object(@args);
+        my $object = $entry->class->$expand_object(@$args);
 
         $self->register_object( $entry => $object );
 
