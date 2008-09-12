@@ -9,7 +9,7 @@ use Moose;
 
 use Scope::Guard;
 use Carp qw(croak);
-use Scalar::Util qw(isweak refaddr);
+use Scalar::Util qw(isweak refaddr reftype);
 
 use KiokuDB::Entry;
 use KiokuDB::Reference;
@@ -21,6 +21,8 @@ use Set::Object qw(set);
 use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
+
+has '+tied_as_objects' => ( default => 1 );
 
 has resolver => (
     isa => "KiokuDB::Resolver",
@@ -176,21 +178,26 @@ sub compact_entries {
         my $flatten = {};
         @{$flatten}{@flatten} = delete @{$entries}{@flatten};
 
+
         $options->{resolver}->remove(@flatten);
 
-        $self->compact_entry($_, $flatten) for values %$flatten, values %$entries;
+        $self->compact_entry($_, $flatten) for values %$entries;
     }
 }
 
 sub compact_entry {
     my ( $self, $entry, $flatten ) = @_;
-    $self->compact_data($entry->data, $flatten);
+
+    my $data = $entry->data;
+
+    if ( $self->compact_data($data, $flatten) ) {
+        warn "Replacing";
+        $entry->data($data);
+    }
 }
 
 sub compact_data {
     my ( $self, $data, $flatten ) = @_;
-
-    return unless ref $data;
 
     if ( ref $data eq 'KiokuDB::Reference' ) {
         my $id = $data->id;
@@ -198,15 +205,27 @@ sub compact_data {
         if ( my $entry = $flatten->{$id} ) {
             # replace reference with data from entry, so that the
             # simple data is inlined, and mark that entry for removal
-            $_[1] = $entry->data;
+            $self->compact_entry($entry, $flatten);
+
+            if ( $entry->tied or $entry->class ) {
+                $entry->clear_id;
+                $_[1] = $entry;
+            } else {
+                $_[1] = $entry->data;
+            }
+            return 1;
         }
     } elsif ( ref($data) eq 'ARRAY' ) {
-        $self->compact_data($_, $flatten) for @$data;
+        ref && $self->compact_data($_, $flatten) for @$data;
     } elsif ( ref($data) eq 'HASH' ) {
-        $self->compact_data($_, $flatten) for values %$data;
+        ref && $self->compact_data($_, $flatten) for values %$data;
+    } elsif ( ref($data) eq 'KiokuDB::Entry' ) {
+        $self->compact_entry($data, $flatten);
     } else {
-        die "unsupported reftype: " . ref $data;
+        confess "unsupported reftype: " . ref $data;
     }
+
+    return;
 }
 
 sub make_entry {
@@ -247,6 +266,7 @@ sub visit_seen {
 
     my $id = $self->_seen_id($seen);
 
+
     # register ID as first class
     $self->_first_class->{$id} = undef;
 
@@ -274,15 +294,21 @@ sub visit_ref {
             }
         }
 
-        push @{ $self->_simple_entries }, $id;
+        my $collapsed = $self->SUPER::visit_ref($_[1]);
 
-        $self->make_entry(
-            id     => $id,
-            object => $ref,
-            data   => $self->SUPER::visit_ref($_[1]),
-        );
+        if ( ref($collapsed) eq 'KiokuDB::Reference' and $collapsed->id eq $id ) {
+            return $collapsed; # tied
+        } else {
+            push @{ $self->_simple_entries }, $id;
 
-        $self->make_ref( $id => $_[1] );
+            $self->make_entry(
+                id     => $id,
+                object => $ref,
+                data   => $collapsed,
+            );
+
+            return $self->make_ref( $id => $_[1] );
+        }
     } elsif ( $self->compact and not isweak($_[1]) ) {
         # for now we assume this data just won't be shared, instead of
         # compacting it later.
@@ -304,6 +330,42 @@ sub _ref_id {
     }
 
     die { unknown => $ref };
+}
+
+sub visit_tied_hash   { shift->visit_tied(@_) }
+sub visit_tied_array  { shift->visit_tied(@_) }
+sub visit_tied_scalar { shift->visit_tied(@_) }
+sub visit_tied_glob   { shift->visit_tied(@_) }
+
+sub visit_tied {
+    my ( $self, $tied, $ref ) = @_;
+
+    my $tie = $self->visit($tied);
+
+    if ( my $id = $self->_ref_id($ref) ) {
+        if ( !$self->compact and my $only = $self->_options->{only} ) {
+            unless ( $only->contains($ref) ) {
+                return $self->make_ref( $id => $_[1] );
+            }
+        }
+
+        push @{ $self->_simple_entries }, $id;
+
+        $self->make_entry(
+            id     => $id,
+            object => $ref,
+            data   => $tie,
+            tied   => reftype($ref),
+        );
+
+        return $self->make_ref( $id => $_[2] );
+    } else {
+        return $self->make_entry(
+            object => $ref,
+            data   => $tie,
+            tied   => reftype($ref),
+        );
+    }
 }
 
 sub visit_object {

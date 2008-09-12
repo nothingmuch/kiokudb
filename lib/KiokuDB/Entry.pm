@@ -6,6 +6,7 @@ use Moose;
 has id => (
     isa => "Str",
     is  => "rw",
+    clearer => "clear_id",
 );
 
 has root => (
@@ -16,7 +17,6 @@ has root => (
 has deleted => (
     isa => "Bool",
     is  => "rw",
-    default => !1,
 );
 
 has data => (
@@ -29,6 +29,12 @@ has class => (
     isa => "Str",
     is  => "rw",
     predicate => "has_class",
+);
+
+has tied => (
+    isa => "Str",
+    is  => "rw",
+    predicate => "has_tied",
 );
 
 has backend_data => (
@@ -62,14 +68,25 @@ sub deletion_entry {
     );
 }
 
+my %tied = (
+    "H" => "HASH",
+    "S" => "SCALAR",
+    "A" => "ARRAY",
+    "G" => "GLOB",
+);
+
+my %tied_r = reverse %tied;
+
 sub STORABLE_freeze {
     my ( $self, $cloning ) = @_;
 
+    no warnings 'uninitialized';
     return (
         join(",",
-            $self->id || '',
+            $self->id,
             !!$self->root,
-            $self->class || '',
+            $self->class,
+            $tied_r{$self->tied},
             !!$self->deleted,
         ),
         ( $self->has_data ? $self->data : () ),
@@ -79,12 +96,13 @@ sub STORABLE_freeze {
 sub STORABLE_thaw {
     my ( $self, $cloning, $attrs, $data ) = @_;
 
-    my ( $id, $root, $class, $deleted ) = split ',', $attrs;
+    my ( $id, $root, $class, $tied, $deleted ) = split ',', $attrs;
 
     $self->id($id) if $id;
     $self->root(1) if $root;;
-    $self->class( $class) if $class;
-    $self->deleted($deleted);
+    $self->class($class) if $class;
+    $self->tied($tied{$tied}) if $tied;
+    $self->deleted(1) if $deleted;
 
     $self->data($data) if ref $data;
 }

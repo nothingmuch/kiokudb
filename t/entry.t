@@ -6,7 +6,7 @@ use warnings;
 use Test::More 'no_plan';
 
 
-use Storable qw(nfreeze thaw);
+use Storable qw(dclone);
 
 use ok 'KiokuDB::Entry';
 use ok 'KiokuDB::LiveObjects';
@@ -39,6 +39,14 @@ my $l = KiokuDB::LiveObjects->new;
             deleted => 1
         ),
         KiokuDB::Entry->new(
+            id   => "bondage",
+            tied => "HASH",
+            data => KiokuDB::Entry->new(
+                class => "Foo",
+                data => {},
+            ),
+        ),
+        KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],
             backend_data => "lalalal",
@@ -49,9 +57,7 @@ my $l = KiokuDB::LiveObjects->new;
             prev => KiokuDB::Entry->new( id => "bar" ),
         ),
     ) {
-        my $f = nfreeze($ent);
-
-        my $copy = thaw($f);
+        my $copy = dclone($ent);
 
         foreach my $transient ( qw(backend_data object prev) ) {
             my $attr = KiokuDB::Entry->meta->find_attribute_by_name($transient);
@@ -61,6 +67,6 @@ my $l = KiokuDB::LiveObjects->new;
 
         is_deeply( $copy, $ent, "copy is_deeply orig" );
 
-        is_deeply( thaw(nfreeze($copy)), $copy, "round trip of copy" );
+        is_deeply( dclone($copy), $copy, "round trip of copy" );
     }
 }

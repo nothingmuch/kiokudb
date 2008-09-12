@@ -6,6 +6,7 @@ use warnings;
 use Test::More 'no_plan';
 
 use Scalar::Util qw(weaken isweak);
+use Storable qw(dclone);
 
 use ok 'KiokuDB::Collapser';
 use ok 'KiokuDB::Resolver';
@@ -13,6 +14,9 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::TypeMap::Entry::MOP';
+use ok 'KiokuDB::TypeMap::Entry::Callback';
+
+use Tie::RefHash;
 
 {
     package Foo;
@@ -451,6 +455,114 @@ use ok 'KiokuDB::TypeMap::Entry::MOP';
                 ),
             },
             "intrinsic entry data",
+        );
+    }
+}
+
+{
+    tie my %h, 'Tie::RefHash';
+
+    $h{Bar->new( blah => "two" )} = "bar";
+
+    my $obj = Foo->new(
+        bar => \%h,
+    );
+
+    {
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => my $lo = KiokuDB::LiveObjects->new
+            ),
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        'Tie::RefHash' => KiokuDB::TypeMap::Entry::Callback->new(
+                            intrinsic => 1,
+                            collapse  => "STORABLE_freeze",
+                            expand    => "STORABLE_thaw",
+                        ),
+                    },
+                ),
+            ),
+        );
+
+        my $s = $lo->new_scope;
+
+        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        my $root = delete $entries->{$ids[0]};
+        my $key  = (values %$entries)[0];
+
+        my $t = Tie::RefHash->TIEHASH( KiokuDB::Reference->new( id => $key->id ) => "bar" );
+
+        is_deeply(
+            dclone($root),
+            KiokuDB::Entry->new(
+                id    => $ids[0],
+                class => "Foo",
+                data  => {
+                    bar => KiokuDB::Entry->new(
+                        tied => "HASH",
+                        data => KiokuDB::Entry->new(
+                            class => "Tie::RefHash",
+                            data  => [ $t->STORABLE_freeze ],
+                        ),
+                    ),
+                },
+            ),
+            "intrinsic collapsing of Tie::RefHash",
+        );
+    }
+}
+
+{
+    tie my %h, 'Tie::RefHash';
+
+    $h{Bar->new( blah => "two" )} = "bar";
+
+    my $obj = Foo->new(
+        bar => \%h,
+    );
+
+    {
+        my $v = KiokuDB::Collapser->new(
+            resolver => KiokuDB::Resolver->new(
+                live_objects => my $lo = KiokuDB::LiveObjects->new
+            ),
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        'Tie::RefHash' => KiokuDB::TypeMap::Entry::Callback->new(
+                            collapse  => "STORABLE_freeze",
+                            expand    => "STORABLE_thaw",
+                        ),
+                    },
+                ),
+            ),
+        );
+
+        my $s = $lo->new_scope;
+
+        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        my $root = $entries->{$ids[0]};
+        my $tie  = (grep { $_->class eq 'Tie::RefHash' } values %$entries)[0];
+
+        is_deeply(
+            dclone($root),
+            KiokuDB::Entry->new(
+                id    => $ids[0],
+                class => "Foo",
+                data  => {
+                    bar => KiokuDB::Entry->new(
+                        tied => "HASH",
+                        data => KiokuDB::Reference->new( id => $tie->id ),
+                    ),
+                },
+            ),
+            "first class collapsing of Tie::RefHash",
         );
     }
 }

@@ -12,6 +12,8 @@ use Moose;
 
 use Carp qw(croak);
 use Scalar::Util qw(reftype weaken);
+use Symbol qw(gensym);
+use Tie::ToObject;
 
 use namespace::clean -except => 'meta';
 
@@ -99,7 +101,31 @@ sub inflate_data {
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         my $obj;
         $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) ); # no id means intrinsic
-        bless $obj, $data->class if $data->class;
+
+        if ( my $tie = $data->tied ) {
+            if ( $tie eq 'HASH' ) {
+                tie my %h, "Tie::ToObject" => $obj;
+                $obj = \%h;
+            } elsif ( $tie eq 'ARRAY' ) {
+                tie my @a, "Tie::ToObject" => $obj;
+                $obj = \@a;
+            } elsif ( $tie eq 'GLOB' ) {
+                my $glob = gensym();
+                tie *$glob, "Tie::ToObject" => $obj,
+                $obj = $glob;
+            } elsif ( $tie eq 'SCALAR' ) {
+                my $scalar;
+                tie $scalar, "Tie::ToObject" => $obj;
+                $obj = \$scalar;
+            } else {
+                die "Don't know how to tie $tie";
+            }
+        }
+
+        if ( my $class = $data->class ) {
+            bless $obj, $data->class;
+        }
+
         $$into = $obj;
     } elsif ( ref($data) eq 'HASH' ) {
         my %targ;
