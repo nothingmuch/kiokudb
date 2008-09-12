@@ -16,6 +16,11 @@ sub push {
     push @{ $self->objects }, @objs;
 }
 
+sub clear {
+    my $self = shift;
+    @{ $self->objects } = ();
+}
+
 has parent => (
     isa => __PACKAGE__,
     is  => "ro",

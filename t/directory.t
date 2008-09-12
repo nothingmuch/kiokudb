@@ -120,7 +120,8 @@ no_live_objects;
 
     is( scalar(@ids), 2, "got two ids" );
 
-    undef $s;
+    $s->clear;
+
     undef $x;
 
     is( $dir->live_objects->id_to_object($ids[0]), undef, "first object is dead" );
@@ -246,11 +247,9 @@ no_live_objects;
     my $id = $dir->insert( Foo->new( foo => "henry" ) );
     ok( $id, "insert returns ID for new object" );
 
-    undef $s;
+    $s->clear;
 
     no_live_objects;
-
-    $s = $dir->new_scope;
 
     my $obj = $dir->lookup($id);
 
@@ -263,11 +262,10 @@ no_live_objects;
 
 
 {
-    my $s = $dir->new_scope;
-
-    my $id = $dir->store( Foo->new( foo => "blimey" ) );
-
-    undef $s;
+    my $id = do {
+        my $s = $dir->new_scope;
+        $dir->store( Foo->new( foo => "blimey" ) );
+    };
 
     no_live_objects;
 
@@ -427,13 +425,12 @@ no_live_objects;
 
 
 {
-    my $s = $dir->new_scope;
-
-    my $id = $dir->insert( Foo->new( foo => "hippies" ) );
+    my $id = do {
+        my $s = $dir->new_scope;
+        $dir->insert( Foo->new( foo => "hippies" ) );
+    };
 
     ok( $id, "insert returns ID for new object" );
-
-    undef $s;
 
     no_live_objects;
 
