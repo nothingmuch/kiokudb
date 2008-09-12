@@ -132,7 +132,9 @@ sub inflate_data {
     } elsif ( ref($data) eq 'HASH' ) {
         return { map { ref() ? $self->inflate_data($_) : $_ } %$data };
     } else {
-        die "unsupported reftype: " . ref $data;
+        # presumably passthrough?
+        #die "unsupported reftype: " . ref $data;
+        return $data;
     }
 }
 
