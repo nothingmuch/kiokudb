@@ -38,12 +38,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
 {
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $foo = Foo->new(
         id  => "oink",
@@ -122,12 +124,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
 {
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $x = { name => "shared" };
 
@@ -169,12 +173,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
     # circular ref
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $foo = Foo->new(
         id  => "oink",
@@ -218,12 +224,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
 {
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $x = { name => "shared" };
 
@@ -266,12 +274,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
 {
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $x = { name => "shared" };
 
@@ -315,12 +325,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
 {
     my $v = KiokuDB::Collapser->new(
         resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
+            live_objects => my $lo = KiokuDB::LiveObjects->new
         ),
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new
         ),
     );
+
+    my $s = $lo->new_scope;
 
     my $data = { };
     $data->{self} = $data;
@@ -340,13 +352,15 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
     {
         my $v = KiokuDB::Collapser->new(
             resolver => KiokuDB::Resolver->new(
-                live_objects => KiokuDB::LiveObjects->new
+                live_objects => my $lo = KiokuDB::LiveObjects->new
             ),
             compact => 0,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new
             ),
         );
+
+        my $s = $lo->new_scope;
 
         my @entries = $v->collapse_objects($obj);
         is( scalar(@entries), 2, "two entries" );
@@ -355,13 +369,15 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
     {
         my $v = KiokuDB::Collapser->new(
             resolver => KiokuDB::Resolver->new(
-                live_objects => KiokuDB::LiveObjects->new
+                live_objects => my $lo = KiokuDB::LiveObjects->new
             ),
             compact => 1,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new
             ),
         );
+
+        my $s = $lo->new_scope;
 
         my @entries = $v->collapse_objects($obj);
         is( scalar(@entries), 1, "one entry with compacter" );
@@ -374,12 +390,14 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
     {
         my $v = KiokuDB::Collapser->new(
             resolver => KiokuDB::Resolver->new(
-                live_objects => KiokuDB::LiveObjects->new
+                live_objects => my $lo = KiokuDB::LiveObjects->new
             ),
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new
             ),
         );
+
+        my $s = $lo->new_scope;
 
         {
             my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
@@ -404,7 +422,7 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
     {
         my $v = KiokuDB::Collapser->new(
             resolver => KiokuDB::Resolver->new(
-                live_objects => KiokuDB::LiveObjects->new
+                live_objects => my $lo = KiokuDB::LiveObjects->new
             ),
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
@@ -416,6 +434,8 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
                 ),
             ),
         );
+
+        my $s = $lo->new_scope;
 
         my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
         is( scalar(keys %$entries), 1, "one entries for deep collapse with intrinsic value" );
