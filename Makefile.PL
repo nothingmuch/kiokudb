@@ -28,7 +28,8 @@ WriteMakefile(
         #'Data::UUID::LibUUID' => 0, # reccomended
 
         # visits are also important
-        'Data::Visitor' => '0.19',
+        'Data::Visitor' => '0.20',
+        'Tie::ToObject' => 0,
 
         # scanning and searching
         'Data::Stream::Bulk' => "0.02",
@@ -47,7 +48,6 @@ WriteMakefile(
 
         # live objects
         'Hash::Util::FieldHash::Compat' => 0,
-        'Data::Swap' => 0,
         'Scope::Guard' => 0,
 
         'Set::Object' => 0,
