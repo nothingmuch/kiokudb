@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::TypeMap::Entry::Normal;
+package KiokuDB::TypeMap::Entry::MOP;
 use Moose;
 
 use namespace::clean -except => 'meta';

@@ -97,9 +97,8 @@ sub inflate_data {
         $$into = $self->get_or_load_object($id);
         weaken($$into) if $data->is_weak;
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
-        # intrinsic entry
         my $obj;
-        $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) );
+        $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) ); # no id means intrinsic
         bless $obj, $data->class if $data->class;
         $$into = $obj;
     } elsif ( ref($data) eq 'HASH' ) {
@@ -128,8 +127,8 @@ sub inflate_data {
         $$into = \$targ;
     } else {
         if ( blessed($data) ) {
+            # this branch is for passthrough intrinsic values
             $self->register_object( $entry => $data ) if $entry;
-            # presumably passthrough?
             $$into = $data;
         } else {
             die "unsupported reftype: " . ref $data;

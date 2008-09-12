@@ -4,7 +4,7 @@ package KiokuDB::TypeMap::Resolver;
 use Moose;
 
 use KiokuDB::TypeMap;
-use KiokuDB::TypeMap::Entry::Normal;
+use KiokuDB::TypeMap::Entry::MOP;
 
 use namespace::clean -except => 'meta';
 
@@ -81,7 +81,7 @@ sub resolve_fallback_with_meta {
     my ( $self, $class, $meta ) = @_;
 
     # FIXME only allow with Storage?
-    return $self->compile_entry( $class => KiokuDB::TypeMap::Entry::Normal->new );
+    return $self->compile_entry( $class => KiokuDB::TypeMap::Entry::MOP->new );
 }
 
 sub resolve_fallback_without_meta {

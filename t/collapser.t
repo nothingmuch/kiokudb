@@ -12,7 +12,7 @@ use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
-use ok 'KiokuDB::TypeMap::Entry::Normal';
+use ok 'KiokuDB::TypeMap::Entry::MOP';
 
 {
     package Foo;
@@ -427,7 +427,7 @@ use ok 'KiokuDB::TypeMap::Entry::Normal';
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
-                        Bar => KiokuDB::TypeMap::Entry::Normal->new(
+                        Bar => KiokuDB::TypeMap::Entry::MOP->new(
                             intrinsic => 1,
                         ),
                     },
