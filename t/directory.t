@@ -56,6 +56,8 @@ sub no_live_objects {
 my $id;
 
 {
+    my $s = $dir->new_scope;
+
     my $x = Foo->new(
         foo => "dancing",
         bar => Foo->new(
@@ -91,6 +93,8 @@ my $id;
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
     my $obj = $dir->lookup($id);
 
     is( $obj->foo, "dancing", "simple attr" );
@@ -103,6 +107,8 @@ no_live_objects;
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
     my $x = Foo->new(
         foo => "oink oink",
         bar => my $y = Foo->new(
@@ -114,23 +120,31 @@ no_live_objects;
 
     is( scalar(@ids), 2, "got two ids" );
 
+    undef $s;
     undef $x;
 
     is( $dir->live_objects->id_to_object($ids[0]), undef, "first object is dead" );
     is( $dir->live_objects->id_to_object($ids[1]), $y, "second is still alive" );
 
-    my @objects = map { $dir->lookup($_) } @ids;
+    {
+        my $s = $dir->new_scope;
+        my @objects = map { $dir->lookup($_) } @ids;
 
-    isa_ok( $objects[0], "Foo" );
-    is( $objects[0]->foo, "oink oink", "object retrieved" );
-    is( $objects[1], $y, "object is already live" );
-    is( $objects[0]->bar, $y, "link recreated" );
+        isa_ok( $objects[0], "Foo" );
+        is( $objects[0]->foo, "oink oink", "object retrieved" );
+        is( $objects[1], $y, "object is already live" );
+        is( $objects[0]->bar, $y, "link recreated" );
+    }
 }
 
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
     my @ids = do{
+        my $s = $dir->new_scope;
+
         my $shared = Foo->new( foo => "shared" );
 
         my $first  = Foo->new( foo => "first",  bar => $shared );
@@ -159,7 +173,11 @@ no_live_objects;
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
     my @ids = do{
+        my $s = $dir->new_scope;
+
         my $shared = { foo => "shared", object => Foo->new( foo => "shared child" ) };
 
         $shared->{object}->parent($shared);
@@ -193,7 +211,11 @@ no_live_objects;
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
     my $id = do{
+        my $s = $dir->new_scope;
+
         my $shared = { foo => "hippies" };
 
         weaken($shared->{self} = $shared);
@@ -212,22 +234,23 @@ no_live_objects;
     is( $obj->bar->{foo}, "hippies", "hash data" );
     is( $obj->bar->{self}, $obj->bar, "circular ref" );
 
-    {
-        local $TODO = "weaken is not yet supported in expander";
-        ok( isweak($obj->bar->{self}), "weak ref" );
-
-        weaken($obj->bar->{self}); # to make no_live_objects pass
-    }
+    ok( isweak($obj->bar->{self}), "weak ref" );
 }
 
 no_live_objects;
 
 
 {
+    my $s = $dir->new_scope;
+
     my $id = $dir->insert( Foo->new( foo => "henry" ) );
     ok( $id, "insert returns ID for new object" );
 
+    undef $s;
+
     no_live_objects;
+
+    $s = $dir->new_scope;
 
     my $obj = $dir->lookup($id);
 
@@ -240,11 +263,17 @@ no_live_objects;
 
 
 {
+    my $s = $dir->new_scope;
+
     my $id = $dir->store( Foo->new( foo => "blimey" ) );
+
+    undef $s;
 
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         isa_ok( $obj, "Foo" );
@@ -258,6 +287,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         isa_ok( $obj, "Foo" );
@@ -273,6 +304,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         isa_ok( $obj, "Foo" );
@@ -288,6 +321,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         isa_ok( $obj, "Foo" );
@@ -303,9 +338,13 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $child;
 
         {
+            my $s = $dir->new_scope;
+
             my $obj = $dir->lookup($id);
 
             isa_ok( $obj, "Foo" );
@@ -325,6 +364,8 @@ no_live_objects;
 
 
         {
+            my $s = $dir->new_scope;
+
             my $obj = $dir->lookup($id);
 
             isa_ok( $obj, "Foo" );
@@ -347,6 +388,8 @@ no_live_objects;
         }
 
         {
+            my $s = $dir->new_scope;
+
             my $obj = $dir->lookup($id);
 
             isa_ok( $obj, "Foo" );
@@ -363,6 +406,8 @@ no_live_objects;
         }
 
         {
+            my $s = $dir->new_scope;
+
             my $obj = $dir->lookup($id);
 
             isa_ok( $obj, "Foo" );
@@ -382,13 +427,19 @@ no_live_objects;
 
 
 {
+    my $s = $dir->new_scope;
+
     my $id = $dir->insert( Foo->new( foo => "hippies" ) );
 
     ok( $id, "insert returns ID for new object" );
 
+    undef $s;
+
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->foo, "hippies", "stored by insert" );
@@ -399,6 +450,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->foo, "hippies", "not updated" );
@@ -427,6 +480,8 @@ no_live_objects;
     my $child = Foo->new( foo => "meddling kids" );
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->foo, "goddamn", "updated" );
@@ -445,6 +500,8 @@ no_live_objects;
     }
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->bar, $child, "updated" );
@@ -459,6 +516,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->bar->foo, "meddling kids", "update is shallow" );
@@ -471,6 +530,8 @@ no_live_objects;
     no_live_objects;
 
     {
+        my $s = $dir->new_scope;
+
         my $obj = $dir->lookup($id);
 
         is( $obj->bar->foo, "three", "updated" );
@@ -480,18 +541,27 @@ no_live_objects;
 no_live_objects;
 
 {
-     my $id = $dir->store(
-        Foo->new(
-            foo => "dancing",
-            bar => Foo->new(
-                foo => "oh",
+    my $s = $dir->new_scope;
+
+    my $id = do {
+        my $s = $dir->new_scope;
+
+        $dir->store(
+            Foo->new(
+                foo => "dancing",
+                bar => Foo->new(
+                    foo => "oh",
+                ),
             ),
-        ),
-    );
+        );
+    };
 
     no_live_objects;
 
-    isa_ok( $dir->lookup($id), "Foo" );
+    {
+        my $s = $dir->new_scope;
+        isa_ok( $dir->lookup($id), "Foo" );
+    }
 
     no_live_objects;
 
@@ -505,6 +575,8 @@ no_live_objects;
 no_live_objects;
 
 {
+    my $s = $dir->new_scope;
+
      my $id = $dir->store(
         my $foo = Foo->new(
             foo => "dancing",
