@@ -11,7 +11,7 @@ use Moose;
 
 
 use Carp qw(croak);
-use Data::Swap qw(swap);
+use Scalar::Util qw(reftype weaken);
 
 use namespace::clean -except => 'meta';
 
@@ -78,53 +78,58 @@ sub expand_object {
 sub expand_naive {
     my ( $self, $entry ) = @_;
 
-    # FIXME remove Data::Swap
+    $self->inflate_data( $entry, \(my $data) );
 
-    # for simple structures with circular refs we need to have the UUID
-    # already pointing to a refaddr
-
-    # a better way to do this is to hijack _register_mapping so that when
-    # it maps from $entry->data to the new value, we register that with the live object set
-
-    my $placeholder = {};
-    $self->register_object( $entry => $placeholder );
-    my $data = $self->inflate_data( $entry->data );
-
-    if ( my $class = $entry->class ) {
-        bless $data, $class;
-    }
-
-    swap($data, $placeholder);
-    return $placeholder;
+    $data;
 }
 
 sub inflate_data {
-    my ( $self, $data ) = @_;
+    my ( $self, $data, $into, $entry ) = @_;
 
-    return unless ref $data;
-
-    if ( ref $data eq 'KiokuDB::Reference' ) {
+    unless ( ref $data ) {
+        $$into = $data;
+    } elsif ( ref $data eq 'KiokuDB::Reference' ) {
         my $id = $data->id;
-        # FIXME if $object->is_weak then we need a Data::Visitor api to make
-        # sure the container this gets put in is weakened
-        # not a huge issue because usually we'll encounter attrs with weak_ref
-        # => 1, but this is still needed for correctness
-
-        # GAH! just returning the object is broken, gotta find out why
-        my $obj = $self->get_or_load_object($id);
-        return $obj;
+        $$into = $self->get_or_load_object($id);
+        weaken($$into) if $data->is_weak;
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         # intrinsic entry
-        my $obj = $self->inflate_data($data->data);
-        return bless $obj, $data->class;
-    } elsif ( ref($data) eq 'ARRAY' ) {
-        return [ map { ref() ? $self->inflate_data($_) : $_ } @$data ];
+        my $obj;
+        $self->inflate_data($data->data, \$obj, $data);
+        bless $obj, $data->class if $data->class;
+        $$into = $obj;
     } elsif ( ref($data) eq 'HASH' ) {
-        return { map { ref() ? $self->inflate_data($_) : $_ } %$data };
+        my %targ;
+        $self->register_object( $entry => \%targ ) if $entry;
+        foreach my $key ( keys %$data ) {
+            $self->inflate_data( $data->{$key}, \$targ{$key});
+        }
+        $$into = \%targ;
+    } elsif ( ref($data) eq 'ARRAY' ) {
+        my @targ;
+        $self->register_object( $entry => \@targ ) if $entry;
+        for (@$data ) {
+            push @targ, undef;
+            $self->inflate_data($_, \$targ[-1]);
+        }
+        $$into = \@targ;
+    } elsif ( ref($data) eq 'SCALAR' ) {
+        my $targ = $$data;
+        $self->register_object( $entry => \$targ ) if $entry;
+        $$into = \$targ;
+    } elsif ( ref($data) eq 'REF' ) {
+        my $targ;
+        $self->register_object( $entry => \$targ ) if $entry;
+        $self->inflate_data( $$data, \$targ );
+        $$into = \$targ;
     } else {
-        # presumably passthrough?
-        #die "unsupported reftype: " . ref $data;
-        return $data;
+        if ( blessed($data) ) {
+            $self->register_object( $entry => $data ) if $entry;
+            # presumably passthrough?
+            $$into = $data;
+        } else {
+            die "unsupported reftype: " . ref $data;
+        }
     }
 }
 
@@ -135,6 +140,9 @@ sub get_or_load_objects {
 
     my %objects;
     @objects{@ids} = $self->live_objects->ids_to_objects(@ids);
+
+    die "Circular structure with unsupported typemap"
+        if grep { ref() eq 'KiokuDB::Linker::Circular' } values %objects;
 
     my @missing = grep { not defined $objects{$_} } @ids;
 

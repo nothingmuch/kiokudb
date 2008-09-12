@@ -3,8 +3,6 @@
 package KiokuDB::TypeMap::Entry::Callback;
 use Moose;
 
-use Data::Swap qw(swap);
-
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);
@@ -29,17 +27,15 @@ sub compile_mappings {
     my $expand = sub {
         my ( $self, $entry ) = @_;
 
-        # FIXME see Linker::expand_naive
-
-        my $placeholder = {};
-        $self->register_object( $entry => $placeholder );
-
         my @args = map { $self->inflate_data($_) } @{ $entry->data };
 
+        # does *NOT* support circular refs
+        # document it as such
         my $object = $entry->class->$expand_object(@args);
 
-        swap($object, $placeholder);
-        return $placeholder;
+        $self->register_object( $entry => $object );
+
+        return $object;
     };
 
     return ( $collapse, $expand );

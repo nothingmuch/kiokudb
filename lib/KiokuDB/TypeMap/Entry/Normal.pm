@@ -67,7 +67,7 @@ sub compile_expander {
         foreach my $name ( keys %$data ) {
             my $value = $data->{$name};
 
-            $value = $self->inflate_data($value) if ref $value;
+            $self->inflate_data($value, \$value) if ref $value;
 
             $attrs{$name}->set_value($instance, $value);
         }
