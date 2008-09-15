@@ -5,7 +5,12 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-requires "root_entries";
+requires "all_entries";
+
+sub root_entries {
+    my $self = shift;
+    return $self->all_entries->filter(sub {[ grep { $_->root } @$_ ]});
+}
 
 __PACKAGE__
 
