@@ -170,9 +170,6 @@ sub get_or_load_objects {
     my %objects;
     @objects{@ids} = $self->live_objects->ids_to_objects(@ids);
 
-    die "Circular structure with unsupported typemap"
-        if grep { ref() eq 'KiokuDB::Linker::Circular' } values %objects;
-
     my @missing = grep { not defined $objects{$_} } @ids;
 
     @objects{@missing} = $self->load_objects(@missing);
