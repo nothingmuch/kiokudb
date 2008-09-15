@@ -32,7 +32,7 @@ WriteMakefile(
         'Tie::ToObject' => 0,
 
         # scanning and searching
-        'Data::Stream::Bulk' => "0.02",
+        'Data::Stream::Bulk' => "0.03",
 
         # JSPON backend
         'JSON' => 0,
@@ -59,4 +59,3 @@ WriteMakefile(
         'Test::TempDir' => 0,
     },
 );
-
