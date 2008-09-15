@@ -8,7 +8,7 @@ use MooseX::AttributeHelpers;
 use Scalar::Util qw(weaken);
 use Scope::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
-use Carp qw(croak carp);
+use Carp qw(croak);
 use Devel::PartialDump qw(croak);
 use Set::Object;
 
@@ -190,7 +190,7 @@ sub insert {
 
     my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
 
-    my $s = $self->current_scope or carp "no open live object scope";
+    my $s = $self->current_scope or croak "no open live object scope";
 
     while ( @pairs ) {
         my ( $id, $object ) = splice @pairs, 0, 2;
@@ -212,7 +212,7 @@ sub insert {
         } else {
             weaken($i->{$id} = $object);
 
-            $s->push($object) if $s;
+            $s->push($object);
 
             if ( $entry and !$ei->{$id} ) {
                 $ei->{$id} = $entry;
