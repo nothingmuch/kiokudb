@@ -23,7 +23,7 @@ has db => (
     handles => [qw(document)],
 );
 
-sub root_entries {
+sub all_entries {
     my $self = shift;
 
     bulk( map { $self->deserialize($_) } $self->db->all_documents ); # all_documents returns docs with no data
@@ -48,6 +48,7 @@ sub insert {
         my $collapsed = $self->collapse_jspon($entry);
         $collapsed->{_id} = delete $collapsed->{id}; # FIXME
         $collapsed->{class} = delete $collapsed->{__CLASS__};
+        $collapsed->{is_root} = $entry->root; # FIXME
 
         if ( my $prev = $entry->prev ) {
             my $doc = $prev->backend_data;
@@ -89,7 +90,7 @@ sub deserialize {
     $doc{__CLASS__} = delete $doc{class};
     $doc{id} = $doc->id;
 
-    return $self->expand_jspon(\%doc, backend_data => $doc);
+    return $self->expand_jspon(\%doc, backend_data => $doc, root => delete $doc{is_root} );
 }
 
 sub exists {
