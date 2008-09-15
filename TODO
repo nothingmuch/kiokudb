@@ -1,4 +1,4 @@
-* Backend roles:
+* Backends:
     * Map ( for all UUID <-> serialized blob mappings )
     * Backend::CAS (content addressible map based on serialize)
     * Backend::Store
@@ -11,11 +11,35 @@
     * SQLite
         * with dynamic alter table statements?
         * audrey style indexing?
+    * BDB
+        * Set::Object/Hash sharding
+        * tight GIN integration
+        * txn_do, setup, associate etc from GIN in a separate BDB wrapper
+    * RDF
+        * generate triples
+            * predicates as FQ attr names names
+            * predicates as short attr names
+            * predicates as UUIDs?
+            * no collapsing by default
+        * SPARQL matching with simple search
     * Backend::TXN
     * Backend::Locking
         * TXN::Exclusive
 
-* lazy loadeding:
+* caching support
+    * entries only? How else do we guarantee no weak ref breakage?
+    * maybe cache full scopes up to a certain limit?
+        * defer destruction of orphanned scopes as long as object count is
+          under a bound?
+
+* typemap
+    * default types
+    * runtime role support
+        * json in class field?
+        * Reference in class field?
+            * fully DB resident metaclass?
+
+* lazy loading:
     * Set::Object
         * insert without loading members
         * remove without loading members
@@ -26,3 +50,11 @@
     * thunk
         * what are the degenerate cases?
         * how to break circular dependencies?
+
+* tools
+    * consistency checker
+    * generic garbage collector
+    * backup/restore
+        * yaml output
+        * storable output
+        * backend to backend
