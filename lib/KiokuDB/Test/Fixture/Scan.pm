@@ -20,7 +20,7 @@ sub create {
     ( map { KiokuDB::Test::Person->new(%$_) }
         { name => "foo", age => 3 },
         { name => "bar", age => 3 },
-        { name => "gorch", age => 5 },
+        { name => "gorch", age => 5, friends => [ KiokuDB::Test::Person->new( name => "quxx", age => 6 ) ] },
     );
 }
 
@@ -32,14 +32,26 @@ before populate => sub {
 sub verify {
     my $self = shift;
 
-    my $stream = $self->root_set;
+    my $root = $self->root_set;
 
-    does_ok( $stream, "Data::Stream::Bulk" );
+    does_ok( $root, "Data::Stream::Bulk" );
 
     is_deeply(
-        [ sort map { $_->name } $stream->all ],
+        [ sort map { $_->name } $root->all ],
         [ sort qw(foo bar gorch) ],
         "root set",
+    );
+
+    my $all_entries = $self->backend->all_entries;
+
+    does_ok( $all_entries, "Data::Stream::Bulk" );
+
+    my $all = $all_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
+
+    is_deeply(
+        [ sort map { $_->name } $all->all ],
+        [ sort qw(foo bar gorch quxx) ],
+        "all entries",
     );
 }
 
