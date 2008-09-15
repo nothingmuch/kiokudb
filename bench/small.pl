@@ -6,9 +6,6 @@ use warnings;
 use KiokuDB;
 use KiokuDB::Backend::Hash;
 
-#use Data::Structure::Util qw(circular_off);
-sub circular_off {}
-
 $| = 1;
 
 my $f = (require KiokuDB::Test::Fixture::Small)->new;
@@ -24,9 +21,9 @@ sub bench_write {
         my $t = times;
         until ( times() - $t > 1 ) {
             for ( 1 .. 10 ) {
+                my $s = $mxsd_hash->new_scope;
                 my @objs = $f->create, $f->create;
                 $mxsd_hash->store(@objs);
-                circular_off(\@objs);
             }
         }
         $mxsd_hash->backend->clear;
@@ -38,13 +35,17 @@ sub bench_write {
 }
 
 sub bench_read {
-    my @ids = $mxsd_hash->store($f->create, $f->create);
+    my @ids = do {
+        my $s = $mxsd_hash->new_scope;
+        $mxsd_hash->store($f->create, $f->create)
+    };
 
     for ( 1 .. 20 ) {
         my $t = times;
         until ( times() - $t > 1 ) {
             for ( 1 .. 250 ) {
-                circular_off($mxsd_hash->lookup(@ids));
+                my $s = $mxsd_hash->new_scope;
+                my @objs = $mxsd_hash->lookup(@ids);
             }
         }
         print ".";
@@ -89,7 +90,10 @@ sub bench_search {
         backend => $gin,
     );
 
-    $dir->store($f->create) for 1 .. 10;
+    for ( 1 .. 10 ) {
+        my $s = $dir->new_scope;
+        $dir->store($f->create);
+    }
 
     my $q_employee = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Employee" );
 
@@ -97,6 +101,7 @@ sub bench_search {
         my $t = times;
         until ( times() - $t > 1 ) {
             for ( 1 .. 10 ) {
+                my $s = $dir->new_scope;
                 $dir->search($q_employee);
             }
         }
