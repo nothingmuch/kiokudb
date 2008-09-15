@@ -42,6 +42,18 @@ sub verify {
         "root set",
     );
 
+    my $child_entries = $self->backend->child_entries;
+
+    does_ok( $child_entries, "Data::Stream::Bulk" );
+
+    my $children = $child_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
+
+    is_deeply(
+        [ sort map { $_->name } $children->all ],
+        [ sort qw(quxx) ],
+        "child entries",
+    );
+
     my $all_entries = $self->backend->all_entries;
 
     does_ok( $all_entries, "Data::Stream::Bulk" );

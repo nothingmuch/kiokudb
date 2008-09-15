@@ -12,6 +12,11 @@ sub root_entries {
     return $self->all_entries->filter(sub {[ grep { $_->root } @$_ ]});
 }
 
+sub child_entries {
+    my $self = shift;
+    return $self->all_entries->filter(sub {[ grep { not $_->root } @$_ ]});
+}
+
 __PACKAGE__
 
 __END__
