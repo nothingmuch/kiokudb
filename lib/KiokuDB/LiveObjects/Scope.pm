@@ -35,6 +35,12 @@ has live_objects => (
 sub DEMOLISH {
     my $self = shift;
 
+    # consider possibilities of optimizing live object set removal at this
+    # point
+
+    # problems can arise from an object outliving the scope it was loaded in:
+    # { my $outer = lookup(...); { my $inner = lookup(...); $outer->foo($inner) } }
+
     if ( my $l = $self->live_objects ) {
         if ( my $parent = $self->parent ) {
             $l->_set_current_scope($parent);
