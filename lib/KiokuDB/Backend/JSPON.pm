@@ -11,6 +11,8 @@ use JSON;
 
 use KiokuDB ();
 
+use Data::Stream::Bulk::Path::Class;
+
 use MooseX::Types::Path::Class qw(Dir File);
 
 use namespace::clean -except => 'meta';
@@ -20,13 +22,14 @@ with qw(
     KiokuDB::Backend::Serialize::JSPON
     KiokuDB::Backend::UnicodeSafe
     KiokuDB::Role::StorageUUIDs
+    KiokuDB::Backend::Clear
+    KiokuDB::Backend::Scan
+    KiokuDB::Backend::Query::Simple::Linear
 );
 
 sub BUILD {
     my $self = shift;
-
-    $self->object_dir->mkpath;
-    $self->root_set_dir->mkpath;
+    $self->create_dirs;
 }
 
 has dir => (
@@ -183,18 +186,25 @@ sub insert_entry {
 sub read_entry {
     my ( $self, $id ) = @_;
 
-    my $fh = $self->object_file($id)->openr
-        || croak("read_entry($id): $!");
-
-    $fh->binmode(":utf8");
-
-    my $data = do { local $/; <$fh> };
+    my $data = $self->slurp_file($self->object_file($id));
 
     my %attrs;
 
     $attrs{root} = 1 if -e $self->root_set_file($id);
 
     return ( $data, %attrs );
+}
+
+sub slurp_file {
+    my ( $self, $file ) = @_;
+
+    my $fh = $file->openr || croak("slurp_file($file): $!");
+
+    $fh->binmode(":utf8");
+
+    my $data = do { local $/; <$fh> };
+
+    return $data;
 }
 
 sub write_entry {
@@ -229,6 +239,43 @@ sub object_file {
 sub root_set_file {
     my ( $self, $uid ) = @_;
     $self->root_set_dir->file($self->uuid_to_string($uid));
+}
+
+sub create_dirs {
+    my $self = shift;
+
+    $self->object_dir->mkpath;
+    $self->root_set_dir->mkpath;
+}
+
+sub clear {
+    my $self = shift;
+
+    $_->rmtree({ keep_root => 1 }) for $self->root_set_dir, $self->object_dir;
+}
+
+sub all_entries {
+    my $self = shift;
+
+    my $root_set_dir = $self->root_set_dir;
+
+    Data::Stream::Bulk::Path::Class->new( dir => $self->object_dir, only_files => 1 )->filter(sub { [ map {
+        my $json = $self->slurp_file($_);
+        my $root = -e $root_set_dir->file($_->basename);
+        my $data = $self->decode($json);
+
+        $self->expand_jspon( $data, ( $root ? ( root => 1 ) : () ) );
+    } @$_ ]});
+}
+
+sub root_entries {
+    my $self = shift;
+
+    Data::Stream::Bulk::Path::Class->new( dir => $self->root_set_dir, only_files => 1 )->filter(sub { [ map {
+        my $json = $self->slurp_file($_);
+        my $data = $self->decode($json);
+        $self->expand_jspon( $data, root => 1 );
+    } @$_ ]});
 }
 
 __PACKAGE__->meta->make_immutable;
