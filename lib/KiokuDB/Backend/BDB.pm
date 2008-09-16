@@ -29,8 +29,7 @@ with qw(
 has dir => (
     isa => Dir,
     is  => "ro",
-    required => 1,
-    coerce   => 1,
+    coerce => 1,
 );
 
 has manager => (
@@ -43,11 +42,12 @@ has manager => (
 sub txn_begin { shift->manager->txn_begin(@_) }
 sub txn_commit { shift->manager->txn_commit(@_) }
 sub txn_rollback { shift->manager->txn_rollback(@_) }
+sub txn_do { shift->manager->txn_do(@_) }
 
 sub _build_manager {
     my $self = shift;
 
-    my $dir = $self->dir;
+    my $dir = $self->dir || die "Either 'manager' or 'dir' is required";;
 
     $dir->mkpath;
 
