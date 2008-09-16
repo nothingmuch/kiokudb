@@ -24,6 +24,8 @@ with qw(
     KiokuDB::Backend::Serialize::Storable
     KiokuDB::Backend::Clear
     KiokuDB::Backend::TXN
+    KiokuDB::Backend::Scan
+    KiokuDB::Backend::Query::Simple::Linear
 );
 
 has dir => (
@@ -118,6 +120,17 @@ sub clear {
         $cursor->c_del() == 0 or die $BerkeleyDB::Error;
     }
 }
+
+sub all_entries {
+    my $self = shift;
+
+    $self->manager->cursor_stream(
+        db => $self->dbm,
+        values => 1,
+    )->filter(sub {[ map { $self->deserialize($_) } @$_ ]});
+}
+
+# sub root_entries { } # secondary index?
 
 __PACKAGE__->meta->make_immutable;
 
