@@ -114,7 +114,7 @@ sub clear {
 
     my $cursor = $self->dbm->db_cursor;
 
-    my ($key, $value);
+    my ($key, $value) = ( '', '' );
 
     while ( $cursor->c_get($key, $value, BerkeleyDB::DB_PREV() ) == 0) {
         $cursor->c_del() == 0 or die $BerkeleyDB::Error;
