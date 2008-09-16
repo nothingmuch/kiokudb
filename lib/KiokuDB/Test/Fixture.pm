@@ -87,6 +87,8 @@ sub run {
     SKIP: {
         local $Test::Builder::Level = $Test::Builder::Level + 1;
 
+        my $txn = $self->backend->does("KiokuDB::Backend::TXN") && $self->backend->txn_begin;
+
         $self->precheck;
 
         $self->clear_live_objects;
@@ -99,6 +101,8 @@ sub run {
             $self->populate;
             $self->verify;
         } "no error in fixture";
+
+        $self->backend->txn_commit($txn) if $txn;
 
         is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name . " fixture" );
 
