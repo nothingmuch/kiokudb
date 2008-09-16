@@ -110,7 +110,7 @@ sub exists {
 }
 
 sub clear {
-    my $self = shift ;
+    my $self = shift;
 
     my $cursor = $self->dbm->db_cursor;
 
