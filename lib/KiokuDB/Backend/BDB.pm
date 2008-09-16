@@ -62,6 +62,8 @@ has dbm => (
     lazy_build => 1,
 );
 
+sub BUILD { shift->dbm } # early
+
 sub _build_dbm {
     my $self = shift;
 
