@@ -58,3 +58,6 @@
         * yaml output
         * storable output
         * backend to backend
+
+* query
+    * http://www.ietf.org/rfc/rfc1960.txt
