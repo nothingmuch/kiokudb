@@ -78,6 +78,8 @@ is_deeply(
 foreach my $entry ( @entries ) {
     ok( $b->dbm->db_get($entry->id, my $data) == 0, "got from db" );
 
+    $data = $b->deserialize($data);
+
     isa_ok( $data, "KiokuDB::Entry" );
     is( ref $data->data, 'HASH', "hash loaded" );
 

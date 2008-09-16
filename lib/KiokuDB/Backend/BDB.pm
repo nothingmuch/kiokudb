@@ -5,7 +5,7 @@ use Moose;
 
 use Scalar::Util qw(weaken);
 use Storable qw(nfreeze thaw);
-use BerkeleyDB;
+use BerkeleyDB::Manager;
 use MooseX::Types::Path::Class qw(Dir);
 
 use namespace::clean -except => 'meta';
@@ -32,43 +32,40 @@ has dir => (
     coerce   => 1,
 );
 
-has environment => (
-    is   => 'ro',
-    isa  => 'BerkeleyDB::Env',
-    lazy => 1,
-    default => sub {
-        my $self = shift;
-        my $db = $self->dir;
-        $db->mkpath;
-        return BerkeleyDB::Env->new(
-            -Home  => $db->stringify,
-            -Flags => DB_CREATE | DB_INIT_MPOOL | DB_REGISTER | DB_RECOVER | DB_INIT_TXN, 
-        ) || die $BerkeleyDB::Error;
-    },
+has manager => (
+    isa => "BerkeleyDB::Manager",
+    is  => "ro",
+    lazy_build => 1,
 );
+
+sub _build_manager {
+    my $self = shift;
+
+    my $dir = $self->dir;
+
+    $dir->mkpath;
+
+    BerkeleyDB::Manager->new( home => $dir );
+}
 
 has dbm => (
     is      => 'ro',
     isa     => 'Object',
-    lazy    => 1,
-    default => sub {
-        my $self = shift;
-        my $hash = BerkeleyDB::Btree->new(
-            -Env      => $self->environment,
-            -Filename => 'objects.db',
-            -Flags    => DB_CREATE | DB_AUTO_COMMIT,
-        ) || die $BerkeleyDB::Error;
-
-        weaken $self;
-
-        $hash->filter_store_key(sub { $_ = $self->format_uid($_) });
-        $hash->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
-        $hash->filter_store_value(sub { $_ = $self->serialize($_) });
-        $hash->filter_fetch_value(sub { $_ = $self->deserialize($_) });
-
-        return $hash;
-    },
+    lazy_build => 1,
 );
+
+sub _build_dbm {
+    my $self = shift;
+
+    my $db = $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
+
+    weaken $self;
+
+    $db->filter_store_key(sub { $_ = $self->format_uid($_) });
+    $db->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
+
+    return $db;
+}
 
 sub delete {
     my ( $self, @ids_or_entries ) = @_;
@@ -82,7 +79,7 @@ sub delete {
 sub insert {
     my ( $self, @entries ) = @_;
     my $dbm = $self->dbm;
-    $dbm->db_put( $_->id => $_ ) for @entries;
+    $dbm->db_put( $_->id => $self->serialize($_) ) for @entries;
 }
 
 sub get {
@@ -97,14 +94,14 @@ sub get {
         push @ret, $var;
     }
 
-    return @ret;
+    return map { $self->deserialize($_) } @ret;
 }
 
 sub exists {
     my ( $self, @uids ) = @_;
     my $dbm = $self->dbm;
-    # fucking wasteful
-    map { $dbm->db_get($_, my $var) == 0 } @uids;
+    my $v;
+    map { $dbm->db_get($_, $v) == 0 } @uids;
 }
 
 __PACKAGE__->meta->make_immutable;

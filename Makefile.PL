@@ -44,7 +44,7 @@ WriteMakefile(
         # CouchDB backend
         'Net::CouchDB' => 0,
 
-        'BerkeleyDB' => 0,
+        'BerkeleyDB::Manager' => 0,
 
         # live objects
         'Hash::Util::FieldHash::Compat' => 0,
