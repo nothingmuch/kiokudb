@@ -11,7 +11,6 @@ with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::JSPON
     KiokuDB::Backend::UnicodeSafe
-    KiokuDB::Role::StorageUUIDs
     KiokuDB::Backend::Clear
     KiokuDB::Backend::Scan
     KiokuDB::Backend::Query::Simple::Linear

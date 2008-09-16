@@ -22,7 +22,6 @@ use namespace::clean -except => 'meta';
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::Storable
-    KiokuDB::Role::StorageUUIDs
 );
 
 has dir => (
@@ -60,9 +59,6 @@ sub _build_dbm {
     my $db = $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
 
     weaken $self;
-
-    $db->filter_store_key(sub { $_ = $self->format_uid($_) });
-    $db->filter_fetch_key(sub { $_ = $self->parse_uid($_) });
 
     return $db;
 }

@@ -83,7 +83,7 @@ is_deeply(
 
 foreach my $entry ( @entries ) {
     my $file = $b->object_file($entry->id);
-    ok( -e $file, "file for " . $b->uuid_to_string($entry->id) . " exists" );
+    ok( -e $file, "file for " . $entry->id . " exists" );
 
     local $@;
     my $data = eval { from_json(scalar $file->slurp, { utf8 => 1 }) };
@@ -91,7 +91,7 @@ foreach my $entry ( @entries ) {
 
     is( ref $data, 'HASH', "hash loaded" );
 
-    is( $b->parse_uid($data->{id}), $entry->id, "id is correct" );
+    is( $data->{id}, $entry->id, "id is correct" );
 }
 
 ok(  -e $b->root_set_file($entries[0]->id), "root is in root set" );

@@ -13,8 +13,6 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
-with qw(KiokuDB::Role::StorageUUIDs);
-
 sub collapse_jspon {
     my ( $self, @args ) = @_;
     $self->visit(@args);
@@ -34,12 +32,12 @@ sub visit_object {
     my ( $self, $object ) = @_;
 
     if ( obj $object, 'KiokuDB::Reference' ) {
-        return { '$ref' => $self->format_uid($object->id), ( $object->is_weak ? ( weak => 1 ) : () ) };
+        return { '$ref' => $object->id, ( $object->is_weak ? ( weak => 1 ) : () ) };
     } elsif ( obj $object, 'KiokuDB::Entry' ) {
         croak("Unsupported data for JSPON: ", $object->data) unless ref($object->data) eq 'HASH';
         return {
             ( $object->has_class ? ( __CLASS__ => $object->class ) : () ),
-            id        => $self->format_uid($object->id),
+            id => $object->id,
             $self->visit_hash_entries($object->data),
         };
     }

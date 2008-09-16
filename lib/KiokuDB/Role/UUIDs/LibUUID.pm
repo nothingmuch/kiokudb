@@ -7,7 +7,7 @@ use KiokuDB ();
 
 use namespace::clean -except => 'meta';
 
-with join("::", __PACKAGE__, KiokuDB::RUNTIME_BINARY_UUIDS() ? "Bin" : "Str" );
+with join("::", __PACKAGE__, "Str" );
 
 __PACKAGE__
 

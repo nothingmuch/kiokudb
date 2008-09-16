@@ -17,9 +17,7 @@ has expander => (
 
 sub _build_expander {
     my $self = shift;
-    KiokuDB::Backend::Serialize::JSPON::Expander->new(
-        binary_uuids => $self->binary_uuids,
-    );
+    KiokuDB::Backend::Serialize::JSPON::Expander->new();
 }
 
 has collapser => (
@@ -31,9 +29,7 @@ has collapser => (
 
 sub _build_collapser {
     my $self = shift;
-    KiokuDB::Backend::Serialize::JSPON::Collapser->new(
-        binary_uuids => $self->binary_uuids,
-    );
+    KiokuDB::Backend::Serialize::JSPON::Collapser->new();
 }
 
 __PACKAGE__

@@ -5,10 +5,7 @@ use Moose;
 
 our $VERSION = "0.01_01";
 
-our ( $BINARY_UUIDS, $SERIAL_IDS );
-
-use constant SERIAL_IDS           => not not our $SERIAL_IDS;
-use constant RUNTIME_BINARY_UUIDS => !SERIAL_IDS && ( defined($BINARY_UUIDS) ? not not $BINARY_UUIDS : 0 );
+use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
 use KiokuDB::Backend;
 use KiokuDB::Resolver;
@@ -21,7 +18,7 @@ use KiokuDB::TypeMap::Resolver;
 use Hash::Util::FieldHash::Compat qw(idhash);
 use Carp qw(croak);
 
-use namespace::clean -except => [qw(meta SERIAL_IDS RUNTIME_BINARY_UUIDS)];
+use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
 has typemap => (
     isa => "KiokuDB::TypeMap",

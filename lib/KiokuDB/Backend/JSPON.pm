@@ -21,7 +21,6 @@ with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::JSPON
     KiokuDB::Backend::UnicodeSafe
-    KiokuDB::Role::StorageUUIDs
     KiokuDB::Backend::Clear
     KiokuDB::Backend::Scan
     KiokuDB::Backend::Query::Simple::Linear
@@ -233,12 +232,12 @@ sub write_entry {
 
 sub object_file {
     my ( $self, $uid ) = @_;
-    $self->object_dir->file($self->uuid_to_string($uid));
+    $self->object_dir->file($uid);
 }
 
 sub root_set_file {
     my ( $self, $uid ) = @_;
-    $self->root_set_dir->file($self->uuid_to_string($uid));
+    $self->root_set_dir->file($uid);
 }
 
 sub create_dirs {
