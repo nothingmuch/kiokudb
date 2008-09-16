@@ -22,6 +22,8 @@ use namespace::clean -except => 'meta';
 with qw(
     KiokuDB::Backend
     KiokuDB::Backend::Serialize::Storable
+    KiokuDB::Backend::Clear
+    KiokuDB::Backend::TXN
 );
 
 has dir => (
@@ -35,7 +37,12 @@ has manager => (
     isa => "BerkeleyDB::Manager",
     is  => "ro",
     lazy_build => 1,
+    #handles => "KiokuDB::Backend::TXN",
 );
+
+sub txn_begin { shift->manager->txn_begin(@_) }
+sub txn_commit { shift->manager->txn_commit(@_) }
+sub txn_rollback { shift->manager->txn_rollback(@_) }
 
 sub _build_manager {
     my $self = shift;
@@ -98,6 +105,18 @@ sub exists {
     my $dbm = $self->dbm;
     my $v;
     map { $dbm->db_get($_, $v) == 0 } @uids;
+}
+
+sub clear {
+    my $self = shift ;
+
+    my $cursor = $self->dbm->db_cursor;
+
+    my ($key, $value);
+
+    while ( $cursor->c_get($key, $value, BerkeleyDB::DB_PREV() ) == 0) {
+        $cursor->c_del() == 0 or die $BerkeleyDB::Error;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
