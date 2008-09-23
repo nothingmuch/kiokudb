@@ -222,7 +222,7 @@ sub compact_data {
     } elsif ( ref($data) eq 'KiokuDB::Entry' ) {
         $self->compact_entry($data, $flatten);
     } else {
-        confess "unsupported reftype: " . ref $data;
+        # passthrough
     }
 
     return;
