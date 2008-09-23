@@ -56,15 +56,15 @@ sub _build_manager {
     BerkeleyDB::Manager->new( home => $dir );
 }
 
-has dbm => (
+has primary_db => (
     is      => 'ro',
     isa     => 'Object',
     lazy_build => 1,
 );
 
-sub BUILD { shift->dbm } # early
+sub BUILD { shift->primary_db } # early
 
-sub _build_dbm {
+sub _build_primary_db {
     my $self = shift;
 
     $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
@@ -75,14 +75,14 @@ sub delete {
 
     my @uids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
 
-    my $dbm = $self->dbm;
-    $dbm->db_del($_) for @uids;
+    my $primary_db = $self->primary_db;
+    $primary_db->db_del($_) for @uids;
 }
 
 sub insert {
     my ( $self, @entries ) = @_;
-    my $dbm = $self->dbm;
-    $dbm->db_put( $_->id => $self->serialize($_) ) for @entries;
+    my $primary_db = $self->primary_db;
+    $primary_db->db_put( $_->id => $self->serialize($_) ) for @entries;
 }
 
 sub get {
@@ -90,10 +90,10 @@ sub get {
 
     my ( $var, @ret );
 
-    my $dbm = $self->dbm;
+    my $primary_db = $self->primary_db;
 
     foreach my $uid ( @uids ) {
-        $dbm->db_get($uid, $var) == 0 || return;
+        $primary_db->db_get($uid, $var) == 0 || return;
         push @ret, $var;
     }
 
@@ -102,15 +102,15 @@ sub get {
 
 sub exists {
     my ( $self, @uids ) = @_;
-    my $dbm = $self->dbm;
+    my $primary_db = $self->primary_db;
     my $v;
-    map { $dbm->db_get($_, $v) == 0 } @uids;
+    map { $primary_db->db_get($_, $v) == 0 } @uids;
 }
 
 sub clear {
     my $self = shift;
 
-    my $cursor = $self->dbm->db_cursor;
+    my $cursor = $self->primary_db->db_cursor;
 
     my ($key, $value) = ( '', '' );
 
@@ -123,7 +123,7 @@ sub all_entries {
     my $self = shift;
 
     $self->manager->cursor_stream(
-        db => $self->dbm,
+        db => $self->primary_db,
         values => 1,
     )->filter(sub {[ map { $self->deserialize($_) } @$_ ]});
 }

@@ -76,7 +76,7 @@ is_deeply(
 );
 
 foreach my $entry ( @entries ) {
-    ok( $b->dbm->db_get($entry->id, my $data) == 0, "got from db" );
+    ok( $b->primary_db->db_get($entry->id, my $data) == 0, "got from db" );
 
     $data = $b->deserialize($data);
 
