@@ -41,6 +41,7 @@ has backend_data => (
     isa => "Ref",
     is  => "rw",
     predicate => "has_backend_data",
+    clearer   => "clear_backend_data",
 );
 
 has prev => (

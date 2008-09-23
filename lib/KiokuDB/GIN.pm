@@ -5,7 +5,10 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Backend::Query::GIN);
+with qw(
+    KiokuDB::Backend::Query::GIN
+    Search::GIN::Driver
+);
 
 has root_only => (
     isa => "Bool",
@@ -33,34 +36,6 @@ after delete => sub {
 
     $self->remove_ids(@ids);
 };
-
-has distinct => (
-    isa => "Bool",
-    is  => "rw",
-    default => 0, # FIXME what should the default be?
-);
-
-sub search {
-    my ( $self, $query, @args ) = @_;
-
-    my %args = (
-        distinct => $self->distinct,
-        @args,
-    );
-
-    my @spec = $query->extract_values;
-
-    my $ids = $self->fetch_entries(@spec);
-
-    $ids = unique($ids) if $args{distinct};
-
-    return $ids->filter(sub {[ $self->get(@$_) ]});
-}
-
-sub search_filter {
-    my ( $self, $objects, $query, @args ) = @_;
-    return $objects->filter(sub { [ grep { $query->consistent($self, $_) } @$_ ] });
-}
 
 __PACKAGE__
 
