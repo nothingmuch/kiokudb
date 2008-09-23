@@ -14,7 +14,6 @@
     * BDB
         * Set::Object/Hash sharding
         * tight GIN integration
-        * txn_do, setup, associate etc from GIN in a separate BDB wrapper
     * RDF
         * generate triples
             * predicates as FQ attr names names
