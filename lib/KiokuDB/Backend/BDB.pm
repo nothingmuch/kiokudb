@@ -67,11 +67,7 @@ sub BUILD { shift->dbm } # early
 sub _build_dbm {
     my $self = shift;
 
-    my $db = $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
-
-    weaken $self;
-
-    return $db;
+    $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
 }
 
 sub delete {
