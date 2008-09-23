@@ -49,7 +49,7 @@ my $l = KiokuDB::LiveObjects->new;
         KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],
-            backend_data => "lalalal",
+            backend_data => ["lalalal"],
         ),
         KiokuDB::Entry->new(
             id => "bar",
@@ -59,7 +59,7 @@ my $l = KiokuDB::LiveObjects->new;
     ) {
         my $copy = dclone($ent);
 
-        foreach my $transient ( qw(backend_data object prev) ) {
+        foreach my $transient ( qw(object prev) ) {
             my $attr = KiokuDB::Entry->meta->find_attribute_by_name($transient);
             ok( !$attr->has_value($copy), "no $transient in copy" );
             $attr->clear_value($ent);

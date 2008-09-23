@@ -38,7 +38,7 @@ has tied => (
 );
 
 has backend_data => (
-    isa => "Any",
+    isa => "Ref",
     is  => "rw",
     predicate => "has_backend_data",
 );
@@ -89,12 +89,15 @@ sub STORABLE_freeze {
             $tied_r{$self->tied},
             !!$self->deleted,
         ),
-        ( $self->has_data ? $self->data : () ),
+        [
+            ( $self->has_data         ? $self->data         : undef ),
+            ( $self->has_backend_data ? $self->backend_data : undef ),
+        ],
     );
 }
 
 sub STORABLE_thaw {
-    my ( $self, $cloning, $attrs, $data ) = @_;
+    my ( $self, $cloning, $attrs, $refs ) = @_;
 
     my ( $id, $root, $class, $tied, $deleted ) = split ',', $attrs;
 
@@ -104,7 +107,11 @@ sub STORABLE_thaw {
     $self->tied($tied{$tied}) if $tied;
     $self->deleted(1) if $deleted;
 
-    $self->data($data) if ref $data;
+    if ( $refs ) {
+        my ( $data, $backend_data ) = @$refs;
+        $self->data($data) if ref $data;
+        $self->backend_data($backend_data) if ref $backend_data;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
