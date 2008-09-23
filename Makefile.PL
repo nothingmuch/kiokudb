@@ -42,7 +42,7 @@ WriteMakefile(
         'MooseX::Types::Path::Class' => 0,
 
         # CouchDB backend
-        'Net::CouchDB' => 0,
+        'Net::CouchDb' => 0,
 
         'BerkeleyDB::Manager' => 0,
 
