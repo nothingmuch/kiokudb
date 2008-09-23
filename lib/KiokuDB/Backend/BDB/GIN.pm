@@ -63,7 +63,7 @@ before insert => sub {
             $entry->clear_backend_data;
         } else {
             my $d = $entry->backend_data || $entry->backend_data({});
-            $d->{keys} = [ $self->extract_values( $entry->object ) ];
+            $d->{keys} = [ $self->extract_values( $entry->object, entry => $entry ) ];
         }
     }
 };
