@@ -5,11 +5,7 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-with qw(
-    Search::GIN::Driver
-    Search::GIN::Extract
-    KiokuDB::Backend::Query
-);
+with qw(KiokuDB::Backend::Query::GIN);
 
 has root_only => (
     isa => "Bool",

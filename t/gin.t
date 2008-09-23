@@ -28,7 +28,6 @@ use ok 'Search::GIN::Extract::Class';
         qw(
             KiokuDB::GIN
             Search::GIN::Driver::Hash
-            Search::GIN::Extract::Delegate
         ),
     );
 
