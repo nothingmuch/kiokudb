@@ -234,7 +234,11 @@ sub insert {
 sub insert_entries {
     my ( $self, @entries ) = @_;
 
-    confess if grep { !ref } @entries;
+    confess "non reference entries: ", join ", ", map { $_ ? $_ : "undef" } @entries if grep { !ref } @entries;
+
+    my $i = $self->_ids;
+
+    @entries = grep { not exists $i->{$_->id} } @entries;
 
     my @ids = map { $_->id } @entries;
 
