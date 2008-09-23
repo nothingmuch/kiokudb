@@ -270,7 +270,6 @@ sub store_objects {
 
     $self->backend->insert(values %$entries);
 
-    # FIXME do something with prev for nested txns?
     $self->live_objects->update_entries(values %$entries);
 
     if ( @$objects == 1 ) {
@@ -306,6 +305,17 @@ sub delete {
     $self->backend->delete(@ids_or_entries);
 
     $l->update_entries(@entries);
+}
+
+sub txn_do {
+    my ( $self, $code, %args ) = @_;
+
+    my $scope = $self->live_objects->new_txn;
+
+    my $rollback = $args{rollback};
+    $args{rollback} = sub { $scope->rollback; $rollback && $rollback->() };
+
+    $self->backend->txn_do( $code, %args );
 }
 
 __PACKAGE__->meta->make_immutable;

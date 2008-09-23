@@ -134,6 +134,8 @@ has directory => (
         grep
 
         new_scope
+
+        txn_do
     )],
 );
 

@@ -13,6 +13,7 @@ use Devel::PartialDump qw(croak);
 use Set::Object;
 
 use KiokuDB::LiveObjects::Scope;
+use KiokuDB::LiveObjects::TXNScope;
 
 use namespace::clean -except => 'meta';
 
@@ -64,6 +65,14 @@ has current_scope => (
     weak_ref => 1,
 );
 
+has txn_scope => (
+    isa => "KiokuDB::LiveObjects::TXNScope",
+    is  => "ro",
+    writer   => "_set_txn_scope",
+    clearer  => "_clear_txn_scope",
+    weak_ref => 1,
+);
+
 sub new_scope {
     my $self = shift;
 
@@ -75,6 +84,21 @@ sub new_scope {
     );
 
     $self->_set_current_scope($child);
+
+    return $child;
+}
+
+sub new_txn {
+    my $self = shift;
+
+    my $parent = $self->txn_scope;
+
+    my $child = KiokuDB::LiveObjects::TXNScope->new(
+        ( $parent ? ( parent => $parent ) : () ),
+        live_objects => $self,
+    );
+
+    $self->_set_txn_scope($child);
 
     return $child;
 }
@@ -156,7 +180,32 @@ sub update_entries {
         $ent->{entry} = $entry;
     }
 
+    if ( my $s = $self->txn_scope ) {
+        $s->update_entries(@entries);
+    }
+
     @ret;
+}
+
+sub rollback_entries {
+    my ( $self, @entries ) = @_;
+
+    my ( $o, $i, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_ids );
+
+    foreach my $entry ( reverse @entries ) {
+        my $id = $entry->id;
+
+        if ( my $prev = $entry->prev ) {
+            $ei->{$id} = $prev;
+
+            my $obj = $i->{$id};
+
+            $o->{$obj}{entry} = $prev;
+        } else {
+            delete $ei->{$id};
+            delete $i->{$id};
+        }
+    }
 }
 
 sub remove {
