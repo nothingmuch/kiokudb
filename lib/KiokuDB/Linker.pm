@@ -41,7 +41,7 @@ has typemap_resolver => (
 sub register_object {
     my ( $self, $entry, $object ) = @_;
 
-    $self->live_objects->insert( $entry => $object );
+    $self->live_objects->insert( $entry => $object ) if $entry->id;
 }
 
 sub expand_objects {
@@ -100,33 +100,36 @@ sub inflate_data {
         weaken($$into) if $data->is_weak;
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         my $obj;
-        $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) ); # no id means intrinsic
 
-        if ( my $tie = $data->tied ) {
-            if ( $tie eq 'HASH' ) {
-                tie my %h, "Tie::ToObject" => $obj;
-                $obj = \%h;
-            } elsif ( $tie eq 'ARRAY' ) {
-                tie my @a, "Tie::ToObject" => $obj;
-                $obj = \@a;
-            } elsif ( $tie eq 'GLOB' ) {
-                my $glob = gensym();
-                tie *$glob, "Tie::ToObject" => $obj,
-                $obj = $glob;
-            } elsif ( $tie eq 'SCALAR' ) {
-                my $scalar;
-                tie $scalar, "Tie::ToObject" => $obj;
-                $obj = \$scalar;
-            } else {
-                die "Don't know how to tie $tie";
-            }
-        }
 
         if ( my $class = $data->class ) {
-            bless $obj, $data->class;
-        }
+            my $expand_method = $self->expand_method($class);
+            $$into = $self->$expand_method($data);
+        } else {
+            $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) ); # no id means intrinsic
 
-        $$into = $obj;
+            if ( my $tie = $data->tied ) {
+                if ( $tie eq 'HASH' ) {
+                    tie my %h, "Tie::ToObject" => $obj;
+                    $obj = \%h;
+                } elsif ( $tie eq 'ARRAY' ) {
+                    tie my @a, "Tie::ToObject" => $obj;
+                    $obj = \@a;
+                } elsif ( $tie eq 'GLOB' ) {
+                    my $glob = gensym();
+                    tie *$glob, "Tie::ToObject" => $obj,
+                    $obj = $glob;
+                } elsif ( $tie eq 'SCALAR' ) {
+                    my $scalar;
+                    tie $scalar, "Tie::ToObject" => $obj;
+                    $obj = \$scalar;
+                } else {
+                    die "Don't know how to tie $tie";
+                }
+            }
+
+            $$into = $obj;
+        }
     } elsif ( ref($data) eq 'HASH' ) {
         my %targ;
         $self->register_object( $entry => \%targ ) if $entry;
