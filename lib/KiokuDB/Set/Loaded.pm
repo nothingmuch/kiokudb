@@ -7,6 +7,8 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::Set::Storage);
 
+extends qw(KiokuDB::Set::Base);
+
 sub loaded { 1 }
 
 sub includes { shift->_objects->includes(@_) }

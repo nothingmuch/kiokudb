@@ -382,7 +382,7 @@ sub visit_object {
 }
 
 sub collapse_first_class {
-    my ( $self, $collapse, $object ) = @_;
+    my ( $self, $collapse, $object, @entry_args ) = @_;
 
     # Data::Visitor stuff for circular refs
     $self->_register_mapping( $object, $object );
@@ -400,7 +400,8 @@ sub collapse_first_class {
     my @args = (
         object => $object,
         id     => $id,
-        class  => $class
+        class  => $class,
+        @entry_args,
     );
 
     my $data = $self->$collapse(@args);
@@ -415,7 +416,7 @@ sub collapse_first_class {
 }
 
 sub collapse_intrinsic {
-    my ( $self, $collapse, $object ) = @_;
+    my ( $self, $collapse, $object, @entry_args ) = @_;
 
     my $class = ref $object;
 
@@ -423,7 +424,8 @@ sub collapse_intrinsic {
 
     my @args = (
         object => $object,
-        class  => $class
+        class  => $class,
+        @entry_args,
     );
 
     return $self->make_entry(

@@ -11,6 +11,41 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::Set::Storage);
 
+extends qw(KiokuDB::Set::Base);
+
+has _linker => (
+    isa => "KiokuDB::Linker",
+    is  => "ro",
+    required => 1,
+    clearer => "_clear_linker",
+);
+
+has _live_objects => (
+    isa => "KiokuDB::LiveObjects",
+    is  => "ro",
+    lazy_build => 1,
+    clearer => "_clear_live_objects",
+);
+
+sub _build__live_objects {
+    my $self = shift;
+    $self->_linker->live_objects;
+}
+
+has _live_object_scope => (
+    isa => "KiokuDB::LiveObjects::Scope",
+    is  => "rw",
+    weak_ref => 1,
+    clearer  => "_clear_live_object_scope",
+);
+
+sub BUILD {
+    my $self = shift;
+    # can't use lazy build because it doesn't work with weak_ref
+    # at any rate we need to capture the current scope at begin time
+    $self->_live_object_scope( $self->_live_objects->current_scope );
+}
+
 sub loaded { shift->size == 0 }
 
 sub includes {
@@ -78,6 +113,11 @@ sub _load_all {
 
     # replace the ID set with the object set
     $self->_set_objects( Set::Object::Weak->new(@objects) );
+
+    # clear unnecessary structures
+    $self->_clear_linker;
+    $self->_clear_live_objects;
+    $self->_clear_live_object_scope;
 
     # and swap in loaded behavior
     bless $self, "KiokuDB::Set::Loaded";

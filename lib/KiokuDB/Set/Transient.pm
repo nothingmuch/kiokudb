@@ -7,17 +7,10 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::Set);
 
-has _objects => (
-    isa => "Set::Object",
-    is  => "ro",
-    init_arg => "set",
-    required => 1,
-);
+extends qw(KiokuDB::Set::Base);
 
 sub loaded { 1 }
 
-sub clear    { shift->_objects->clear }
-sub size     { shift->_objects->size }
 sub includes { shift->_objects->includes(@_) }
 sub remove   { shift->_objects->remove(@_) }
 sub insert   { shift->_objects->insert(@_) }

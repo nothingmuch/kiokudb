@@ -17,7 +17,7 @@ use Tie::ToObject;
 
 use namespace::clean -except => 'meta';
 
-extends qw(Data::Visitor);
+extends qw(Data::Visitor); # FIXME remove
 
 has live_objects => (
     isa => "KiokuDB::LiveObjects",

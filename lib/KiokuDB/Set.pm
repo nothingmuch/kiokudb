@@ -1,18 +1,27 @@
 #!/usr/bin/perl
 
 package KiokuDB::Set;
-use Moose::Role qw(requires); # need a 'has' method
+use Moose::Role 'requires', 'has' => { -as => "attr" }; # need a 'has' method
 
 use namespace::clean -except => "meta";
 
 requires qw(
-    clear
     includes
     members
     insert
     remove
-    size
 );
+
+attr _objects => (
+    isa => "Set::Object",
+    is  => "ro",
+    init_arg => "set",
+    writer   => "_set_objects",
+    default => sub { Set::Object->new },
+);
+
+sub clear { shift->_objects->clear }
+sub size  { shift->_objects->size }
 
 sub has { (shift)->includes(@_) }
 sub contains { (shift)->includes(@_) }
