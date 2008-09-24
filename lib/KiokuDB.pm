@@ -48,7 +48,12 @@ has live_objects => (
     is  => "ro",
     lazy => 1,
     builder => "_build_live_objects", # lazy_build => 1 sets clearer
-    handles => { clear_live_objects => "clear", new_scope => "new_scope" },
+    handles => {
+        clear_live_objects => "clear",
+        new_scope          => "new_scope",
+        object_to_id       => "object_to_id",
+        "objects_to_ids"   => "objects_to_ids"
+    },
 );
 
 sub _build_live_objects { KiokuDB::LiveObjects->new }
