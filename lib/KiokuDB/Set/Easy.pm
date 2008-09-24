@@ -5,7 +5,7 @@ package KiokuDB::Set::Easy;
 use strict;
 use warnings;
 
-use Set::Object;
+use Set::Object ();
 
 use KiokuDB::Set::Transient;
 
