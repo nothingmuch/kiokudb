@@ -5,7 +5,8 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use ok 'KiokuDB::Set';
+use ok 'KiokuDB::Set::Transient';
+use ok 'KiokuDB::Set::Deferred';
 use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
@@ -28,29 +29,27 @@ my @ids = do {
 
     my @people = $dir->lookup(@ids);
 
-    my $set = KiokuDB::Set->new(
-        dir => $dir,
-    );
+    my $set = KiokuDB::Set::Transient->new( set => Set::Object->new );
 
     is_deeply([ $set->members ], [], "no members");
 
-    $set->insert($ids[0]);
+    $set->insert($people[0]);
 
     is_deeply(
         [ $set->members ],
         [ $people[0] ],
-        "set vivified",
+        "set members",
     );
 
-    ok( $set->loaded, "now marked as loaded" );
+    ok( $set->loaded, "set is loaded" );
 
-    $set->insert( $ids[0] );
+    $set->insert( $people[0] );
 
     is( $set->size, 1, "inserting ID of live object already in set did not affect set size" );
 
     ok( $set->loaded, "set still loaded" );
 
-    $set->insert( $ids[2] );
+    $set->insert( $people[2] );
 
     is( $set->size, 2, "inserting ID of live object" );
 
@@ -61,18 +60,33 @@ my @ids = do {
         [ sort @people[0, 2] ],
         "members",
     );
+
+    $set->remove( $people[2] );
+    
+    is( $set->size, 1, "removed element" );
+
+    can_ok( $set, "union" );
+
+    foreach my $other ( Set::Object->new( $people[2] ), KiokuDB::Set::Transient->new( set => Set::Object->new( $people[2] ) ) ) {
+        my $union = $set->union($other);
+
+        isa_ok( $union, "KiokuDB::Set::Transient", "union" );
+
+        is_deeply(
+            [ sort $union->members ],
+            [ sort @people[0, 2] ],
+            "members",
+        );
+    }
 }
+
 
 {
     my $s = $dir->new_scope;
 
-    my $set = KiokuDB::Set->new(
-        dir => $dir,
-    );
+    my $set = KiokuDB::Set::Deferred->new( set => Set::Object->new($ids[0]), _linker => $dir->linker );
 
-    is_deeply([ $set->members ], [], "no members");
-
-    $set->insert($ids[0]);
+    ok( !$set->loaded, "set not loaded" );
 
     is_deeply(
         [ $set->members ],
@@ -82,44 +96,46 @@ my @ids = do {
 
     ok( $set->loaded, "now marked as loaded" );
 
-    $set->insert( $ids[0] );
+    my @people = $dir->lookup(@ids);
 
-    is( $set->size, 1, "inserting ID of live object did not affect set size" );
+    foreach my $other ( Set::Object->new( $people[2] ), KiokuDB::Set::Transient->new( set => Set::Object->new( $people[2] ) ) ) {
+        my $union = $set->union($other);
 
-    ok( $set->loaded, "set still loaded" );
+        isa_ok( $union, "KiokuDB::Set::Loaded", "union" );
 
-    $set->insert( $ids[2] );
-
-    is( $set->size, 2, "inserting of non live ID" );
-
-    ok( !$set->loaded, "set not loaded" );
-
-    is_deeply(
-        [ sort $set->members ],
-        [ sort $dir->lookup(@ids[0, 2]) ],
-        "members",
-    );
-
-    ok( $set->loaded, "now it is loaded" );
+        is_deeply(
+            [ sort $union->members ],
+            [ sort @people[0, 2] ],
+            "members",
+        );
+    }
 }
 
 {
     my $s = $dir->new_scope;
 
-    my $set = KiokuDB::Set->new(
-        dir => $dir,
-    );
+    my $set = KiokuDB::Set::Deferred->new( _linker => $dir->linker );
 
-    is_deeply([ $set->members ], [], "no members");
+    is( $set->size, 0, "set size is 0" );
 
-    $set->insert(@ids);
+    is_deeply([ $set->members ], [], "no members" );
 
-    ok( !$set->loaded, "set not loaded" );
+    is( ref($set), "KiokuDB::Set::Deferred", 'calling members on empty set does not load it' );
+
+    $set->insert($dir->lookup(@ids));
+
+    ok( !$set->loaded, "set not loaded by insertion of live objects" );
 
     $set->remove( $dir->lookup($ids[0]) );
 
     is( $set->size, ( @ids - 1 ), "removed element" );
     ok( !$set->loaded, "set not loaded" );
+
+    my $other = KiokuDB::Set::Deferred->new( set => Set::Object->new($ids[0]), _linker => $dir->linker );
+
+    isa_ok( my $union = $set->union($other), "KiokuDB::Set::Deferred" );
+
+    ok( !$union->loaded, "union is deferred" );
 
     is_deeply(
         [ sort $set->members ],
@@ -128,18 +144,22 @@ my @ids = do {
     );
 
     ok( $set->loaded, "now it is loaded" );
+
+    is_deeply(
+        [ sort $union->members ],
+        [ sort $dir->lookup(@ids[0, 1, 2]) ],
+        "union",
+    );
 }
 
 {
     my $s = $dir->new_scope;
 
-    my $set = KiokuDB::Set->new(
-        dir => $dir,
-    );
+    my $set = KiokuDB::Set::Deferred->new( _linker => $dir->linker );
 
     is_deeply([ $set->members ], [], "no members");
 
-    $set->insert(@ids);
+    $set->_objects->insert(@ids);
 
     ok( !$set->loaded, "set not loaded" );
 
@@ -150,20 +170,3 @@ my @ids = do {
     ok( $set->loaded, "cleared set is loaded" );
 }
 
-{
-    my $s = $dir->new_scope;
-
-    my $set = KiokuDB::Set->new(
-        dir => $dir,
-    );
-
-    is_deeply([ $set->members ], [], "no members");
-
-    $set->insert(@ids[0, 1]);
-
-    ok( !$set->includes($ids[2]), "set does not include $ids[2]" );
-    ok( !$set->includes($dir->lookup($ids[2])), "set does not include $ids[2] (obj)" );
-
-    ok( $set->includes($ids[0]), "set includes $ids[0]" );
-    ok( $set->includes($dir->lookup($ids[0])), "set includes $ids[0] (obj)" );
-}

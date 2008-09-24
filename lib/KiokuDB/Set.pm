@@ -1,48 +1,18 @@
 #!/usr/bin/perl
 
 package KiokuDB::Set;
-use Moose has => { -as => "attr" }; # Set::Object needs a 'has' method
+use Moose::Role qw(requires); # need a 'has' method
 
 use namespace::clean -except => "meta";
 
-# typemap maps directly to references
-# interactions with sets whose dir != cause full loading
-# interactions with set::object cause available loading, only refs are considered in the Set::Object
-# interactions with sets of the same dir require no loading at all
-
-attr dir => (
-    isa => "KiokuDB",
-    is  => "ro",
+requires qw(
+    clear
+    includes
+    members
+    insert
+    remove
+    size
 );
-
-attr set => (
-    isa => "Set::Object",
-    is  => "ro",
-    default => sub { Set::Object::Weak->new },
-    handles => [qw(size)],
-);
-
-attr loaded => (
-    isa => "Bool",
-    is  => "rw",
-);
-
-sub clear {
-    my $self = shift;
-
-    $self->loaded(1);
-    $self->set->clear();
-}
-
-
-sub includes {
-    my ( $self, @members ) = @_;
-
-    $self->_load_available;
-
-    $self->_fix_args(\@members);
-    $self->set->includes(@members);
-}
 
 sub has { (shift)->includes(@_) }
 sub contains { (shift)->includes(@_) }
@@ -54,98 +24,34 @@ sub member {
         $item : undef );
 }
 
-sub remove {
-    my ( $self, @members ) = @_;
+sub _apply {
+    my ( $self, $method, @sets ) = @_;
 
-    $self->_load_available;
+    my @real_sets;
 
-    $self->_fix_args(\@members);
-    $self->set->remove(@members);
-}
-
-sub insert {
-    my ( $self, @members ) = @_;
-
-    $self->_load_available;
-
-    $self->loaded($self->_fix_args(\@members) && $self->loaded);
-    $self->set->insert(@members);
-}
-
-sub members {
-    my $self = shift;
-
-    $self->_load_all();
-    return $self->set->members;
-}
-
-sub _load_all {
-    my $self = shift;
-
-    return if $self->loaded;
-
-    my $set = $self->set;
-
-    my @members = $set->members;
-
-    if ( my @ids = grep { not ref } @members ) {
-        my @objs = $self->dir->lookup(@ids);
-        $set->remove(@ids);
-        $set->insert(@objs);
-    }
-
-    $self->loaded(1);
-}
-
-sub _load_available {
-    my $self = shift;
-
-    my @members = $self->set->members;
-
-    if ( my @ids = grep { not ref } @members ) {
-        my %objs;
-        @objs{@ids} = $self->dir->live_objects->ids_to_objects(@ids);
-
-        my $bad;
-
-        my $set = $self->set;
-
-        foreach my $id ( @ids ) {
-            if ( defined( my $obj = $objs{$id} ) ) {
-                $set->remove($id);
-                $set->insert($obj);
-            } else {
-                $bad++;
-            }
+    foreach my $set ( @sets ) {
+        if ( my $meth = $set->can("_load_all") ) {
+            $set->$meth;
         }
-
-        $self->loaded(1) unless $bad;
-    } else {
-        $self->loaded(1);
-    }
-}
-
-sub _fix_args {
-    my ( $self, $members ) = @_;
-
-    my $live = $self->dir->live_objects;
-
-    my $bad;
-
-    foreach my $member ( @$members ) {
-        unless ( ref $member ) {
-            if ( my $obj = $live->id_to_object($member) ) {
-                $member = $obj;
-            } else {
-                $bad++;
-            }
+        
+        if ( my $inner = $set->can("_objects") ) {
+            push @real_sets, $set->$inner;
+        } elsif ( $set->isa("Set::Object") ) {
+            push @real_sets, $set;
+        } else {
+            die "Bad set interaction: $self with $set";
         }
     }
 
-    return !$bad;
+    $self->meta->clone_instance( $self, set => $self->_objects->$method( @real_sets ) );
 }
 
-# intersection invert equal not equal union difference superset subset proper_superset proper_subset unique symmetric_difference
+# FIXME what else
+sub union { shift->_apply( union => @_ ) }
+sub intersection { shift->_apply( union => @_ ) }
+sub subset { shift->_apply( union => @_ ) }
+sub difference { shift->_apply( union => @_ ) }
+sub equal { shift->_apply( union => @_ ) }
 
 __PACKAGE__
 
