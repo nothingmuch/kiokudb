@@ -59,7 +59,7 @@ sub includes {
 
     if ( @ids == @members ) {
         # all objects have IDs, so we check
-        $self->_objects->includes(@ids);
+        return $self->_objects->includes(@ids);
     }
 
     # if they didn't have IDs thenn they are not in storage, and hence not part of the set
@@ -84,8 +84,11 @@ sub insert {
     my @ids = grep { defined } $self->_live_objects->objects_to_ids(@members);
 
     if ( @ids == @members ) {
-        # all objects have IDs, no need to load all objects
-        $self->_live_object_scope->push(@members); # keep them around at least as long as us
+        if ( my $scope = $self->_live_object_scope ) {
+            $scope->push(@members); # keep them around at least as long as us
+        }
+
+        # all objects have IDs, no need to load anything
         return $self->_objects->insert(@ids);
     } else {
         $self->_load_all;
