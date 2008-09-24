@@ -29,7 +29,7 @@ sub _build_secondary_db {
 has root_only => (
     isa => "Bool",
     is  => "ro",
-    default => 1,
+    default => 0,
 );
 
 sub _open_secondary {
