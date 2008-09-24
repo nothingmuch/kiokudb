@@ -53,18 +53,18 @@ my $t = KiokuDB::TypeMap->new(
         ),
         'Path::Class::File' => KiokuDB::TypeMap::Entry::Callback->new(
             intrinsic => 1,
-            collapse => sub { "$_[0]" },
-            expand   => sub { Path::Class::file($_[1]) },
+            collapse => "stringify",
+            expand   => "new",
         ),
         'Path::Class::Dir' => KiokuDB::TypeMap::Entry::Callback->new(
             intrinsic => 1,
-            collapse => sub { "$_[0]" },
-            expand   => sub { Path::Class::dir($_[1]) },
+            collapse => "stringify",
+            expand   => "new",
         ),
         'URI' => KiokuDB::TypeMap::Entry::Callback->new(
             intrinsic => 1,
-            collapse => sub { "$_[0]" },
-            expand   => sub { URI->new($_[1]) },
+            collapse => "as_string",
+            expand   => "new",
         ),
         'DateTime' => KiokuDB::TypeMap::Entry::Passthrough->new(
             intrinsic => 1,
