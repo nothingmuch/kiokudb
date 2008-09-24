@@ -191,7 +191,6 @@ sub compact_entry {
     my $data = $entry->data;
 
     if ( $self->compact_data($data, $flatten) ) {
-        warn "Replacing";
         $entry->data($data);
     }
 }
@@ -294,7 +293,7 @@ sub visit_ref {
             }
         }
 
-        my $collapsed = $self->SUPER::visit_ref($_[1]);
+        my $collapsed = $self->visit_ref_data($_[1]);
 
         if ( ref($collapsed) eq 'KiokuDB::Reference' and $collapsed->id eq $id ) {
             return $collapsed; # tied
@@ -318,6 +317,11 @@ sub visit_ref {
     }
 }
 
+sub visit_ref_data {
+    my ( $self, $ref ) = @_;
+    $self->SUPER::visit_ref($_[1]);
+}
+
 sub _ref_id {
     my ( $self, $ref ) = @_;
 
@@ -332,6 +336,7 @@ sub _ref_id {
     die { unknown => $ref };
 }
 
+# avoid retying, we want to get back Reference or Entry objects
 sub visit_tied_hash   { shift->visit_tied(@_) }
 sub visit_tied_array  { shift->visit_tied(@_) }
 sub visit_tied_scalar { shift->visit_tied(@_) }
@@ -373,7 +378,7 @@ sub visit_object {
 
     my $collapse = $self->collapse_method(ref $object);
 
-    $self->$collapse($object);
+    $self->$collapse($_[1]);
 }
 
 sub collapse_first_class {
@@ -430,14 +435,6 @@ sub collapse_intrinsic {
 sub _object_id {
     my ( $self, $object ) = @_;
     $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
-}
-
-sub collapse_naive {
-    my ( $self, %args ) = @_;
-
-    my $object = $args{object};
-
-    return $self->SUPER::visit_ref($object);
 }
 
 # we don't reblass in collapse_naive

@@ -67,19 +67,6 @@ sub expand_objects {
 sub expand_object {
     my ( $self, $entry ) = @_;
 
-    #confess($entry) unless blessed($entry);
-
-    if ( my $class = $entry->class ) {
-        my $expand_method = $self->expand_method($class);
-        return $self->$expand_method($entry);
-    } else {
-        return $self->expand_naive($entry);
-    }
-}
-
-sub expand_naive {
-    my ( $self, $entry ) = @_;
-
     $self->inflate_data( $entry, \(my $data) );
 
     $data;
@@ -106,7 +93,7 @@ sub inflate_data {
             my $expand_method = $self->expand_method($class);
             $$into = $self->$expand_method($data);
         } else {
-            $self->inflate_data($data->data, \$obj, ( $data->id ? $data : () ) ); # no id means intrinsic
+            $self->inflate_data($data->data, \$obj, $data );
 
             if ( my $tie = $data->tied ) {
                 if ( $tie eq 'HASH' ) {
