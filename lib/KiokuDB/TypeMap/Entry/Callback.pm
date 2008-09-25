@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::Callback;
 use Moose;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);

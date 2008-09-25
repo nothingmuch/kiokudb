@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::Set;
 use Moose;
 
+no warnings 'recursion';
+
 use KiokuDB::Set::Stored;
 use KiokuDB::Set::Deferred;
 use KiokuDB::Set::Loaded;
