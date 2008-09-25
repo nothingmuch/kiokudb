@@ -57,10 +57,10 @@ sub _apply {
 
 # FIXME what else
 sub union { shift->_apply( union => @_ ) }
-sub intersection { shift->_apply( union => @_ ) }
-sub subset { shift->_apply( union => @_ ) }
-sub difference { shift->_apply( union => @_ ) }
-sub equal { shift->_apply( union => @_ ) }
+sub intersection { shift->_apply( intersection => @_ ) }
+sub subset { shift->_apply( subset => @_ ) }
+sub difference { shift->_apply( difference => @_ ) }
+sub equal { shift->_apply( equal => @_ ) }
 
 __PACKAGE__
 
