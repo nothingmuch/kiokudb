@@ -17,11 +17,25 @@ attr _objects => (
     is  => "ro",
     init_arg => "set",
     writer   => "_set_objects",
-    default => sub { Set::Object->new },
+    handles  => [qw(clear size is_weak weaken strengthen is_null)],
+    default  => sub { Set::Object->new },
 );
 
-sub clear { shift->_objects->clear }
-sub size  { shift->_objects->size }
+sub _clone {
+    my ( $self, %args ) = @_;
+    $args{set} ||= $self->_clone_object_set;
+    $self->meta->clone_instance( $self, %args );
+}
+
+sub _clone_object_set {
+    my $self = shift;
+    my $set = $self->_objects;
+    ( ref $set )->new( $set->members );
+}
+
+sub delete { shift->remove(@_) }
+
+sub elements { shift->members }
 
 sub has { (shift)->includes(@_) }
 sub contains { (shift)->includes(@_) }
@@ -42,7 +56,7 @@ sub _apply {
         if ( my $meth = $set->can("_load_all") ) {
             $set->$meth;
         }
-        
+
         if ( my $inner = $set->can("_objects") ) {
             push @real_sets, $set->$inner;
         } elsif ( $set->isa("Set::Object") ) {
@@ -52,15 +66,63 @@ sub _apply {
         }
     }
 
-    $self->meta->clone_instance( $self, set => $self->_objects->$method( @real_sets ) );
+    $self->_clone( set => $self->_objects->$method( @real_sets ) );
 }
 
-# FIXME what else
-sub union { shift->_apply( union => @_ ) }
-sub intersection { shift->_apply( intersection => @_ ) }
-sub subset { shift->_apply( subset => @_ ) }
-sub difference { shift->_apply( difference => @_ ) }
-sub equal { shift->_apply( equal => @_ ) }
+# we weed out empty sets so that they don't trigger loading of deferred sets
+
+sub union {
+    if ( my @sets = grep { $_->size } @_ ) {
+        my $self = shift @sets;
+        return $self->_apply( union => @sets );
+    } else {
+        my $self = shift;
+        return $self->_clone
+    }
+}
+
+sub intersection {
+    my ( $self, @sets ) = @_;
+
+    if ( grep { $_->size == 0 } $self, @sets ) {
+        return $self->_clone;
+    } else {
+        $self->_apply( intersection => @sets );
+    }
+}
+
+sub subset {
+    my ( $self, $other ) = @_;
+
+    return if $other->size < $self->size;
+    return 1 if $self->size == 0;
+
+    $self->_apply( subset => $other )
+}
+
+sub difference {
+    my ( $self, $other ) = @_;
+
+    if ( $other->size == 0 ) {
+        return $self->_clone;
+    } else {
+        $self->_apply( difference => $other );
+    }
+}
+
+sub equal {
+    my ( $self, $other ) = @_;
+
+    return 1 if $self->size == 0 and $other->size == 0;
+    return if $self->size != 0 and $other->size != 0;
+
+    $self->_apply( equal => $other )
+}
+
+sub not_equal {
+    my ( $self, $other ) = @_;
+    not $self->equal($other);
+}
 
 __PACKAGE__
 
