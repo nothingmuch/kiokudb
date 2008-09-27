@@ -23,7 +23,6 @@ sub insert   {
     $self->_objects->insert(@objects)
 }
 
-
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
