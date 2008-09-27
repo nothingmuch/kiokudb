@@ -8,11 +8,5 @@ use ok 'KiokuDB::Backend::JSPON';
 
 use KiokuDB::Test;
 
-run_all_fixtures(
-    KiokuDB->new(
-        backend => KiokuDB::Backend::JSPON->new(
-            dir => temp_root,
-        ),
-    )
-);
+run_all_fixtures( KiokuDB->connect("jspon:dir=" . temp_root) );
 

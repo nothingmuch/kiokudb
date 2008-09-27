@@ -3,12 +3,59 @@
 package KiokuDB::Backend;
 use Moose::Role;
 
+use Moose::Util::TypeConstraints;
+
+use namespace::clean -except => 'meta';
+
+coerce ( __PACKAGE__,
+    from HashRef => via {
+        my %p = %$_;
+        my $class = delete $p{class} || die "Can't coerce backend from hash without a 'class' parameter";
+
+        do {
+            local $@;
+            eval {
+                Class::MOP::load_class("KiokuDB::Backend::$class");
+                "KiokuDB::Backend::$class"->new(%p);
+            }
+        } or do {
+            Class::MOP::load_class($class);
+            $class->new(%p);
+        }
+    },
+    from Str => via {
+        Class::MOP::load_class($_);
+        $_->new;
+    },
+);
+
 requires qw(
     exists
     insert
     get
     delete
 );
+
+sub new_from_dsn {
+    my ( $class, $params ) = @_;
+
+    if ( defined $params ) {
+        $class->new($class->parse_dsn_params($params));
+    } else {
+        return $class->new;
+    }
+}
+
+sub parse_dsn_params {
+    my ( $self, $params ) = @_;
+
+    my @pairs = split ';', $params;
+
+    return map {
+        my ( $key, $value ) = /(\w+)(?:=(.*))/;
+        length($value) ? ( $key, $value ) : $key;
+    } @pairs;
+}
 
 __PACKAGE__
 

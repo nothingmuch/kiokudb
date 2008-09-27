@@ -20,6 +20,12 @@ use Carp qw(croak);
 
 use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
+sub connect {
+    my ( $class, $dsn ) = @_;
+    require KiokuDB::Util;
+    $class->new( backend => KiokuDB::Util::dsn_to_backend($dsn) );
+}
+
 has typemap => (
     isa => "KiokuDB::TypeMap",
     is  => "ro",
@@ -91,7 +97,8 @@ has backend => (
     does => "KiokuDB::Backend",
     is   => "ro",
     required => 1,
-    handles => [qw(exists)],
+    coerce   => 1,
+    handles  => [qw(exists)],
 );
 
 has linker => (

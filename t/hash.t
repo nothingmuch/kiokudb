@@ -8,9 +8,5 @@ use ok 'KiokuDB::Backend::Hash';
 
 use KiokuDB::Test;
 
-run_all_fixtures(
-    KiokuDB->new(
-        backend => KiokuDB::Backend::Hash->new,
-    )
-);
+run_all_fixtures( KiokuDB->connect("hash") );
 
