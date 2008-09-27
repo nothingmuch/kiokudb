@@ -3,6 +3,8 @@
 package KiokuDB::Set;
 use Moose::Role 'requires', 'has' => { -as => "attr" }; # need a 'has' method
 
+use Set::Object;
+
 use namespace::clean -except => "meta";
 
 requires qw(
