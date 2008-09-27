@@ -3,6 +3,8 @@
 package KiokuDB::Set::Deferred;
 use Moose;
 
+use Carp qw(croak);
+
 use KiokuDB::Set::Loaded;
 
 use Scalar::Util qw(refaddr);
@@ -80,6 +82,8 @@ sub insert {
     my ( $self, @members ) = @_;
 
     return unless @members;
+
+    croak "Can't insert non reference into a KiokuDB::Set" if grep { not ref } @members;
 
     my @ids = grep { defined } $self->_live_objects->objects_to_ids(@members);
 
