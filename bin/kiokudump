@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use KiokuDB::Cmd::Dump;
+
+KiokuDB::Cmd::Dump->new_with_options->run;
+
