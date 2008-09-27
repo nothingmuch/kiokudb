@@ -36,7 +36,7 @@ my %monikers = (
 sub dsn_to_backend {
     my $dsn = shift;
 
-    if ( my ( $moniker, $rest ) = ( $dsn =~ /^(\w+)(?::(.*))?$/ ) ) {
+    if ( my ( $moniker, $rest ) = ( $dsn =~ /^([\w-]+)(?::(.*))?$/ ) ) {
 
         if ( $moniker eq 'config' ) {
             return process_config_file(file($rest));
