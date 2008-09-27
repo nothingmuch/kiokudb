@@ -6,8 +6,6 @@ use Moose::Role;
 use Test::More;
 use Test::Exception;
 
-use Data::Structure::Util qw(circular_off);
-
 sub _lives_and_ret (&;$) {
     my ( $sub, @args ) = @_;
 
