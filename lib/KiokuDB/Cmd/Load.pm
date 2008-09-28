@@ -100,6 +100,8 @@ sub _build_formatter_yaml {
                 my @data = YAML::XS::Load($buf);
                 $buf = $_;
                 return @data;
+            } else {
+                $buf .= $_;
             }
         }
 

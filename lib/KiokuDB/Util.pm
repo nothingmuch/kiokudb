@@ -34,37 +34,17 @@ my %monikers = (
 );
 
 sub dsn_to_backend {
-    my $dsn = shift;
+    my ( $dsn, @args ) = @_;
 
     if ( my ( $moniker, $rest ) = ( $dsn =~ /^([\w-]+)(?::(.*))?$/ ) ) {
+        $moniker = $monikers{$moniker} || $moniker;
+        my $class = "KiokuDB::Backend::$moniker";
 
-        if ( $moniker eq 'config' ) {
-            return process_config_file(file($rest));
-        } elsif ( my $class = $monikers{$moniker} ) {
-            Class::MOP::load_class("KiokuDB::Backend::$class");
-            return "KiokuDB::Backend::$class"->new_from_dsn($rest);
-        } else {
-            Class::MOP::load_class("KiokuDB::Backend::$moniker");
-            return "KiokuDB::Backend::$class"->new_from_dsn($rest);
-        }
+        Class::MOP::load_class($class);
+        return $class->new_from_dsn($rest, @args);
     } else {
         croak "Malformed DSN: $dsn";
     }
-}
-
-sub process_config {
-    my ( $self, $config ) = @_;
-
-    my %config = %$config;
-
-    croak "No backend configuration provided"
-        unless $config{backend};
-
-    my $class = delete $config{class} || "KiokuDB";
-
-    $class->new(
-        %config
-    );
 }
 
 __PACKAGE__

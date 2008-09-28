@@ -15,7 +15,10 @@ run_all_fixtures(
         backend => KiokuDB::Backend::BDB::GIN->new(
             extract => Search::GIN::Extract::Class->new,
             root_only => 0,
-            dir => temp_root,
+            manager => {
+                home => temp_root,
+                create => 1,
+            },
         ),
     )
 );

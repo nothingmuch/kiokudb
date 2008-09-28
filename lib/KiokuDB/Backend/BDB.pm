@@ -5,8 +5,9 @@ use Moose;
 
 use Scalar::Util qw(weaken);
 use Storable qw(nfreeze thaw);
-use BerkeleyDB::Manager;
 use MooseX::Types::Path::Class qw(Dir);
+
+use KiokuDB::Backend::BDB::Manager;
 
 use namespace::clean -except => 'meta';
 
@@ -28,33 +29,30 @@ with qw(
     KiokuDB::Backend::Query::Simple::Linear
 );
 
-has dir => (
-    isa => Dir,
+has manager => (
+    isa => "KiokuDB::Backend::BDB::Manager",
     is  => "ro",
     coerce => 1,
-);
-
-has manager => (
-    isa => "BerkeleyDB::Manager",
-    is  => "ro",
-    lazy_build => 1,
+    required => 1,
     #handles => "KiokuDB::Backend::TXN",
 );
+
+sub new_from_dsn_params {
+    my ( $self, %args ) = @_;
+
+    my %manager = %args;
+
+    if ( my $dir = delete $args{dir} ) {
+        $manager{home} = $dir;
+    }
+
+    $self->new(manager => \%manager, %args);
+}
 
 sub txn_begin { shift->manager->txn_begin(@_) }
 sub txn_commit { shift->manager->txn_commit(@_) }
 sub txn_rollback { shift->manager->txn_rollback(@_) }
 sub txn_do { shift->manager->txn_do(@_) }
-
-sub _build_manager {
-    my $self = shift;
-
-    my $dir = $self->dir || die "Either 'manager' or 'dir' is required";;
-
-    $dir->mkpath;
-
-    BerkeleyDB::Manager->new( home => $dir );
-}
 
 has primary_db => (
     is      => 'ro',
@@ -67,7 +65,7 @@ sub BUILD { shift->primary_db } # early
 sub _build_primary_db {
     my $self = shift;
 
-    $self->manager->open_db("objects.db", class => "BerkeleyDB::Hash");
+    $self->manager->open_db("objects", class => "BerkeleyDB::Hash");
 }
 
 sub delete {

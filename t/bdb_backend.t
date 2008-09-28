@@ -33,7 +33,7 @@ use ok 'KiokuDB::LiveObjects';
     );
 }
 
-my $b = KiokuDB::Backend::BDB->new( dir => temp_root );
+my $b = KiokuDB::Backend::BDB->new( manager => { home => temp_root, create => 1 } );
 
 my $obj = Foo->new(
     id => "shlomo",
