@@ -11,13 +11,13 @@ use KiokuDB::TypeMap::Entry::Alias;
 use namespace::clean -except => 'meta';
 
 has [qw(entries isa_entries)] => (
-    isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]",
+    #isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]", # dog slow regex
     is  => "ro",
     default => sub { return {} },
 );
 
 has [qw(all_entries all_isa_entries)] => (
-    isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]",
+    #isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]", # dog slow regex
     is  => "ro",
     lazy_build => 1,
 );
