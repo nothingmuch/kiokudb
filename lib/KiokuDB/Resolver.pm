@@ -3,7 +3,6 @@
 package KiokuDB::Resolver;
 use Moose;
 
-use KiokuDB ();
 use KiokuDB::LiveObjects;
 
 use namespace::clean -except => 'meta';

@@ -3,9 +3,6 @@
 package KiokuDB::Backend::Null;
 use Moose;
 
-use KiokuDB ();
-
-
 use namespace::clean -except => 'meta';
 
 with qw(

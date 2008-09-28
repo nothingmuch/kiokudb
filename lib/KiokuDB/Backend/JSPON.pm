@@ -9,8 +9,6 @@ use File::NFSLock;
 use IO::AtomicFile;
 use JSON;
 
-use KiokuDB ();
-
 use Data::Stream::Bulk::Path::Class;
 
 use MooseX::Types::Path::Class qw(Dir File);

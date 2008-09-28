@@ -3,8 +3,6 @@
 package KiokuDB::Role::UUIDs::DataUUID;
 use Moose::Role;
 
-use KiokuDB ();
-
 use namespace::clean -except => 'meta';
 
 with join("::", __PACKAGE__, "Str" );
