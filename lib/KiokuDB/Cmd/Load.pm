@@ -9,6 +9,9 @@ use MooseX::Types::Path::Class qw(File);
 
 use Moose::Util::TypeConstraints;
 
+use KiokuDB::Entry;
+use KiokuDB::Reference;
+
 use namespace::clean -except => 'meta';
 
 with qw(MooseX::Getopt);
@@ -41,7 +44,7 @@ sub _build_backend {
     $self->v("Connecting to DSN $dsn...");
 
     require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend($dsn);
+    my $b = KiokuDB::Util::dsn_to_backend( $dsn, create => 1 );
 
     $self->v(" $b\n");
 
@@ -87,7 +90,7 @@ sub _build_formatter {
 sub _build_formatter_yaml {
     require YAML::XS;
 
-    my $buf;
+    my $buf = '';
 
     sub {
         my $fh = shift;
@@ -105,7 +108,13 @@ sub _build_formatter_yaml {
             }
         }
 
-        return YAML::XS::Load($buf);
+        if ( length $buf ) {
+            my @data = YAML::XS::Load($buf);
+            $buf = '';
+            return @data;
+        } else {
+            return;
+        }
     }
 }
 
@@ -125,6 +134,7 @@ has file => (
     isa => File,
     is  => "ro",
     coerce => 1,
+    predicate => "has_file",
 );
 
 has input_handle => (
@@ -135,7 +145,12 @@ has input_handle => (
 
 sub _build_input_handle {
     my $self = shift;
-    $self->file->openr;
+
+    if ( $self->has_file ) {
+        $self->file->openr;
+    } else {
+        \*STDIN;
+    }
 }
 
 has verbose => (

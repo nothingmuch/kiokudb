@@ -36,7 +36,7 @@ sub _build_backend {
     $self->v("Connecting to DSN $dsn...");
 
     require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend($dsn);
+    my $b = KiokuDB::Util::dsn_to_backend( $dsn, readonly => 1 );
 
     $self->v(" $b\n");
 
@@ -63,7 +63,7 @@ sub _build_formatter {
 
 sub _build_formatter_yaml {
     require YAML::XS;
-    sub { $_[0]->print(YAML::XS::Dump($_[1])) };
+    sub { $_[1]->print(YAML::XS::Dump($_[0])) };
 }
 
 sub _build_formatter_json {
