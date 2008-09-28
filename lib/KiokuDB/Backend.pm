@@ -37,13 +37,18 @@ requires qw(
 );
 
 sub new_from_dsn {
-    my ( $class, $params ) = @_;
+    my ( $class, $params, @extra ) = @_;
 
     if ( defined $params ) {
-        $class->new($class->parse_dsn_params($params));
+        $class->new_from_dsn_params($class->parse_dsn_params($params), @extra);
     } else {
         return $class->new;
     }
+}
+
+sub new_from_dsn_params {
+    my ( $class, @params ) = @_;
+    $class->new(@params);
 }
 
 sub parse_dsn_params {
@@ -53,7 +58,7 @@ sub parse_dsn_params {
 
     return map {
         my ( $key, $value ) = /(\w+)(?:=(.*))/;
-        length($value) ? ( $key, $value ) : $key;
+        length($value) ? ( $key, $value ) : ( $key => 1 );
     } @pairs;
 }
 

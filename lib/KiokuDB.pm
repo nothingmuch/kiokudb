@@ -21,9 +21,9 @@ use Carp qw(croak);
 use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
 sub connect {
-    my ( $class, $dsn ) = @_;
+    my ( $class, $dsn, @args ) = @_;
     require KiokuDB::Util;
-    $class->new( backend => KiokuDB::Util::dsn_to_backend($dsn) );
+    $class->new( backend => KiokuDB::Util::dsn_to_backend($dsn, @args), @args );
 }
 
 has typemap => (
