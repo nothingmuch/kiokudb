@@ -110,13 +110,11 @@ sub exists {
 sub clear {
     my $self = shift;
 
-    my $cursor = $self->primary_db->db_cursor;
+    my $count = 0;
 
-    my ($key, $value) = ( '', '' );
+    $self->primary_db->truncate($count);
 
-    while ( $cursor->c_get($key, $value, BerkeleyDB::DB_PREV() ) == 0) {
-        $cursor->c_del() == 0 or die $BerkeleyDB::Error;
-    }
+    return $count;
 }
 
 sub all_entries {
