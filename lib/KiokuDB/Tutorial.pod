@@ -274,7 +274,6 @@ it we instantiate the backend like this:
         },
     );
 
-
 The BDB backend uses L<BerkeleyDB::Manager> to do a lot of the L<BerkeleyDB>
 gruntwork. The L<BerkeleyDB::Manager> object will be instantiated using the
 arguments provided in the C<manager> attribute.
