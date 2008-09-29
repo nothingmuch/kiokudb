@@ -362,6 +362,10 @@ It can be iterated as follows:
         }
     }
 
+Or even more simply, if you don't mind loading the whole resultset into memory:
+
+    my @people = $stream->all;
+
 The way it works internally that L<Search::GIN::Extract::Class> introspects the
 objects as they are being inserted to the database, and extracts all the keys
 that L<Search::GIN::Query::Class> would need to later find these objects in the
