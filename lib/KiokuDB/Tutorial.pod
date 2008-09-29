@@ -63,7 +63,7 @@ and insert the object to the database as follows:
 
     my $scope = $dir->new_scope;
 
-    my $id = $dir->store($obj);
+    my $homer_id = $dir->store($obj);
 
 This is very trivial use of L<KiokuDB>, but it illustrates a few important
 things.
@@ -84,7 +84,7 @@ once weak references are used. We will look into that in more detail later.
 So now that Homer has been inserted into the database, we can fetch him out of
 there using the ID we got from C<store>.
 
-    my $homer = $dir->lookup($id);
+    my $homer = $dir->lookup($homer_id);
 
 Assuming that C<$scope> and C<$obj> are still in scope, C<$homer> and C<$obj>
 will actually be the same reference:
@@ -99,7 +99,7 @@ scope, and then fetch the object from the database again:
 
     my $scope = $dir->new_scope;
 
-    my $homer = $dir->lookup($id);
+    my $homer = $dir->lookup($homer_id);
 
 In this case since the original instance of Homer is no longer live, but has
 been garbage collected by Perl, L<KiokuDB> will fetch it from the backend.
@@ -130,7 +130,7 @@ Now that we have both objects in the database, lets link them together:
     {
         my $scope = $dir->new_scope;
 
-        my ( $marge, $homer ) = $dir->lookup( $marge_id, $id );
+        my ( $marge, $homer ) = $dir->lookup( $marge_id, $homer_id );
 
         $marge->spouse($homer);
         $homer->spouse($marge);
@@ -153,7 +153,7 @@ To load the graph, we can do something like this:
     {
         my $scope = $dir->new_scope;
 
-        my $homer = $dir->lookup($id);
+        my $homer = $dir->lookup($homer_id);
 
         print $homer->spouse->name; # Marge Simpson
     }
