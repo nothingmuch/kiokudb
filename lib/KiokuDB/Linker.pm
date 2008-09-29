@@ -231,11 +231,33 @@ KiokuDB::Linker - Relinks live objects from storage entries
 
 =head1 DESCRIPTION
 
-This object reconnects entry data using the MOP, constructing the connected
-object graph in memory.
+The linker reconnects entry data, recreating the connected object graph in
+memory.
 
-If a live object already exists for a UID then that object will be reused
-instead of being loaded a second time.
+The linkage process starts with a an ID (or several IDs) to be loaded passed to
+the C<get_or_load_objects> method.
+
+This ID will first be searched for in the live object set
+(L<KiokuDB::LiveObjects>). If the object is already live, then it will be
+returned as is.
+
+If the object is not live, then the corresponding entry is fetched from the
+backend, and expanded into an actual instance.
+
+Expansion consults the L<KiokuDB::TypeMap> using L<KiokuDB::TypeMap::Resolver>,
+to find the correct typemap entry (see
+L<KiokuDB::Collapser/"COLLAPSING STRATEGIES"> and L<KiokuDB::TypeMap>), and
+that is used for the actual expansion.
+
+Most of the grunt work is delegated by the entries back to the linker using the
+C<inflate_data> method, which handles circular structures, retrying of tied
+structures, etc.
+
+Inflated objects are registered with L<KiokuDB::LiveObjects>, and get inserted
+into the current live object scope (L<KiokuDB::LiveObjects::Scope>). The
+scope's job is to maintain a reference count of at least 1 for any loaded
+object, until it is destroyed itself. This ensures that weak references are not
+destroyed prematurely, but allows their use in order to avoid memory leaks.
 
 =cut
 

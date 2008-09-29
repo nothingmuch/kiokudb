@@ -392,7 +392,8 @@ semantics).
 
 =back
 
-=head1 TECHNICAL DETAILS
+
+=head1 FUNDAMENTAL CONCEPTS
 
 In order to use any persistence framework it is important to understand what it
 does and how it does it.
@@ -422,9 +423,10 @@ created varies with the object's class.
 When objects are loaded, entries are retrieved from the backend using their
 UIDs.
 
-When a UID is already loaded (in the live object set of a L<KiokuDB> instance)
-the live object is used. This way references to shared objects are shared in
-memory regardless of the order the objects were stored or loaded.
+When a UID is already loaded (in the live object set of a L<KiokuDB> instance,
+see L<KiokuDB::LiveObjects>) the live object is used. This way references to
+shared objects are shared in memory regardless of the order the objects were
+stored or loaded.
 
 This process is explained in detail in L<KiokuDB::Linker>.
 
@@ -444,45 +446,42 @@ L<KiokuDB::Backend>.
 
 The backend handles storage and retrieval of entries.
 
-=item collapser
-
-L<KiokuDB::Collapser>
-
-The collapser prepares objects for storage.
-
-=item linker
-
-L<KiokuDB::Linker>
-
-The linker links retrieved entries into functioning instances.
-
-=item resolver
-
-L<KiokuDB::Resolver>
-
-The resolver swizzles memory addresses to UIDs and back.
-
-=item live_objects
-
-L<KiokuDB::LiveObjects>
-
-The live object set keeps track of objects for the linker and the resolver.
-
 =back
 
 =head1 METHODS
 
 =over 4
 
+=item connect $dsn, %args
+
+DWIM wrapper for C<new>.
+
+C<$dsn> represents some sort of backend (much like L<DBI> dsns map to DBDs).
+
+An example DSN is:
+
+    my $dir = KiokuDB->connect("bdb:dir=path/to/data/");
+
+The backend moniker name is extracted by splitting on the colon. The rest of
+the string is passed tp C<new_from_dsn>, which is documented in more detail in
+L<KiokuDB::Backend>.
+
+Typically DSN arguments are separated by C<;>, with C<=> separating keys and
+values. Arguments with no value are assumed to denote boolean truth (e.g.
+C<jspon:dir=foo;pretty> means c<dir => "foo", pretty => 1>).
+
+Extra arguments are passed both to the backend constructor, and the C<KiokuDB>
+constructor.
+
+=item configure $config_file, %args
+
+TODO
+
 =item new %args
 
 Creates a new directory object.
 
 See L</ATTRIBUTES>
-
-=item connect $dsn, %args
-
-DWIM initialization.
 
 =item lookup @ids
 
@@ -522,6 +521,37 @@ instead of UUIDs.
 
 This is useful for testing, since the same IDs will be issued each run, but is
 utterly broken in the face of concurrency.
+
+=back
+
+=head1 INTERNAL ATTRIBUTES
+
+These attributes are documented for completeness and should typically not be
+needed.
+
+=item collapser
+
+L<KiokuDB::Collapser>
+
+The collapser prepares objects for storage.
+
+=item linker
+
+L<KiokuDB::Linker>
+
+The linker links retrieved entries into functioning instances.
+
+=item resolver
+
+L<KiokuDB::Resolver>
+
+The resolver swizzles reference addresses to UIDs and back.
+
+=item live_objects
+
+L<KiokuDB::LiveObjects>
+
+The live object set keeps track of objects for the linker and the resolver.
 
 =back
 

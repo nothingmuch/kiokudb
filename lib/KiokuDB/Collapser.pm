@@ -463,7 +463,8 @@ data
 The collapser simplifies real objects into L<KiokuDB::Entry> objects to pass to
 the backend.
 
-Non object data is collapsed by walking it with L<Data::Visitor>.
+Non object data is collapsed by walking it with L<Data::Visitor> (which
+L<KiokuDB::Collapser> inherits from).
 
 Object collapsing is detailed in L</"COLLAPSING STRATEGIES">.
 
@@ -490,7 +491,33 @@ like store).
 =head1 COLLAPSING STRATEGIES
 
 Collapsing strategies are chosen based on the type of the object being
-collapsed.
+collapsed, using L<KiokuDB::TypeMap::Resolver>.
+
+The resolver consults the typemap (L<KiokuDB::TypeMap>), and caches the results
+as keyed by C<ref $object>.
+
+The typemap contains normal entries (keyed by C<ref $object eq $class>) or isa
+entries (filtered by C<$object->isa($class)>). The rationale is that a typemap
+entry for a superclass might not support all subclasses as well.
+
+Any strategy may be collapsed as a first class object, or intrinsicly, inside
+its parent (in which case it isn't assigned a UUID). This is determined based
+on the C<intrinsic> attribute to the entry. For instance, if L<Path::Class>
+related objects should be collapsed as if they are values, the following
+typemap entry can be used:
+
+    isa_entries => {
+        'Path::Class::Entity' => KiokuDB::TypeMap::Entry::Callback->new(
+            intrinsic => 1,
+            collapse  => "stringify",
+            expand    => "new",
+        ),
+    },
+
+If no typemap entry exists, L<KiokuDB::TypeMap::Entry::MOP> is used by default.
+See L<KiokuDB::TypeMap::Resolver> for more details.
+
+These are the strategies in brief:
 
 =head2 MOP
 
@@ -498,48 +525,31 @@ When the object has a L<Class::MOP> registered metaclass (any L<Moose> object,
 but not only), the MOP is used to walk the object's attributes and construct
 the simplified version without breaking encapsulation.
 
-Annotations on the meta attributes, like L<MooseX::Storarge> meta traits
-can precisely control which attributes get serialized and how.
-
-=head2 Type Map
-
-A type map is consulted for objects without a meta class.
-
-The default type map contains entries for a number of fairly standard classes
-(e.g. L<Path::Class>, L<DateTime>, etc).
-
-=head2 L<Pixie::Complicity> / L<Tangram::Complicity>
-
-The C<px_thaw> and C<px_freeze> methods can be defined on your object to
-convert them to "pure" perl data structures.
+See L<KiokuDB::TypeMap::Entry::MOP>.
 
 =head2 Naive
 
-If desired, naive collaping will simply walk the object's reference using
-L<Data::Visitor>.
+This collapsing strategy simply walks the object's data using L<Data::Visitor>.
 
-This is disabled by default and should be enabled on a case by case basis, but
-can be done for all unknown objects too.
+This allows collapsing of L<Class::Accessor> based objects, for instance, but
+should be used with care.
 
-=head1 TODO
+See L<KiokuDB::TypeMap::Entry::Naive>
 
-=over 4
+=head2 Callback
 
-=item *
+This collapsing strategy allows callbacks to be used to map the types.
 
-Tied data
+It is more limited than the other strategies, but very convenient for simple
+values.
 
-=item *
+See L<KiokuDB::TypeMap::Entry::Callback> for more details.
 
-Custom hooks
+=head2 Passthrough
 
-=item *
-
-Non moose objects
-
-(Adapt L<Storable> hooks, L<Pixie::Complicity>, etc etc)
-
-=back
+This delegates collapsing to the backend serialization. This is convenient for
+when a backend uses e.g. L<Storable> to serialize entries, and the object in
+question already has a C<STORABLE_freeze> and C<STORABLE_thaw> method.
 
 =cut
 
