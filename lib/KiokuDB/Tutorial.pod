@@ -255,4 +255,70 @@ This set object is optimized to make most operations defer loading. For
 instance, if you intersect two deferred sets, only the members of the
 intersection set will need to be loaded.
 
-=back
+=head1 GETTING STARTED WITH BDB
+
+So far we've only made use of L<KiokuDB::Backend::Hash>, so while our objects
+were serialized, they were not actually stored on disk.
+
+The most mature backend for L<KiokuDB> is L<KiokuDB::Backend::BDB>. It performs
+very well, and supports many features, like L<Search::GIN> integration to
+provide customized indexing of your objects and transactions.
+
+To use the BDB backend we must first create the storage. The first time we use
+it we instantiate the backend like this:
+
+    my $backend = KiokuDB::Backend::BDB->new(
+        manager => {
+            home   => Path::Class::Dir->new(qw(path to storage)),
+            create => 1,
+        },
+    );
+
+
+The BDB backend uses L<BerkeleyDB::Manager> to do a lot of the L<BerkeleyDB>
+gruntwork. The L<BerkeleyDB::Manager> object will be instantiated using the
+arguments provided in the C<manager> attribute.
+
+Now that the storage is created we can make use of this backend, much like before:
+
+    my $dir = KiokuDB->new( backend => $backend );
+
+Subsequent opens will not required the C<create> argument to be true, but it
+doesn't hurt.
+
+As a convenience feature, L<KiokuDB> provides the C<connect> method. The above
+code could be written more concisely as:
+
+    my $dir = KiokuDB->connect( "bdb:dir=path/to/storage", create => 1 );
+
+=head1 TRANSACTIONS
+
+Some backends (ones which do the L<KiokuDB::Backend::TXN> role) can be used
+with transactions.
+
+If you are familiar with L<DBIx::Class> this should be very familiar:
+
+    $dir->txn_do(sub {
+        $dir->store($obj);
+    });
+
+This will create a L<BerkeleyDB> level transaction, and all changes to the
+database are committed if the block was executed cleanly.
+
+If any error occurred the transaction will be rolled back, and the changes will
+not be visible to subsequent reads.
+
+Note that L<KiokuDB> does B<not> touch live instances, so if you do something like
+
+    $dir->txn_do(sub {
+        my $scope = $dir->new_scope;
+        $obj->name("Dancing Hippy");
+        $dir->store($obj);
+    });
+
+the C<name> attribute is B<not> rolled back, it is simply the C<store>
+operation that gets reverted.
+
+Transactions will nest properly, and with BDB they generally increase write
+performance.
+
