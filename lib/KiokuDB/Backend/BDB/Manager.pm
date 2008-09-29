@@ -11,8 +11,6 @@ extends "BerkeleyDB::Manager";
 
 has '+home' => ( required => 1 );
 
-has '+multiversion' => ( default => 1 );
-
 has '+data_dir' => ( default => "data" );
 
 has '+log_dir' => ( default => "logs" );
