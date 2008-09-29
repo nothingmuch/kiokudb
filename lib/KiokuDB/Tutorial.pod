@@ -16,19 +16,6 @@ For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
 which is an in memory store, but for production L<KiokuDB::Backend::BDB> is
 the recommended backend.
 
-=head2 Installing L<KiokuDB::Backend::BDB>
-
-L<KiokuDB::Backend::BDB> needs the L<BerkeleyDB> module, and a recent version
-of Berkeley DB itself, which can be found here:
-L<http://www.oracle.com/technology/software/products/berkeley-db/db/index.html>.
-
-BerkeleyDB (the library) normally installs into C</usr/local/BerkeleyDB.4.7>,
-while L<BerkeleyDB> (the module) looks for it in C</usr/local/BerkeleyDB>, so
-adding a symbolic link should make installation easy.
-
-Once you have L<BerkeleyDB> installed, L<KiokuDB::Backend::BDB> should install
-without problem and you can use it with L<KiokuDB>.
-
 =head1 CREATING A DIRECTORY
 
 A KiokuDB directory is the object that contains all the common functionality
@@ -264,8 +251,23 @@ The most mature backend for L<KiokuDB> is L<KiokuDB::Backend::BDB>. It performs
 very well, and supports many features, like L<Search::GIN> integration to
 provide customized indexing of your objects and transactions.
 
-To use the BDB backend we must first create the storage. The first time we use
-it we instantiate the backend like this:
+=head2 Installing L<KiokuDB::Backend::BDB>
+
+L<KiokuDB::Backend::BDB> needs the L<BerkeleyDB> module, and a recent version
+of Berkeley DB itself, which can be found here:
+L<http://www.oracle.com/technology/software/products/berkeley-db/db/index.html>.
+
+BerkeleyDB (the library) normally installs into C</usr/local/BerkeleyDB.4.7>,
+while L<BerkeleyDB> (the module) looks for it in C</usr/local/BerkeleyDB>, so
+adding a symbolic link should make installation easy.
+
+Once you have L<BerkeleyDB> installed, L<KiokuDB::Backend::BDB> should install
+without problem and you can use it with L<KiokuDB>.
+
+=head2 Using L<KiokuDB::Backend::BDB>
+
+To use the BDB backend we must first create the storage. To do this the
+C<create> flag must be passed:
 
     my $backend = KiokuDB::Backend::BDB->new(
         manager => {
