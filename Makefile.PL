@@ -57,5 +57,9 @@ WriteMakefile(
         'Test::Memory::Cycle' => 0,
         'Test::More' => 0,
         'Test::TempDir' => 0,
+
+        # used in testing
+        'Class::Accessor' => 0,
+        'URI' => 0,
     },
 );
