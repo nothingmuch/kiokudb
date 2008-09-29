@@ -205,4 +205,54 @@ is at least one, but note that child scopes refer to their parents to ensure
 that all objects that were already live at the time that a scope is created are
 still alive
 
+=head1 OBJECT SETS
+
+More complex relationships (not necessarily 1 to 1) are fairly easy to model
+with L<Set::Object>.
+
+Let's extend the C<Person> class to add such a relationship:
+
+    package Person;
+
+    has children => (
+        does => "KiokuDB::Set",
+        is   => "rw",
+    );
+
+L<KiokuDB::Set> objects are L<KiokuDB> specific wrappers for L<Set::Object>.
+
+    my @kids = map { Person->new( name => $_ ) } qw(maggie lisa bart);
+
+    use KiokuDB::Util qw(set);
+
+    my $set = set(@kids);
+
+    $homer->children($set);
+
+    $dir->store($homer);
+
+The C<set> convenience function creates a new L<KiokuDB::Set::Transient>
+object. A transient set is one which started its life in memory space.
+
+The C<weak_set> convenience function also exists, creating a transient set with
+L<Set::Object::Weak> used internally to help avoid circular structures (for
+instance if setting a C<parent> attribute in our example).
+
+The set object behaves pretty much like a normal L<Set::Object>:
+
+    my @kids = $dir->lookup($homer_id)->children->members;
+
+The main difference is that sets coming from the database are deferred by
+default, that is the objects in C<@kids> are not loaded until they are actually
+needed.
+
+This allows large object graphs to exist in the database, while only being
+partially loaded, without breaking the encapsulation of user objects. This
+behavior is implemented in L<KiokuDB::Set::Deferred> and
+L<KiokuDB::Set::Loaded>.
+
+This set object is optimized to make most operations defer loading. For
+instance, if you intersect two deferred sets, only the members of the
+intersection set will need to be loaded.
+
 =back
