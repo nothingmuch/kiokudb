@@ -58,8 +58,9 @@ WriteMakefile(
         'Test::More' => 0,
         'Test::TempDir' => 0,
 
-        # used in testing
+        # used in testing... add skip logic?
         'Class::Accessor' => 0,
         'URI' => 0,
+        'DateTime' => 0,
     },
 );
