@@ -1,0 +1,208 @@
+=pod
+
+=head1 NAME
+
+KiokuDB::Tutorial - Getting started with L<KiokuDB>
+
+=head1 INSTALLATION
+
+L<KiokuDB> depends L<Moose> and a few other modules out of the box, but no
+storage.
+
+L<KiokuDB> is a frontend to several backends, much like L<DBI> uses DBDs to
+connect to actual databases.
+
+For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
+which is an in memory store, but for production L<KiokuDB::Backend::BDB> is
+the recommended backend.
+
+=head2 Installing L<KiokuDB::Backend::BDB>
+
+L<KiokuDB::Backend::BDB> needs the L<BerkeleyDB> module, and a recent version
+of Berkeley DB itself, which can be found here:
+L<http://www.oracle.com/technology/software/products/berkeley-db/db/index.html>.
+
+BerkeleyDB (the library) normally installs into C</usr/local/BerkeleyDB.4.7>,
+while L<BerkeleyDB> (the module) looks for it in C</usr/local/BerkeleyDB>, so
+adding a symbolic link should make installation easy.
+
+Once you have L<BerkeleyDB> installed, L<KiokuDB::Backend::BDB> should install
+without problem and you can use it with L<KiokuDB>.
+
+=head1 CREATING A DIRECTORY
+
+A KiokuDB directory is the object that contains all the common functionality
+needed for all backends.
+
+The simplest directory ready for use can be created like this:
+
+    my $dir = KiokuDB->new(
+        backend => KiokuDB::Backend::Hash->new
+    );
+
+We will revisit other more interesting backend configuration later in this
+document, but for now this will do.
+
+=head1 INSERTING OBJECTS
+
+Let's start with this simple class:
+
+    package Person;
+    use Moose;
+
+    has name => (
+        isa => "Str",
+        is  => "rw",
+    );
+
+We can instantiate it:
+
+    my $obj = Person->new( name => "Homer Simpson" );
+
+and insert the object to the database as follows:
+
+    my $scope = $dir->new_scope;
+
+    my $id = $dir->store($obj);
+
+This is very trivial use of L<KiokuDB>, but it illustrates a few important
+things.
+
+First, no schema is necessary. L<KiokuDB> can use L<Moose> to introspect your
+object without needing to predefine anything like tables.
+
+Second, every object in the database has an ID. If you don't choose an ID for
+an object, L<KiokuDB> will assign a UUID instead. The ID is like a primary key
+in a relational database.
+
+Third, all L<KiokuDB> operations need to be performed within a B<scope>. The
+scope does not apply to a simple example like the above, but becomes necessary
+once weak references are used. We will look into that in more detail later.
+
+=head1 LOADING OBJECTS
+
+So now that Homer has been inserted into the database, we can fetch him out of
+there using the ID we got from C<store>.
+
+    my $homer = $dir->lookup($id);
+
+Assuming that C<$scope> and C<$obj> are still in scope, C<$homer> and C<$obj>
+will actually be the same reference:
+
+    refaddr($homer) == refaddr($obj)
+
+This is because L<KiokuDB> tracks which objects are "live" in the
+B<live object set> (L<KiokuDB::LiveObjects>).
+
+If C<$obj> and C<$scope> are no longer in scope you'd need to create a new
+scope, and then fetch the object from the database again:
+
+    my $scope = $dir->new_scope;
+
+    my $homer = $dir->lookup($id);
+
+In this case since the original instance of Homer is no longer live, but has
+been garbage collected by Perl, L<KiokuDB> will fetch it from the backend.
+
+=head1 OBJECT RELATIONSHIPS
+
+Let's extend the C<Person> class to hold some more interesting data than just a
+C<name>:
+
+    package Person;
+
+    has spouse => (
+        isa => __PACKAGE__,
+        is  => "rw",
+        weak_ref => 1,
+    );
+
+This new C<spouse> attribute will hold a reference to another person object.
+
+Let's first create and insert another object:
+
+    my $marge_id = $dir->store(
+        Person->new( name => "Marge Simpson" ),
+    );
+
+Now that we have both objects in the database, lets link them together:
+
+    {
+        my $scope = $dir->new_scope;
+
+        my ( $marge, $homer ) = $dir->lookup( $marge_id, $id );
+
+        $marge->spouse($homer);
+        $homer->spouse($marge);
+
+        $dir->store( $marge, $homer );
+    }
+
+Now we have created a persistent B<object graph>, that is several objects which
+point to each other.
+
+The reason C<spouse> was had the C<weak_ref> option was so that this circular
+structure will not leak.
+
+When then objects are updated in the database L<KiokuDB> sees that their
+C<spouse> attribute contains references, and this relationship will be encoded
+using their unique ID in storage.
+
+To load the graph, we can do something like this:
+
+    {
+        my $scope = $dir->new_scope;
+
+        my $homer = $dir->lookup($id);
+
+        print $homer->spouse->name; # Marge Simpson
+    }
+
+    {
+        my $scope = $dir->new_scope;
+
+        my $marge = $dir->lookup($marge_id);
+
+        print $marge->spouse->name; # Homer Simpson
+
+        refaddr($marge) == refaddr($marge->spouse->spouse); # true
+    }
+
+When L<KiokuDB> is loading the initial object, all the objects the object
+depends on will also be loaded. The C<spouse> attribute contains a
+reference to another object (by ID), and this link is resolved at inflation
+time.
+
+=head2 The purpose of C<new_scope>
+
+This is where C<new_scope> becomes important. As objects are inflated from the
+database, they are pushed onto the live object scope, in order to increase
+their reference count.
+
+If this was not done, by the time C<$homer> was returned from C<lookup> his
+C<spouse> attribute would have been cleared because there is no other reference
+to Marge.
+
+If, on the other hand the circular structure was not weak it would have to be
+broken manually, which is very error prone.
+
+By using this idiom:
+
+    {
+        my $scope = $dir->new_scope;
+        
+        # do all KiokuDB work in here
+    }
+
+You are ensuring that the objects live at least as long as is necessary.
+
+In a web application context usually you create one new scope per request.
+
+While scopes can nest, this is not a requirement.
+
+You are free to create as many or as few scopes as you like, as long as there
+is at least one, but note that child scopes refer to their parents to ensure
+that all objects that were already live at the time that a scope is created are
+still alive
+
+=back
