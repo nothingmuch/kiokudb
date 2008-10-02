@@ -3,9 +3,18 @@
 package KiokuDB::Set;
 use Moose::Role 'requires', 'has' => { -as => "attr" }; # need a 'has' method
 
+use Moose::Util::TypeConstraints;
+
 use Set::Object;
 
 use namespace::clean -except => "meta";
+
+coerce( __PACKAGE__,
+    from ArrayRef => via {
+        require KiokuDB::Set::Transient;
+        KiokuDB::Set::Transient->new( set => Set::Object->new( @$_ ) ),
+    },
+);
 
 requires qw(
     includes
