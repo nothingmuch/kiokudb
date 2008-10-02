@@ -21,7 +21,7 @@ See below for instructions on getting L<KiokuDB::Backend::BDB> installed.
 =head1 CREATING A DIRECTORY
 
 A KiokuDB directory is the object that contains all the common functionality
-needed for all backends.
+regardless of the backend.
 
 The simplest directory ready for use can be created like this:
 
