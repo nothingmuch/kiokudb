@@ -246,16 +246,137 @@ intersection set will need to be loaded.
 
 =head1 THE TYPEMAP
 
-All object deconstruction in L<KiokuDB> is done in terms of a typemap.
+Storing an object with L<KiokuDB> involves passing it to L<KiokuDB::Collapser>,
+the object that "flattens" objects into L<KiokuDB::Entry> before the entries
+are inserted into the backend.
 
-The typemap contains mappings keyed by class. By default anything that is not
-in the typemap and isn't a L<Moose> object is rejected, because there are very
-few guarantees regarding that object's storability.
+The collapser uses a L<KiokuDB::TypeMap> object that tells it how objects of
+each type should be collapsed.
 
-Adding new typemap entries is very easy, and allows you to store arbitrary
-objects in L<KiokuDB> as long as you describe how.
+During retrieval of objects the same typemap is used to reinflate objects back
+into working objects.
 
-# XXX
+Trying to store an object that is not in the typemap is an error. The reason
+behind this is that many objects depend on runtime states (for instance C<DBI>
+handles need a socket, objects based on XS modules have an internal pointer as
+an integer), and even though the majority of objects are safe to serialize,
+even a small bit of unreported fragility is usually enough to create large,
+hard to debug problems.
+
+An exception to this rule is L<Moose> based objects, because they have
+sufficient meta information available through L<Moose>'s powerful reflection
+support in order to be safely serialized.
+
+Additionally, the standard backends provide a default typemap for common
+objects (L<DateTime>, L<Path::Class>, etc), which by default is merged with any
+custom typemap you pass to L<KiokuDB>.
+
+So, in order to actually get L<KiokuDB> to store things like L<Class::Accessor>
+based objects, you can do something like this:
+
+    my $dir = KiokuDB->new(
+        backend => $backend,
+        typemap => KiokuDB::TypeMap->new(
+            entries => {
+                "My::Object" => KiokuDB::TypeMap::Entry::Naive->new,
+            },
+        ),
+    );
+
+L<KiokuDB::TypeMap::Entry::Naive> is a type map entry that performs naive
+collapsing of the object, by simply walking it recursively.
+
+When the collapser encounters an object it will ask
+L<KiokuDB::TypeMap::Resolver> for a collapsing routine based on the class of
+the object.
+
+This lookup is typically performed by C<ref $object>, not using inheritence,
+because a typemap entry that is safe to use with a superclass isn't necessarily
+safe to use with a subclass. If you B<do> want inherited entries, specify
+C<isa_entries>:
+
+    KiokuDB::TypeMap->new(
+        isa_entries => {
+            "My::Object" => KiokuDB::TypeMap::Entry::Naive->new,
+        },
+    );
+
+If no normal (C<ref> keyed) entry is found for an object, the isa entries are
+searched for a superclass of that object. Subclass entries are tried before
+superclass entries. The result of this lookup is cached, so it only happens
+once per class.
+
+=head2 Typemap Entries
+
+If you want to do custom serialization hooks, you can specify hooks to collapse
+your object:
+
+    KiokuDB::TypeMap::Entry::Callback->new(
+        collapse => sub {
+            my $object = shift;
+
+            ...
+
+            return @some_args;
+        },
+        expand => sub {
+            my ( $class, @some_args ) = @_;
+
+            ...
+
+            return $object;
+        },
+    );
+
+These hooks are called as methods on the object to be collapsed.
+
+For instance the L<Path::Class> related typemap entry is:
+
+    KiokuDB::TypeMap::Entry::Callback->new(
+        intrinsic => 1,
+        collapse  => "stringify",
+        expand    => "new",
+    );
+
+=head2 Intrinsic vs. First Class
+
+In L<KiokuDB> every object is normally assigned an ID, and if the object is
+shared by several objects this relationship will be preserved.
+
+However, for some objects this is not the desired behavior. These are objects
+that represent values, like L<DateTime>, L<Path::Class> entries, L<URI>
+objects, etc.
+
+L<KiokuDB> can be asked to collapse such objects B<intrinsicly>, that is
+instead of creating a new L<KiokuDB::Entry> with its own ID for the object, the
+object gets collapsed directly into its parent's structures.
+
+This means that shared references that are collapsed intrinsically will be
+loaded back from the database as two distinct copies, so updates to one will
+not affect the other.
+
+For instance, when we run the following code:
+
+    use Path::Class;
+
+    my $path = file(qw(path to foo));
+
+    $obj_1->file($path);
+
+    $obj_2->file($path);
+
+    $dir->store( $obj_1, $obj_2 );
+
+Then
+
+    refaddr($obj_1->file) == refaddr($obj_2->file)
+
+holds true when inserting, but is no longer the case after C<$obj_1> and
+C<$obj_2> are reloaded from the database.
+
+This behavior is usually more appropriate for objects that aren't mutated, but
+are instead cloned and replaced, and for which creating a first class entry in
+the backend with its own ID is undesired.
 
 =head1 GETTING STARTED WITH BDB
 
