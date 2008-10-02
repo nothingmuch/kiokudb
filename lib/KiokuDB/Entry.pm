@@ -3,6 +3,8 @@
 package KiokuDB::Entry;
 use Moose;
 
+use Moose::Util::TypeConstraints;
+
 use namespace::clean -except => 'meta';
 
 has id => (
@@ -33,8 +35,17 @@ has class => (
     predicate => "has_class",
 );
 
+my %tied = (
+    "H" => "HASH",
+    "S" => "SCALAR",
+    "A" => "ARRAY",
+    "G" => "GLOB",
+);
+
+my %tied_r = reverse %tied;
+
 has tied => (
-    isa => "Str",
+    isa => enum([ values %tied ]),
     is  => "rw",
     predicate => "has_tied",
 );
@@ -70,15 +81,6 @@ sub deletion_entry {
         ( $self->has_backend_data ? ( backend_data => $self->backend_data ) : () ),
     );
 }
-
-my %tied = (
-    "H" => "HASH",
-    "S" => "SCALAR",
-    "A" => "ARRAY",
-    "G" => "GLOB",
-);
-
-my %tied_r = reverse %tied;
 
 sub STORABLE_freeze {
     my ( $self, $cloning ) = @_;
