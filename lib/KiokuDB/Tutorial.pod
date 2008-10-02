@@ -62,7 +62,13 @@ object without needing to predefine anything like tables.
 
 Second, every object in the database has an ID. If you don't choose an ID for
 an object, L<KiokuDB> will assign a UUID instead. The ID is like a primary key
-in a relational database.
+in a relational database. If you want to choose an ID for your object, you can
+do something like:
+
+    $dir->store( homer => $obj );
+
+and C<$obj>'s ID will be C<homer>. If you don't provide an ID a UUID will be
+assigned automatically.
 
 Third, all L<KiokuDB> operations need to be performed within a B<scope>. The
 scope does not apply to a simple example like the above, but becomes necessary
