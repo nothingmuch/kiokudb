@@ -29,6 +29,8 @@ use Tie::RefHash;
 
     has zot => ( is => "rw" );
 
+    has moof => ( is => "rw" );
+
     __PACKAGE__->meta->make_immutable;
 
     package Bar;
@@ -564,5 +566,110 @@ use Tie::RefHash;
             ),
             "first class collapsing of Tie::RefHash",
         );
+    }
+}
+
+{
+    my $bar = Bar->new( blah => "shared" );
+
+    my $foo_1 = Foo->new(
+        zot => "one",
+        bar => $bar,
+    );
+
+    my $foo_2 = Foo->new(
+        zot => "two",
+        bar => $bar,
+    );
+
+    my $foo_3 = Foo->new(
+        zot => "three",
+        bar => $bar,
+    );
+
+    my $foo_4 = Foo->new(
+        zot => "two",
+        bar => $bar,
+        moof => [ Bar->new( blah => "yay" ), $bar ],
+    );
+
+    my $v = KiokuDB::Collapser->new(
+        resolver => KiokuDB::Resolver->new(
+            live_objects => my $lo = KiokuDB::LiveObjects->new
+        ),
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new(),
+        ),
+    );
+
+    my $s = $lo->new_scope;
+
+    {
+        my ( $entries, @ids ) = $v->collapse( objects => [ $bar ], only_new => 1 );
+
+        is( scalar(keys %$entries), 1, "one entry" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is( $entries->{$ids[0]}->class, "Bar", "class" );
+
+        $lo->update_entries( values %$entries );
+    }
+
+    {
+        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_1 ], only_new => 1 );
+
+        is( scalar(keys %$entries), 1, "one entry with only_new" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is( $entries->{$ids[0]}->class, "Foo", "class" );
+
+        $lo->update_entries( values %$entries );
+    }
+
+    {
+        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_2 ] );
+
+        is( scalar(keys %$entries), 2, "two entries" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is( $entries->{$ids[0]}->class, "Foo", "class" );
+
+        $lo->update_entries( values %$entries );
+    }
+
+    {
+        $lo->insert( foo_3 => $foo_3 );
+
+        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_3 ], only_new => 1 );
+
+        is( $ids[0], "foo_3", "custom ID for object" );
+
+        is( scalar(keys %$entries), 1, "one entry" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is( $entries->{$ids[0]}->class, "Foo", "class" );
+
+        $lo->update_entries( values %$entries );
+    }
+
+    {
+        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_4 ], only_new => 1 );
+
+        is( scalar(keys %$entries), 2, "two entries" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is( $entries->{$ids[0]}->class, "Foo", "class" );
+
+        ok( !exists($entries->{$lo->object_to_id($bar)}), "known object doesn't exist in entry set" );
+
+        is_deeply(
+            $entries->{$ids[0]}->data->{moof},
+            [
+                KiokuDB::Reference->new( id => $lo->object_to_id($foo_4->moof->[0]) ),
+                KiokuDB::Reference->new( id => $lo->object_to_id($bar) ),
+            ],
+        );
+
+        $lo->update_entries( values %$entries );
     }
 }

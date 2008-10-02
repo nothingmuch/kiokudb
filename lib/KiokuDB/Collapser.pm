@@ -130,16 +130,6 @@ sub collapse {
         $args{live_objects}  ||= $args{resolver}->live_objects;
     }
 
-    my @ids = $r->objects_to_ids(@$objects);
-    foreach my $id ( @ids ) {
-        unless ( $id ) {
-            foreach my $object ( @$objects ) {
-                next if shift @ids;
-                die { unknown => $object };
-            }
-        }
-    }
-
     if ( $args{shallow} ) {
         $args{only} = set(@$objects);
     }
@@ -149,7 +139,6 @@ sub collapse {
     });
 
     my ( %entries, %fc );
-    @fc{@ids} = ();
 
     $self->_set_entries(\%entries);
     $self->_set_options(\%args);
@@ -158,6 +147,9 @@ sub collapse {
 
     # recurse through the object, accumilating entries
     $self->visit(@$objects);
+
+    my @ids = $args{live_objects}->objects_to_ids(@$objects);
+    @fc{@ids} = ();
 
     # compact UUID space by merging simple non shared structures into a single
     # deep entry
@@ -284,6 +276,10 @@ sub _seen_id {
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
+    if ( my $entry = $self->_options->{only_new} && $self->_options->{live_objects}->object_to_entry($ref) ) {
+        return $self->make_ref( $entry->id => $_[1] );
+    }
+
     if ( my $id = $self->_ref_id($ref) ) {
         if ( !$self->compact and my $only = $self->_options->{only} ) {
             unless ( $only->contains($ref) ) {
@@ -381,6 +377,10 @@ sub visit_object {
 
 sub collapse_first_class {
     my ( $self, $collapse, $object, @entry_args ) = @_;
+
+    if ( my $entry = $self->_options->{only_new} && $self->_options->{live_objects}->object_to_entry($object) ) {
+        return $self->make_ref( $entry->id => $_[1] );
+    }
 
     # Data::Visitor stuff for circular refs
     $self->_register_mapping( $object, $object );

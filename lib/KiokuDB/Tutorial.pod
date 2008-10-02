@@ -244,6 +244,19 @@ This set object is optimized to make most operations defer loading. For
 instance, if you intersect two deferred sets, only the members of the
 intersection set will need to be loaded.
 
+=head1 THE TYPEMAP
+
+All object deconstruction in L<KiokuDB> is done in terms of a typemap.
+
+The typemap contains mappings keyed by class. By default anything that is not
+in the typemap and isn't a L<Moose> object is rejected, because there are very
+few guarantees regarding that object's storability.
+
+Adding new typemap entries is very easy, and allows you to store arbitrary
+objects in L<KiokuDB> as long as you describe how.
+
+# XXX
+
 =head1 GETTING STARTED WITH BDB
 
 So far we've only made use of L<KiokuDB::Backend::Hash>, so while our objects

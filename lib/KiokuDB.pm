@@ -277,23 +277,22 @@ sub insert {
 
     my @objects = $self->_register(@args);
 
-    idhash my %ids;
+    idhash my %entries;
 
-    @ids{@objects} = $self->live_objects->objects_to_ids(@objects);
+    @entries{@objects} = $self->live_objects->objects_to_entries(@objects);
 
-    if ( my @unknown = grep { not $ids{$_} } @objects ) {
-
-        $self->store_objects( root_set => 1, objects => \@unknown );
-
-        # return IDs only for unknown objects
-        if ( defined wantarray ) {
-            idhash my %ret;
-            @ret{@unknown} = $self->live_objects->objects_to_ids(@unknown);
-            return @ret{@objects};
-        }
+    if ( my @in_storage = grep { $entries{$_} } @objects ) {
+        croak "Objects already in database: @in_storage";
     }
 
-    return;
+    $self->store_objects( root_set => 1, only_new => 1, objects => \@objects );
+
+    # return IDs only for unknown objects
+    if ( defined wantarray ) {
+        idhash my %ret;
+        $self->live_objects->objects_to_ids(@objects);
+        return @ret{@objects};
+    }
 }
 
 sub update {
