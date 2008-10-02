@@ -3,6 +3,8 @@
 package KiokuDB::Entry;
 use Moose;
 
+use namespace::clean -except => 'meta';
+
 has id => (
     isa => "Str",
     is  => "rw",
