@@ -23,10 +23,6 @@ coerce ( __PACKAGE__,
             $class->new(%p);
         }
     },
-    from Str => via {
-        Class::MOP::load_class($_);
-        $_->new;
-    },
 );
 
 requires qw(
