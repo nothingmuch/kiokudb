@@ -6,8 +6,8 @@ KiokuDB::Tutorial - Getting started with L<KiokuDB>
 
 =head1 INSTALLATION
 
-L<KiokuDB> depends L<Moose> and a few other modules out of the box, but no
-storage.
+L<KiokuDB> depends on L<Moose> and a few other modules out of the box, but no
+specific storage module.
 
 L<KiokuDB> is a frontend to several backends, much like L<DBI> uses DBDs to
 connect to actual databases.
@@ -15,6 +15,8 @@ connect to actual databases.
 For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
 which is an in memory store, but for production L<KiokuDB::Backend::BDB> is
 the recommended backend.
+
+See below for instructions on getting L<KiokuDB::Backend::BDB> installed.
 
 =head1 CREATING A DIRECTORY
 
