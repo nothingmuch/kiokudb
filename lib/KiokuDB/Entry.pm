@@ -143,7 +143,9 @@ This object provides the meta data for a single storage entry.
 
 =item id
 
-The UUID for the netry
+The UUID for the entry.
+
+If there is no ID then the entry is intrinsic.
 
 =item root
 
@@ -159,7 +161,17 @@ address space.
 
 =item class
 
-If the entry is an object this contains the metaclass of that object.
+If the entry is blessed, this contains the class of that object.
+
+In the future this might be a complex structure for anonymous classes, e.g. the
+class and the runtime roles.
+
+=item tied
+
+One of C<HASH>, C<ARRAY>, C<SCALAR> or C<GLOB>.
+
+C<data> is assumed to be a reference or an intrinsic entry for the object
+driving the tied structure (e.g. the C<tied(%hash)>).
 
 =item prev
 
@@ -175,15 +187,9 @@ successfully are replace the previous one.
 
 Backends can use this to store additional meta data as they see fit.
 
-=back
-
-=head1 TODO
-
-=over 4
-
-=item *
-
-Model tiedness as a specialization of class?
+For instance, this is used in the CouchDB backend to track entry revisions for
+the opportunistic locking, and in L<KiokuDB::Backend::BDB::GIN> to to store
+extracted keys.
 
 =back
 
