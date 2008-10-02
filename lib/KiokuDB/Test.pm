@@ -38,3 +38,45 @@ sub run_all_fixtures {
 __PACKAGE__
 
 __END__
+
+=head1 NAME
+
+KiokuDB::Test - Reusable tests for L<KiokuDB> backend authors.
+
+=head1 SYNOPSIS
+
+    use Test::More 'no_plan';
+
+    use KiokuDB::Test;
+
+    use ok "KiokuDB::Backend::MySpecialBackend";
+
+    my $b = KiokuDB::Backend::MySpecialBackend->new( ... );
+
+    run_all_fixtures( KiokuDB->new( backend => $b ) );
+
+=head1 DESCRIPTION
+
+This module loads and runs L<KiokuDB::Test::Fixture>s against a L<KiokuDB>
+directory instance.
+
+=head1 EXPORTS
+
+=over 4
+
+=item run_all_fixtures $dir
+
+=item run_all_fixtures sub { return $dir }
+
+Runs all the L<KiokuDB::Test::Fixture> objects against your dir.
+
+If you need a new instance of L<KiokuDB> for every fixture, pass in a code
+reference.
+
+This will load all the modules in the L<KiokuDB::Test::Fixture> namespace, and
+run them against your directory.
+
+Fixtures generally check for backend roles and skip unless the backend supports
+that set of features.
+
+=back
