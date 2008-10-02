@@ -13,7 +13,6 @@
         * audrey style indexing?
     * BDB
         * Set::Object/Hash sharding
-        * tight GIN integration
     * RDF
         * generate triples
             * predicates as FQ attr names names
@@ -21,42 +20,22 @@
             * predicates as UUIDs?
             * no collapsing by default
         * SPARQL matching with simple search
-    * Backend::TXN
     * Backend::Locking
-        * TXN::Exclusive
-
-* caching support
-    * entries only? How else do we guarantee no weak ref breakage?
-    * maybe cache full scopes up to a certain limit?
-        * defer destruction of orphanned scopes as long as object count is
-          under a bound?
+        * exclusive write lock TXNs using deferred writes
 
 * typemap
     * default types
+        * per backend
+        * backend_typemap => 0 to avoid inheriting the user typemap and the
+          backend typemap
     * runtime role support
         * json in class field?
         * Reference in class field?
             * fully DB resident metaclass?
 
-* lazy loading:
-    * Set::Object
-        * insert without loading members
-        * remove without loading members
-        * exists without loading members (object already loaded)
-        * set operations produce ID sets
-    * array
-        * tie and lazy fetch
-    * thunk
-        * what are the degenerate cases?
-        * how to break circular dependencies?
-
 * tools
     * consistency checker
     * generic garbage collector
-    * backup/restore
-        * yaml output
-        * storable output
-        * backend to backend
 
 * query
     * http://www.ietf.org/rfc/rfc1960.txt
