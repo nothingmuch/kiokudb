@@ -114,7 +114,7 @@ backends that can perform property based lookup.
 L<KiokuDB::Backend::Query::GIN> is a role for using L<Search::GIN> based
 indexing/querying with backends that do not natively support querying.
 
-=head1 METHODS
+=head1 REQUIRED METHODS
 
 =over 4
 
@@ -179,6 +179,31 @@ If C<delete> does not die the write is assumed to be successful.
 Check for existence of the specified IDs, without retrieving their data.
 
 Returns a list of true or false values.
+
+=back
+
+=head1 METHODS
+
+These methods are provided by the L<KiokuDB::Backend> role, and may be overridden.
+
+=over 4
+
+=item new_from_dsn
+
+Parses the second half of the DSN using C<parse_dsn_params> and instantiates a
+new object using C<new_from_dsn>.
+
+See L<KiokuDB::Util>.
+
+=item new_from_dsn_params @args
+
+Takes DSN parameters and converts them to arguments suitable for C<new>
+
+=item parse_dsn_params $str
+
+The string is split on C<;> to produce arguments. Arguments in the form
+C<foo=bar> are split on C<=> into a key/value pair, and other arguments are
+treated as a boolean key and returned as C<< $arg => 1 >>.
 
 =back
 
