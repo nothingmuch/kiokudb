@@ -197,17 +197,14 @@ sub root_set {
     $entries->filter(sub {[ $linker->load_entries(@$_) ]});
 }
 
-# FIXME remove?
-sub all {
-    my $self = shift;
+sub all_objects {
+    my ( $self ) = @_;
 
-    my $root_set = $self->root_set;
+    my $entries = $self->backend->all_entries;
 
-    if ( wantarray ) {
-        return $root_set->all;
-    } else {
-        return $root_set;
-    }
+    my $linker = $self->linker;
+
+    $entries->filter(sub {[ $linker->load_entries(@$_) ]});
 }
 
 sub grep {
@@ -430,7 +427,6 @@ semantics).
 
 =back
 
-
 =head1 FUNDAMENTAL CONCEPTS
 
 In order to use any persistence framework it is important to understand what it
@@ -474,15 +470,25 @@ L<KiokuDB> uses a number of delegates which do the actual work.
 
 Of these only C<backend> is required, the rest have default definitions.
 
+Additional attributes that are not commonly used are listed in L</"INTERNAL
+ATTRIBUTES">.
+
 =over 4
 
 =item backend
 
 This attribute is required.
 
-L<KiokuDB::Backend>.
+This must be an object that does L<KiokuDB::Backend>.
 
 The backend handles storage and retrieval of entries.
+
+=item typemap
+
+This is an instance L<KiokuDB::TypeMap>.
+
+The typemap contains entries which control how L<KiokuDB::Collapser> and
+L<KiokuDB::Linker> handle different types of objects.
 
 =back
 
@@ -511,6 +517,10 @@ C<jspon:dir=foo;pretty> means c<dir => "foo", pretty => 1>).
 Extra arguments are passed both to the backend constructor, and the C<KiokuDB>
 constructor.
 
+Note that if you need a typemap you still need to pass it in:
+
+    KiokuDB->connect( $dsn, typemap => $typemap );
+
 =item configure $config_file, %args
 
 TODO
@@ -521,6 +531,17 @@ Creates a new directory object.
 
 See L</ATTRIBUTES>
 
+=item new_scope
+
+Creates a new object scope. Handled by C<live_objects>.
+
+The object scope artificially bumps up the reference count of objects to ensure
+that they live at least as long as the scope does.
+
+This ensures that weak references aren't deleted prematurely, and the object
+graph doesn't get corrupted without needing to create circular structures and
+cleaning up leaks manually.
+
 =item lookup @ids
 
 Fetches the objects for the specified IDs from the live object set or from
@@ -529,6 +550,9 @@ storage.
 =item store @objects
 
 Recursively collapses C<@objects> and inserts or updates the entries.
+
+This performs a full update of every reachable object from C<@objects>,
+snapshotting everything.
 
 =item update @objects
 
@@ -540,11 +564,57 @@ It is an error to update an object not in the database.
 
 Inserts objects to the database.
 
-It is an error to insert objects that are already in the database.
+It is an error to insert objects that are already in the database, all elements
+of C<@objects> must be new.
+
+C<@objects> will be collapsed recursively, but the collapsing stops at known
+objects, which will not be updated.
 
 =item delete @objects_or_ids
 
 Deletes the specified objects from the store.
+
+Note that this can cause lookup errors if the object you are deleting is
+referred to by another object, because that link will be broken.
+
+=item txn_do $code, %args
+
+Executes $code within the scope of a transaction.
+
+This requires that the backend supports transactions
+(L<KiokuDB::Backend::TXN>).
+
+Transactions may be nested.
+
+=item search \%proto
+
+=item search @args
+
+Searching requires a backend that supports querying.
+
+The C<\%proto> form is currently unspecified but in the future should provide a
+simple but consistent way of looking objects by attributes.
+
+The second form is backend specific querying, for instance
+L<Search::GIN::Query> objects passed to L<KiokuDB::Backend::BDB::GIN> or
+the generic GIN backend wrapper L<KiokuDB::GIN>.
+
+=item root_set
+
+Returns a L<Data::Stream::Bulk> of all the root objects in the database.
+
+=item all_objects
+
+Returns a L<Data::Stream::Bulk> of all the objects in the database.
+
+=item grep $filter
+
+Returns a L<Data::Stream::Bulk> of the objects in C<root_set> filtered by
+C<$filter>.
+
+=item scan $callback
+
+Iterates the root set calling C<$callback> for each object.
 
 =back
 
@@ -571,25 +641,39 @@ needed.
 
 L<KiokuDB::Collapser>
 
-The collapser prepares objects for storage.
+The collapser prepares objects for storage, by creating L<KiokDB::Entry>
+objects to pass to the backend.
 
 =item linker
 
 L<KiokuDB::Linker>
 
-The linker links retrieved entries into functioning instances.
+The linker links entries into functioning instances, loading necessary
+dependencies from the backend.
 
 =item resolver
 
 L<KiokuDB::Resolver>
 
-The resolver swizzles reference addresses to UIDs and back.
+The resolver swizzles reference addresses to UIDs and back, and handles ID
+creation and assignment.
 
 =item live_objects
 
 L<KiokuDB::LiveObjects>
 
-The live object set keeps track of objects for the linker and the resolver.
+The live object set keeps track of objects and entries for the linker and the
+resolver.
+
+It also creates scope objects that help ensure objects don't garbage collect
+too early (L<KiokuDB::LiveObjects/new_scope>, L<KiokuDB::LiveObjects::Scope),
+and transaction scope objects used by C<txn_do>
+(L<KiokuDB::LiveObjects::TXNScope).
+
+=item typemap_resolver
+
+An instance of L<KiokuDB::TypeMap::Resolver>. Handles actual lookup and
+compilation of typemap entries, using the user typemap.
 
 =back
 
