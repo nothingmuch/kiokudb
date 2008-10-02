@@ -5,6 +5,7 @@ use warnings;
 
 use Test::More 'no_plan';
 use Test::Memory::Cycle;
+use Test::Exception;
 
 use Scalar::Util qw(blessed weaken isweak refaddr);
 
@@ -255,7 +256,9 @@ no_live_objects;
 
     is( $obj->foo, "henry", "stored by insert" );
 
-    is( $dir->insert($obj), undef, "insert returns undef" );
+    throws_ok {
+        $dir->insert($obj)
+    } qr/already in database/i, "insertion of present object is an error";
 }
 
 no_live_objects;
@@ -296,7 +299,9 @@ no_live_objects;
 
         is( $obj->foo, "pancy", "attr changed" );
 
-        is( $dir->insert($obj), undef, "insert returns undef for live object" );
+        throws_ok {
+            $dir->insert($obj)
+        } qr/already in database/i, "insertion of present object is an error";
     }
 
     no_live_objects;

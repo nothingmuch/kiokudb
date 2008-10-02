@@ -289,9 +289,7 @@ sub insert {
 
     # return IDs only for unknown objects
     if ( defined wantarray ) {
-        idhash my %ret;
-        $self->live_objects->objects_to_ids(@objects);
-        return @ret{@objects};
+        return $self->live_objects->objects_to_ids(@objects);
     }
 }
 
