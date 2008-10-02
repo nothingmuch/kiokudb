@@ -31,7 +31,7 @@ KiokuDB::Backend::Scan - Root set iteration
 
 	with qw(KiokuDB::Backend::Scan);
 
-    sub root_entries {
+    sub all_entries {
         my $self = shift;
 
         # return all root set entries
@@ -39,6 +39,39 @@ KiokuDB::Backend::Scan - Root set iteration
     }
 
 =head1 DESCRIPTION
+
+This is a role for iterative scanning of all entries in a backend.
+
+It is used for database backups, and various other tasks.
+
+=head1 REQUIRED METHODS
+
+=over 4
+
+=item all_entries
+
+Should return a L<Data::Stream::Bulk> stream enumerating all entries in the
+database.
+
+=back
+
+=head1 OPTIONAL METHODS
+
+These method have default implementations defined in terms of C<all_entries>
+but maybe overridden if there is a more optimal solution than just filtering
+that stream.
+
+=over 4
+
+=item root_entries
+
+Should return a L<Data::Stream::Bulk> of just the root entries.
+
+=item child_entries
+
+Should return a L<Data::Stream::Bulk> of everything but the root entries.
+
+=back
 
 =cut
 
