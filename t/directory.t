@@ -602,3 +602,17 @@ no_live_objects;
 };
 
 no_live_objects;
+
+{
+    my $s = $dir->new_scope;
+
+    my $id = $dir->store(
+        blah => my $foo = Foo->new( foo => "dancing" ),
+    );
+
+    is( $id, "blah", "custom id" );
+
+    is( $dir->live_objects->object_to_id($foo), "blah", "object to id" );
+};
+
+no_live_objects;

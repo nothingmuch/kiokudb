@@ -230,14 +230,52 @@ sub scan {
     }
 }
 
+sub _parse_args {
+    my ( $self, @args ) = @_;
+
+    my ( %ids, @ret );
+
+    while ( @args ) {
+        my $next = shift @args;
+
+        unless ( ref $next ) {
+            my $obj = shift @args;
+
+            $ids{$next} = $obj;
+
+            push @ret, $obj;
+        } else {
+            push @ret, $next;
+        }
+    }
+
+    return ( \%ids, @ret );
+}
+
+sub _register {
+    my ( $self, @args ) = @_;
+
+    my ( $ids, @objs ) = $self->_parse_args(@args);
+
+    if ( scalar keys %$ids ) {
+        $self->live_objects->insert(%$ids);
+    }
+
+    return @objs;
+}
+
 sub store {
-    my ( $self, @objects ) = @_;
+    my ( $self, @args ) = @_;
+
+    my @objects = $self->_register(@args);
 
     $self->store_objects( root_set => 1, objects => \@objects );
 }
 
 sub insert {
-    my ( $self, @objects ) = @_;
+    my ( $self, @args ) = @_;
+
+    my @objects = $self->_register(@args);
 
     idhash my %ids;
 
@@ -259,7 +297,9 @@ sub insert {
 }
 
 sub update {
-    my ( $self, @objects ) = @_;
+    my ( $self, @args ) = @_;
+
+    my @objects = $self->_register(@args);
 
     my $l = $self->live_objects;
 
