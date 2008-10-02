@@ -281,6 +281,7 @@ sub insert {
 
     @entries{@objects} = $self->live_objects->objects_to_entries(@objects);
 
+    # FIXME make optional?
     if ( my @in_storage = grep { $entries{$_} } @objects ) {
         croak "Objects already in database: @in_storage";
     }
