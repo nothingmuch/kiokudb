@@ -128,3 +128,84 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap - Class to collapsing/expanding logic.
+
+=head1 SYNOPSIS
+
+    use KiokuDB::TypeMap;
+
+    KiokuDB::TypeMap->new(
+        entries => {
+            'Foo' => KiokuDB::TypeMap::Entry::Naive->new,
+        },
+        isa_entries => {
+            'My::Class' => KiokuDB::TypeMap::Entry::Naive->new,
+        },
+        includes => [
+            $typemap_foo,
+            $typemap_bar,
+        ],
+    );
+
+=head1 DESCRIPTION
+
+The L<KiokuDB> typemap maps classes to L<KiokuDB::TypeMap::Entry> objects.
+
+The mapping is by class, and entries can be keyed normally (using
+C<ref $object> equality) or by filtering on C<< $object->isa($class) >>
+(C<isa_entries>).
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item entries
+
+A hash of normal entries.
+
+=item isa_entries
+
+A hash of C<< $object->isa >> based entries.
+
+=item includes
+
+A list of parent typemaps to inherit entries from.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item resolve $class
+
+Given a class returns the C<KiokuDB::TypeMap::Entry> object corresponding tot
+hat class.
+
+Called by L<KiokuDB::TypeMap::Resover>
+
+=item resolve_entry $entry
+
+If the entry is an alias, it will be resolved recursively, and simply returned
+otherwise.
+
+=item all_entries
+
+Returns the merged C<entries> from this typemap and all the included typemaps.
+
+=item all_isa_entries
+
+Returns the merged C<isa_entries> from this typemap and all the included
+typemaps.
+
+=item all_isa_entry_classes
+
+An array reference of all the classes in C<all_isa_entries>, sorted from least
+derived to most derived.
+
+=back
