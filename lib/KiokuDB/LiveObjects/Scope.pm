@@ -67,9 +67,33 @@ KiokuDB::Scope -
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Scope;
+    {
+        my $scope = $dir->new_scope;
+
+        ...
+    }
 
 =head1 DESCRIPTION
+
+Live object scopes exist in order to ensure objects don't die too soon if the
+only other references to them are weak.
+
+When scopes are destroyed the refcounts of the objects they refer to go down,
+and the parent scope is replaced in the live object set.
+
+=head1 METHODS
+
+=over 4
+
+=item push
+
+Adds objects or entries, increasing their reference count.
+
+=item clear
+
+Clears the objects from the scope object.
+
+=back
 
 =cut
 
