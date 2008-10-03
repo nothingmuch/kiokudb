@@ -344,6 +344,19 @@ For instance the L<Path::Class> related typemap entry is:
         expand    => "new",
     );
 
+The C<intrinsic> flag is discussed in the next section.
+
+Another option for typemap entries is L<KiokuDB::TypeMap::Entry::Passthrough>,
+which is appropriate when you know the backend's serialization can handle that
+data type natively.
+
+For example, if your object has a L<Storable> hook which you know is
+appropriate (e.g. contains no sub objects that need to be collapsible) and your
+backend uses L<KiokuDB::Backend::Serialize::Storable>. L<DateTime> is an
+example of a class with such storable hopes:
+
+    'DateTime' => KiokuDB::Backend::Entry::Passthrough->new( intrinsic => 1 )
+
 =head2 Intrinsic vs. First Class
 
 In L<KiokuDB> every object is normally assigned an ID, and if the object is
