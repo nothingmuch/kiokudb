@@ -337,8 +337,104 @@ KiokuDB::LiveObjects - Live object set tracking
 
 =head1 SYNOPSIS
 
+    $live_objects->insert( $entry => $object );
+
+    $live_objects->insert( $id => $object );
+
+    my $id = $live_objects->object_to_id( $object );
+
+    my $obj = $live_objects->id_to_object( $id );
+
+    my $scope = $live_objects->new_scope;
+
 =head1 DESCRIPTION
 
-This object keeps track of the set of live objects and their associated UIDs.
+This object keeps track of the set of live objects, their associated IDs, and
+the storage entries.
+
+=head1 METHODS
+
+=over 4
+
+=item insert
+
+Takes pairs, id or entry as the key, and object as the value, registering the
+objects.
+
+=item insert_entries
+
+Takes entries and registers them without an object.
+
+This is used when prefetching entries, before their objects are actually
+inflated.
+
+=item objects_to_ids
+
+=item object_to_id
+
+Given objects, returns their IDs, or undef for objects which not registered.
+
+=item objects_to_entries
+
+=item object_to_entry
+
+Given objects, find the corresponding entries.
+
+=item update_entries
+
+Given entries, replaces the live entries of the corresponding objects with the
+newly updated ones.
+
+The objects must already be in the live object set.
+
+This method is called on a successful transaction commit.
+
+=item new_scope
+
+Creates a new L<KiokuDB::LiveObjects::Scope>, with the current scope as its
+parent.
+
+=item current_scope
+
+The current L<KiokuDB::LiveObjects::Scope> instance.
+
+This is the scope into which newly registered objects are pushed.
+
+=item new_txn
+
+Creates a new L<KiokuDB::LiveObjects::TXNScope>, with the current txn scope as
+its parent.
+
+=item txn_scope
+
+The current L<KiokuDB::LiveObjects::TXNScope>.
+
+=item clear
+
+Forces a clear of the live object set.
+
+This removes all objects and entries, and can be useful in the case of leaks
+(to prevent false positives on lookups).
+
+Note that this does not actually break the circular structures, so the leak is
+unresolved, but the objects are no longer considered live by the L<KiokuDB> instance.
+
+=item live_entries
+
+=item live_objects
+
+=item live_ids
+
+Enumerates the live entries, objects or ids.
+
+=item rollback_entries
+
+Called by L<KiokuDB::LiveObjects::TXNScope/rollback>.
+
+=item remove
+
+Removes entries from the live object set.
+
+=back
 
 =cut
