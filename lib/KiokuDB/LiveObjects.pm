@@ -380,6 +380,16 @@ Given objects, returns their IDs, or undef for objects which not registered.
 
 Given objects, find the corresponding entries.
 
+=item ids_to_objects
+
+=item id_to_object
+
+Given IDs, find the corresponding objects.
+
+=item ids_to_entries
+
+Given IDs, find the corresponding entries.
+
 =item update_entries
 
 Given entries, replaces the live entries of the corresponding objects with the
