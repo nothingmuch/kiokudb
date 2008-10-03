@@ -58,7 +58,11 @@ KiokuDB::LiveObjects::TXNScope - Transaction scope.
 
 =head1 SYNOPSIS
 
-	use KiokuDB::LiveObjects::TXNScope;
+    $txn_scope = $live_objects->new_txn;
+
+    $txn_scope->update_entries(@updated);
+
+    $txn_scope->rollback;
 
 =head1 DESCRIPTION
 
