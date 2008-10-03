@@ -20,3 +20,39 @@ if ( KiokuDB::SERIAL_IDS() ) {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Role::UUIDs - UUID generation role.
+
+=head1 SYNOPSIS
+
+    with qw(KiokuDB::Role::UUIDs);
+
+=head1 DESCRIPTION
+
+This role provides UUID assignment.
+
+Depending on the C<$SERIAL_IDS> variable being true at compile time, and
+availability of UUID generation module (L<Data::UUID::LibUUID> falling back to
+L<Data::UUID>) an implementation role is selected.
+
+This is used by L<KiokuDB::Resolver>.
+
+=head1 METHODS
+
+=over 4
+
+=item generate_uuid
+
+Create a new UUID
+
+=item uuid_to_string
+
+=item string_to_uuid
+
+Conversion subroutines for completeness.
+
+=cut
