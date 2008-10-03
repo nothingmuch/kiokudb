@@ -388,10 +388,13 @@ KiokuDB - Promiscuous, schema-free, graph based persistence
     );
 
     # takes a snapshot of $some_object
-    my $uid = $d->store( $some_object );
+    my $uuid = $d->store($some_object);
 
-    # ... some other place/time:
-    my $some_object = $d->lookup($uid);
+    # or with a custom ID:
+    $d->store( $id => $some_object ); # $id can be any string
+
+    # retrieve by ID
+    my $some_object = $d->lookup($uuid);
 
 =head1 DESCRIPTION
 
@@ -676,6 +679,50 @@ An instance of L<KiokuDB::TypeMap::Resolver>. Handles actual lookup and
 compilation of typemap entries, using the user typemap.
 
 =back
+
+=head1 SEE ALSO
+
+=head2 Prior Art on the CPAN
+
+=over 4
+
+=item L<Pixie>
+
+=item L<DBM::Deep>
+
+=item L<OOPS>
+
+=item L<Tangram>
+
+=item L<DBIx::Class>
+
+Polymorphic retrieval is possible with L<DBIx::Class::DynamicSubclass>
+
+=item L<Fey::ORM>
+
+=item L<MooseX::Storage>
+
+=back
+
+=head2 Links
+
+L<http://en.wikipedia.org/wiki/Navigational_database>
+
+L<http://www.postgresql.org/docs/8.2/static/gin-extensibility.html>
+
+L<http://www.zope.org/Documentation/How-To/ZCatalogTutorial>
+
+L<http://www.couchdb.org>
+
+L<http://sitepen.com/labs/persevere.php>, L<http://code.google.com/p/persevere-framework/>
+
+L<http://www.jspon.org/>
+
+L<http://www.zope.org/Products/StandaloneZODB>
+
+L<http://en.wikipedia.org/wiki/Language_Integrated_Query>
+
+L<http://en.wikipedia.org/wiki/OQL>
 
 =head1 VERSION CONTROL
 
