@@ -336,9 +336,9 @@ your object:
 
 These hooks are called as methods on the object to be collapsed.
 
-For instance the L<Path::Class> related typemap entry is:
+For instance the L<Path::Class> related typemap ISA entry is:
 
-    KiokuDB::TypeMap::Entry::Callback->new(
+    'Path::Class::Entity' => KiokuDB::TypeMap::Entry::Callback->new(
         intrinsic => 1,
         collapse  => "stringify",
         expand    => "new",
