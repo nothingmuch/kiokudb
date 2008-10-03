@@ -54,13 +54,40 @@ __END__
 
 =head1 NAME
 
-KiokuDB::LiveObjects::TXNScope - 
+KiokuDB::LiveObjects::TXNScope - Transaction scope.
 
 =head1 SYNOPSIS
 
 	use KiokuDB::LiveObjects::TXNScope;
 
 =head1 DESCRIPTION
+
+This is an auxillary class used by transaction scoping to roll back entrries
+updated during a transaction when it is aborted.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item entries
+
+An ordered log of updated entries.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item update_entries
+
+Called by L<KiokuDB::LiveObjects/update_entries>. Adds entries to C<entries>.
+
+=item rollback
+
+Calls C<KiokuDB::LiveObjects/rollback_entries> with all the recorded entries.
+
+=back
 
 =cut
 
