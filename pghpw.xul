@@ -657,10 +657,10 @@ Prior
 Art
 ----
 AllegroCache Tangram Pixie
-DBIx::Class OOPS MLDBM
-LINQ DBM::Deep Postgres
-JSPON Prolog Mnesia RDF
-BKNR db4o LDAP bddbddb
+DBIx::Class OOPS Postgres
+LINQ Zope/ZCatalog MLDBM
+DBM::Deep JSPON Prolog
+RDF BKNR db4o LDAP bddbddb
 MooseX::Storage::Directory
 ----
 Pixie
