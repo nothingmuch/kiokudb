@@ -14,7 +14,11 @@ Graph
 “transparent
 persistence”
 ----
-    my $id = $k->store($object)
+    my $homer = Person->new(
+        name => "Homer Simpson",
+    );
+    
+    my $id = $k->store( $homer );
 ----
 A DB
 for OO
