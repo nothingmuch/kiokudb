@@ -5,6 +5,20 @@ If You Constrict Usage
 100 Times Everyday.
 Malarkey? or Effective Way?
 ----
+KiokuDB
+----
+Persistent
+Object
+Graph
+----
+“transparent
+persistence”
+----
+    my $id = $k->store($object)
+----
+A DB
+for OO
+----
 I ♥
 OO
 ----
@@ -215,6 +229,15 @@ opaque
 no
 schema
 ----
+DBMS
+----
+without
+SQL
+----
+☺
+----
+choices
+----
 ⒈
 ----
 CouchDB
@@ -263,16 +286,11 @@ syncing
 ----
 ⒋
 ----
-Ontology
-----
-“triples”
+Triple
+stores
 ----
 graphd
-----
 RDF
-----
-many
-impls
 ----
 ⒌
 ----
@@ -282,29 +300,7 @@ XPath
 XQuery
 XSLT
 ----
-⒍
-----
-BerkeleyDB
-----
-DIY
-----
-does the
-hard stuff
-----
-TXNs
-----
-ACID
-----
-fast
-----
 ⎙
-----
-RDBMS
-----
-without
-SQL
-----
-☺
 ----
 $object
 =
@@ -663,48 +659,6 @@ LINQ Zope/ZCatalog MLDBM
 DBM::Deep JSPON Prolog
 RDF BKNR db4o LDAP bddbddb
 MooseX::Storage::Directory
-----
-Pixie
-----
-no
-queries
-----
-prioritizes
-transparency
-----
-mostly
-safe
-----
-but not
-always
-----
-weak
-hooks
-----
-OOPS
-----
-ties
-----
-breaks
-encapsulation
-----
-'nuff
-said
-----
-SQL
-based
-----
-DBM::Deep
-----
-ties
-----
-no
-queries
-----
-ORMs
-----
-SQL
-based
 ----
 Future
 Directions
