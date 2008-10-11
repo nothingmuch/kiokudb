@@ -375,7 +375,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB - Promiscuous, schema-free, graph based persistence
+KiokuDB - Object Graph storage engine
 
 =head1 SYNOPSIS
 
@@ -395,6 +395,11 @@ KiokuDB - Promiscuous, schema-free, graph based persistence
 
     # retrieve by ID
     my $some_object = $d->lookup($uuid);
+
+=head1 ALPHA WARNING
+
+L<KiokuDB> is still in its infancy. No fundamental changes are expected, but
+nevertheless backwards compatibility is not yet guaranteed.
 
 =head1 DESCRIPTION
 
