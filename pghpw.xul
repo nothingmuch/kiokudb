@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet href="chrome://global/skin/" type="text/css"?><?xml-stylesheet href="takahashi.css" type="text/css"?><page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" id="presentation" xmlns:html="http:/www.w3.org/1999/xhtml" orient="vertical" onkeypress="Presentation.onKeyPress(event);">
 <html:textarea id="builtinCode" style="visibility: collapse"><![CDATA[
-How to Goodbye Relational:
+How to Good-Bye Relational:
 If You Constrict Usage
 100 Times Everyday.
 Malarkey? or Effective Way?
@@ -224,7 +224,7 @@ in
 Erlang
 ----
 ZOMGWTF
-BBQ!!1one!
+BBQ!!!1one!1
 ----
 IDs
 ----
@@ -284,7 +284,7 @@ XSLT
 ----
 ⒍
 ----
-BerkelyDB
+BerkeleyDB
 ----
 DIY
 ----
@@ -335,8 +335,8 @@ languages
 … OO
 languages
 ----
-Perl is
-too flexible
+not
+Perl
 ----
 until
 2006
@@ -357,9 +357,9 @@ Moose
 ----
 KiokuDB
 ----
-    my $id = $k->store($obj);
+    my $id = $k->store($homer);
 ----
-    my $person = $k->lookup($id);
+    my $homer = $k->lookup($id);
 ----
 UID
 based
@@ -368,11 +368,11 @@ Persistent
 Object
 Graph
 ----
-    $person->spouse
+    my $marge = $homer->spouse
 ----
-    $person->spouse->spouse
-              ==
-           $person
+    refaddr($homer->spouse->spouse)
+                  ==
+           refaddr($homer)
 ----
 lazy
 sets
@@ -382,7 +382,7 @@ sets
         is  => "rw",
     );
 ----
-    $person->children->members
+    $homer->children->members
 ----
 like
 Set::Object
@@ -391,7 +391,7 @@ lazy
 attributes
 ----
     has spouse => (
-        traits => "KiokuDB::Lazy",
+        traits => [ "KiokuDB::Lazy" ],
         …
     );
 ----
@@ -465,9 +465,11 @@ entry?
 “simple
 data”
 ----
-no cycles
+no
+cycles
 ----
-refs by ID
+refs
+by ID
 ----
 how?
 ----
@@ -485,8 +487,7 @@ predictable
 everything
 else?
 ----
-that's the
-hard part
+harder
 ----
 KiokuDB::TypeMap
 ----
@@ -583,16 +584,17 @@ encapsulation
 ----
 backend
 ----
-e.g. CouchDB
+e.g.
+CouchDB
 views
 ----
 breaks
 encapsulation
 ----
+opt in
+----
 you say
 how
-----
-opt in
 ----
 ⌖
 ----
@@ -667,7 +669,7 @@ Pixie
 no
 queries
 ----
-prioritises
+prioritizes
 transparency
 ----
 mostly
@@ -707,11 +709,11 @@ based
 Future
 Directions
 ----
-Persistent
-Metaclass
+persistence
+metaclass
 ----
 joint effort
-with DBIx::Class
+with DBIC
 ----
     $obj->id;
     $obj->name("bar");
