@@ -32,6 +32,10 @@ has root_only => (
     default => 0,
 );
 
+has '+extract' => (
+    required => 0,
+);
+
 sub _open_secondary {
     my ( $self, @args ) = @_;
 
@@ -58,12 +62,14 @@ sub _open_secondary {
 before insert => sub {
     my ( $self, @entries ) = @_;
 
-    foreach my $entry ( @entries ) {
-        if ( $entry->deleted || !$entry->has_object || ( !$entry->root && $self->root_only ) ) {
-            $entry->clear_backend_data;
-        } else {
-            my $d = $entry->backend_data || $entry->backend_data({});
-            $d->{keys} = [ $self->extract_values( $entry->object, entry => $entry ) ];
+    if ( $self->extract ) {
+        foreach my $entry ( @entries ) {
+            if ( $entry->deleted || !$entry->has_object || ( !$entry->root && $self->root_only ) ) {
+                $entry->clear_backend_data;
+            } else {
+                my $d = $entry->backend_data || $entry->backend_data({});
+                $d->{keys} = [ $self->extract_values( $entry->object, entry => $entry ) ];
+            }
         }
     }
 };
