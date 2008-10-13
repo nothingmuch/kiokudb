@@ -12,6 +12,7 @@ WriteMakefile(
     INSTALLDIRS  => 'site',
     SIGN         => 1,
     PL_FILES     => { },
+    EXE_FILES    => [ grep { /\w$/ } glob("bin/*") ],
     PREREQ_PM    => {
         'Moose' => 0,
         'MooseX::AttributeHelpers' => 0,
