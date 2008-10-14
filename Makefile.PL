@@ -48,10 +48,11 @@ WriteMakefile(
         'BerkeleyDB::Manager' => 0,
 
         # live objects
+        ( eval { require Variable::Magic } ? ( "Variable::Magic" => "0.24" ) : () ),
         'Hash::Util::FieldHash::Compat' => 0,
         'Scope::Guard' => 0,
 
-        'Set::Object' => 0,
+        'Set::Object' => '1.26',
 
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
