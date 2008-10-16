@@ -35,18 +35,6 @@ WriteMakefile(
         # scanning and searching
         'Data::Stream::Bulk' => "0.03",
 
-        # JSPON backend
-        'JSON' => 0,
-        'File::NFSLock' => 0,
-        'IO::AtomicFile' => 0,
-        'Path::Class' => 0,
-        'MooseX::Types::Path::Class' => 0,
-
-        # CouchDB backend
-        'Net::CouchDb' => 0,
-
-        'BerkeleyDB::Manager' => 0,
-
         # live objects
         ( eval { require Variable::Magic } ? ( "Variable::Magic" => "0.24" ) : () ),
         'Hash::Util::FieldHash::Compat' => 0,
