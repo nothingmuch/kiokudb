@@ -55,13 +55,32 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Set::Easy - 
+KiokuDB::Util - Utility functions for working with KiokuDB
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Set::Easy;
+	use KiokuDB::Set::Easy qw(set weak_set);
+
+	my $set = set(@objects); # create a transient set
+
+	my $weak = weak_set(@objects); # to avoid circular refs
 
 =head1 DESCRIPTION
+
+This module provides various helper functions for working with L<KiokuDB>.
+
+=head1 EXPORTS
+
+=over 4
+
+=item set
+
+=item weak_set
+
+Instantiate a L<Set::Object> or L<Set::Object::Weak> from the arguments, and
+then creates a L<KiokuDB::Set::Transient> with the result.
+
+=back
 
 =cut
 
