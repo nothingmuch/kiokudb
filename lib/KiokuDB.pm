@@ -731,7 +731,8 @@ L<http://en.wikipedia.org/wiki/OQL>
 
 =head1 VERSION CONTROL
 
-L<http://code2.0beta.co.uk/moose/svn/>. Ask on #moose for commit bits.
+KiokuDB is maintained using Git. Information about the repository is available
+on L<http://www.iinteractive.com/kiokudb/>
 
 =head1 AUTHOR
 
