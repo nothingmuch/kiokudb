@@ -7,20 +7,22 @@
                 font-family:
                 "Baskerville"
                 "Didot"
-                "Georgia";
-                line-height: 150%;
+                "Cochin"
+                "Georgia"
+                serif;
+                line-height: 200%;
             }
 
             h1, h2 {
+                font-weight: normal;
                 text-align: center;
-                font-size: 20pt;
-                margin: 1.5em;
+                font-size: 24pt;
+                margin: 2em;
             }
 
             h3 {
-                text-decoration: underline;
                 font-weight: normal;
-                font-size: 14pt;
+                font-size: 16pt;
             }
 
             p {
@@ -32,13 +34,39 @@
 
             #main {
                 margin: auto;
-                width: 40em;
+                width: 46em;
             }
+
+            a {
+                color: #33e;
+                text-decoration: none;
+            }
+
+            a:visited {
+                color: #77f;
+            }
+
+            ul {
+                list-style-type: square;
+            }
+
+            li {
+                margin-left: 1.5em;
+                padding-left: 1em;
+            }
+
+            hr {
+                width: 33%;
+                border: none;
+                margin-top: 4em;
+                margin-bottom: 2em;
+            }
+
         </style>
     </head>
     <body>
         <h1>
-            <object data="images/logo_plain.svg" codetype="image/svg-xml" width="425" height="185">
+            <object data="images/logo_plain.svg" codetype="image/svg-xml" width="400" height="173">
                 <img src="images/logo.png" />
             </object>
         </h1>
@@ -60,12 +88,17 @@
             as <a href="http://www.oracle.com/database/berkeley-db/index.html">Berkeley
             DB</a> for high performance and robust transactional storage.</p>
 
+            <hr/>
+
             <h3>Resources</h3>
             <ul>
                 <li><a href="http://search.cpan.org/perldoc?KiokuDB::Tutorial">KiokuDB::Tutorial</a></li>
                 <li><a href="talks/pghpw.xul">Pittsburgh Perl Workshop talk</a> (XUL, requires Firefox)</li>
                 <li><a href="irc://irc.perl.org/#kiokudb">#kiokudb</a> and <a href="irc://irc.perl.org/#moose">#moose</a> on <a href="http://irc.perl.org/">irc.perl.org</a></li>
             </ul>
+
+            <hr/>
+
             <h3>Download</h3>
             <ul>
                 <li>Released versions are on the <a href="http://search.cpan.org/dist/KiokuDB">CPAN</a></li>
