@@ -63,14 +63,14 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Scope - 
+KiokuDB::LiveObjects::Scope - Scope helper object
 
 =head1 SYNOPSIS
 
     {
         my $scope = $dir->new_scope;
 
-        ...
+        ... do work on $dir ...
     }
 
 =head1 DESCRIPTION
