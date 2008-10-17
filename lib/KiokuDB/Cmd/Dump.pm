@@ -23,6 +23,7 @@ has dsn => (
 );
 
 has backend => (
+    traits => [qw(NoGetopt)],
     does => "KiokuDB::Backend::Scan",
     is   => "ro",
     lazy_build => 1,
@@ -31,7 +32,7 @@ has backend => (
 sub _build_backend {
     my $self = shift;
 
-    my $dsn = $self->dsn || croak("'dsn' or 'backend' is required");
+    my $dsn = $self->dsn || croak("Either 'dsn' or 'backend' is required");
 
     $self->v("Connecting to DSN $dsn...");
 
@@ -50,6 +51,7 @@ has format => (
 );
 
 has formatter => (
+    traits => [qw(NoGetopt)],
     isa => "CodeRef",
     is  => "ro",
     lazy_build => 1,
@@ -100,6 +102,7 @@ has backup_ext => (
 );
 
 has output_handle => (
+    traits => [qw(NoGetopt)],
     isa => "FileHandle",
     is  => "ro",
     lazy_build => 1,
