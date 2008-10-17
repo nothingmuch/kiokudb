@@ -27,10 +27,12 @@ has dsn => (
 );
 
 has _txn => (
+    traits => [qw(NoGetopt)],
     is => "rw",
 );
 
 has backend => (
+    traits => [qw(NoGetopt)],
     does => "KiokuDB::Backend",
     is   => "ro",
     lazy_build => 1,
@@ -76,6 +78,7 @@ has format => (
 );
 
 has formatter => (
+    traits => [qw(NoGetopt)],
     isa => "CodeRef",
     is  => "ro",
     lazy_build => 1,
@@ -138,6 +141,7 @@ has file => (
 );
 
 has input_handle => (
+    traits => [qw(NoGetopt)],
     isa => "FileHandle",
     is  => "ro",
     lazy_build => 1,
