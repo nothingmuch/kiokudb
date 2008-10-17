@@ -73,7 +73,16 @@ KiokuDB::Backend - Backend interface role
     package KiokuDB::Backend::Foo;
     use Moose;
 
-    with qw(KiokuDB::Backend);
+    # load the core api and additional interfaces based on backend capabilities
+    with qw(
+        KiokuDB::Backend
+
+        KiokuDB::Backend::TXN
+        KiokuDB::Backend::Clear
+        KiokuDB::Backend::Scan
+        KiokuDB::Backend::UnicodeSafe
+        KiokuDB::Backend::BinarySafe
+    );
 
     sub insert { ... }
 
@@ -82,6 +91,10 @@ KiokuDB::Backend - Backend interface role
     sub delete { ... }
 
     sub exists { ... }
+
+
+
+    # use the backend like this:
 
     my $dir = KiokuDB->new(
         backend => KiokuDB::Backend::Foo->new( );
@@ -200,6 +213,45 @@ Takes DSN parameters and converts them to arguments suitable for C<new>
 The string is split on C<;> to produce arguments. Arguments in the form
 C<foo=bar> are split on C<=> into a key/value pair, and other arguments are
 treated as a boolean key and returned as C<< $arg => 1 >>.
+
+=back
+
+=head1 ADDITIONAL INTERFACES
+
+Your backend may include more roles, based on its capabilities.
+
+=over 4
+
+=item L<KiokuDB::Backend::Serialize>
+
+=item L<KiokuDB::Backend::Serialize::Storable>
+
+=item L<KiokuDB::Backend::Serialize::JSPON>
+
+For the actual serialization of entries, there are a number of serialization
+roles.
+
+=item L<KiokuDB::Backend::BinarySafe>
+
+=item L<KiokuDB::Backend::UnicodeSafe>
+
+If your serialization is able to store arbitrary binary data and/or unicode
+strings, these informational roles should be included.
+
+=item L<KiokuDB::Backend::TXN>
+
+If your storage supports nested transactions (C<txn_begin>, C<txn_commit> etc)
+this role provides the api to expose that functionality to the high level
+L<KiokuDB> api.
+
+=item L<KiokuDB::Backend::Query>
+
+=item L<KiokuDB::Backend::Query::GIN>
+
+If your backend supports querying of some sort, these are the roles to include.
+
+The querying API uses backend specific lookups to fetch entries, which
+L<KiokuDB> will then relink into result objects.
 
 =back
 
