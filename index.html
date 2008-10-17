@@ -1,24 +1,72 @@
 <html>
 	<head>
 		<title>KiokuDB</title>
+		<style>
+			body {
+				padding: 1em;
+				font-family:
+				"Baskerville"
+				"Didot"
+				"Georgia";
+				line-height: 150%;
+			}
+
+			h1, h2 {
+				text-align: center;
+				font-size: 20pt;
+				margin: 1.5em;
+			}
+
+			h3 {
+				text-decoration: underline;
+				font-weight: normal;
+				font-size: 14pt;
+			}
+
+			p {
+				font-size: 14pt;
+				margin-top: 2em;
+				margin-bottom: 2em;
+				text-align: justify;
+			}
+
+			#main {
+				margin: auto;
+				width: 40em;
+			}
+		</style>
 	</head>
 	<body>
-		<img src="images/logo.png" />
-		<h1>KiokuDB</h1>
-		<h2>Persistent Object Graphs for Perl</h2>
-		<p>
-			KiokuDB is a <a href="http://moose.perl.org">Moose</a> based
-			frontend for various document databases.
-		</p>
-		<h2>Resources</h2>
-		<ul>
-			<li><a href="http://search.cpan.org/perldoc?KiokuDB::Tutorial">Tutorial</a></li>
-			<li><a href="talks/pghpw.xul">Pittsburgh Perl Workshop talk</a> (requires Firefox)</li>
-		</ul>
-		<h2>Download</h2>
-		<ul>
-			<li><a href="http://search.cpan.org/dist/KiokuDB">CPAN</a></li>
-			<li><a href="http://github.com/nothingmuch/kiokudb/tree/kiokudb">GitHub</a></li>
-		</ul>
+		<h1><img src="images/logo.png" /></h1>
+		<h2>KiokuDB: Persistent Object Graphs for Perl</h2>
+		<div id="main">
+			<p>KiokuDB is a <a href="http://moose.perl.org">Moose</a> based
+			OO frontend for various document oriented storage backends.</p>
+
+			<p> KiokuDB focuses on <em>predictability</em> and
+			<em>transparency</em>, allowing noninvasive persistence, while
+			minimising the surprises that come with naive serialization
+			approaches.</p>
+
+			<p>The project builds on <a href="http://moose.perl.org">Moose</a>'s
+			metaprogramming for runtime support, <a
+				href="http://search.cpan.org/perldoc?Search::GIN">Search::GIN</a>'s
+			indexing and querying facilities, and preexisting technologies such
+			as <a
+				href="http://www.oracle.com/database/berkeley-db/index.html">Berkeley
+				DB</a> for high performance and robust transactional storage.</p>
+
+			<h3>Resources</h3>
+			<ul>
+				<li><a href="http://search.cpan.org/perldoc?KiokuDB::Tutorial">KiokuDB::Tutorial</a></li>
+				<li><a href="talks/pghpw.xul">Pittsburgh Perl Workshop talk</a> (XUL, requires Firefox)</li>
+				<li><a href="irc://irc.perl.org/#kiokudb">#kiokudb</a> and <a href="irc://irc.perl.org/#moose">#moose</a> on <a href="http://irc.perl.org/">irc.perl.org</a></li>
+			</ul>
+			<h3>Download</h3>
+			<ul>
+				<li>Released versions are on the <a href="http://search.cpan.org/dist/KiokuDB">CPAN</a></li>
+				<li>The git repository on <a href="http://github.com/nothingmuch/kiokudb/tree/kiokudb">GitHub</a> (for now). The core and backends are in various branches.</li>
+			</ul>
+		</div>
 	</body>
 </html>
