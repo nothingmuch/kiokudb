@@ -9,14 +9,30 @@ use Storable qw(nfreeze thaw);
 
 use ok 'KiokuDB::Reference';
 
-my $ref = KiokuDB::Reference->new(
-    id => "foo",
-    weak => 1,
-);
+foreach my $id (
+    "foo",
+    123,
+    "la-la",
+    "3B19C598-E873-4C65-80BA-0D1C4E961DC9",
+    "9170dc3d7a22403e11ff4c8aa1cd14d20c0ebf65",
+    pack("H*", "9170dc3d7a22403e11ff4c8aa1cd14d20c0ebf65"),
+    "foo,bar",
+) {
+    foreach my $weak ( 1, 0, '', undef ) {
+        my $ref = KiokuDB::Reference->new(
+            id => $id,
+            defined($weak) ? ( weak => $weak ) : (),
+        );
 
-my $f = nfreeze($ref);
+        is( $ref->id, $id, "ID in constructor" );
 
-my $copy = thaw($f);
+        my $f = nfreeze($ref);
 
-is_deeply( $copy, $ref );
+        isa_ok( my $copy = thaw($f), "KiokuDB::Reference", "thaw" );
 
+        local $TODO = "broken storable hook" if $id =~ /,/;
+        is( $copy->id, $id, "ID after thaw" );
+
+        is_deeply( $copy, $ref, "eq deeply" );
+    }
+}
