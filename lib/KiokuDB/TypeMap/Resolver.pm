@@ -19,6 +19,12 @@ has [qw(_collapse _expand)] => (
     default => sub { return {} },
 );
 
+sub resolved {
+    my ( $self, $class ) = @_;
+
+    exists $self->_collapse->{$class};
+}
+
 sub collapse_method {
     my ( $self, $class ) = @_;
 
