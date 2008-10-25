@@ -124,19 +124,3 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
-
-=pod
-
-=head1 NAME
-
-KiokuDB::TypeMap::Entry::Set - 
-
-=head1 SYNOPSIS
-
-	use KiokuDB::TypeMap::Entry::Set;
-
-=head1 DESCRIPTION
-
-=cut
-
-

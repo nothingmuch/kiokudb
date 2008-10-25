@@ -166,14 +166,18 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Set::Deferred - 
+KiokuDB::Set::Deferred - Implementation of deferred set.
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Set::Deferred;
+    # created automatically when sets are loaded from the database
 
 =head1 DESCRIPTION
 
-=cut
+This class implements deferred sets conforming to the L<KiokuDB::Set> API.
 
+Do not use this class directly, instead use L<KiokuDB::Set::Transient> or
+L<KiokuDB::Util/set> to create sets.
+
+=cut
 

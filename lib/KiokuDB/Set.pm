@@ -143,20 +143,51 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Set - 
+KiokuDB::Set - L<Set::Object> wrapper for KiokuDB with lazy loading.
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Set;
+	use KiokuDB::Util qw(set);
 
-    my $set = KiokuDB::Set->new( ;
+    my $set = set(); # KiokuDB::Set::Transient
 
-    $set->insert($id);
+    $set->insert($object);
 
-    $set->insert( 
+    warn $set->size;
+
+    my $id = $dir->store( $set );
 
 =head1 DESCRIPTION
 
-=cut
+This role defines the API implemented by L<KiokuDB::Set::Transient>,
+L<KiokuDB::Set::Deferred>, and L<KiokuDB::Set::Loaded>.
 
+These three classes are modeled after L<Set::Object>, but have implementation
+details specific to L<KiokuDB>.
+
+=head2 Transient Sets
+
+Transient sets are in memory, they are sets that have been constructed by the
+user for subsequent insertion into storage.
+
+When you create a new set, this is what you should use.
+
+L<KiokuDB::Util> provides convenience functions (L<KiokuDB::Util/set> and
+L<KiokuDB::Util/weak_set>) to construct transient sets concisely.
+
+=head2 Deferred Sets
+
+When a set is loaded from the backend, it is deferred by default. This means
+that the objects inside the set are not yet loaded, and will be fetched only as
+needed.
+
+When set members are needed, the set is upgraded in place into a
+L<KiokuDB::Set::Loaded> object.
+
+=head2 Loaded Sets
+
+This is the result of vivifying the members of a deferred set, and is similar
+to transient sets in implemenation.
+
+=cut
 

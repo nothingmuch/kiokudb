@@ -33,13 +33,16 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Set::Loaded - 
+KiokuDB::Set::Loaded - Implementation of loaded sets
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Set::Loaded;
+    # created automatically when deferred sets are vivified
 
 =head1 DESCRIPTION
+
+This is the implementation of a loaded set. A L<KiokuDB::Set::Deferred>
+automatically upgrades into a loaded set when its set members are retrieved.
 
 =cut
 

@@ -14,19 +14,3 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
-
-=pod
-
-=head1 NAME
-
-KiokuDB::Set::Stored - 
-
-=head1 SYNOPSIS
-
-	use KiokuDB::Set::Stored;
-
-=head1 DESCRIPTION
-
-=cut
-
-
