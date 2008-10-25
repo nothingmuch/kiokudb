@@ -12,15 +12,13 @@ use ok 'KiokuDB::Backend::Hash';
 
 {
     package Simple;
-    use Moose;
+    use KiokuDB::Class;
 
-    ::lives_ok {
-        has foo => (
-            traits => [qw(KiokuDB::Lazy)],
-            isa    => __PACKAGE__,
-            is     => "ro",
-        );
-    } "define attribute";
+    has foo => (
+        traits => [qw(KiokuDB::Lazy)],
+        isa    => __PACKAGE__,
+        is     => "ro",
+    );
 }
 
 ok( exists($INC{"KiokuDB/Meta/Attribute/Lazy.pm"}), "KiokuDB::Meta::Attribute::Lazy loaded" );
@@ -51,15 +49,11 @@ my $dir = KiokuDB->new( backend => KiokuDB::Backend::Hash->new );
 
     my $bar = $dir->lookup("bar");
 
-    {
-        local $TODO = "lazy loading not yet implemented";
-
-        is_deeply(
-            [ $dir->live_objects->live_objects ],
-            [ $bar ],
-            "only bar is live",
-        );
-    }
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [ $bar ],
+        "only bar is live",
+    );
 
     my $foo = $bar->foo;
 

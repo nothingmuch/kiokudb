@@ -43,8 +43,6 @@ KiokuDB::Meta::Attribute::Lazy - Trait for lazy loaded attributes
 
 =head1 DESCRIPTION
 
-B<TODO> This is not yet implemented, but is provided for future compatibility.
-
 This L<Moose::Meta::Attribute> trait provides lazy loading on a per field basis
 for objects stored in L<KiokuDB>.
 
