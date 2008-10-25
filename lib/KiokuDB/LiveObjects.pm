@@ -306,7 +306,8 @@ sub clear {
         }
     }
 
-    foreach my $guard ( grep { $_ } values %{ $self->_entry_objects } ) {
+    foreach my $guard ( values %{ $self->_entry_objects } ) {
+        next unless $guard;
         $guard->dismiss;
     }
 
