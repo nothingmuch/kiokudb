@@ -47,3 +47,24 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Thunk - Internal only placeholder for deferred objects
+
+=head1 SYNOPSIS
+
+    # do not use directly,
+    # KiokuDB::Meta::Attribute::Lazy, KiokuDB::Meta::Instance and
+    # KiokuDB::TypeMap::Entry::MOP will do the actual thunking of data so that
+    # the thunk will never be visible unless you break encapsulation.
+
+=head1 DESCRIPTION
+
+This is an internal placeholder object. It will be used on attributes that you
+mark with L<KiokuDB::Meta::Attribute::Lazy> automatically, and should never be
+visible to the user because L<KiokuDB::Meta::Instance> will automatically
+inflate it before it's even seen by the accessor's code.
+
