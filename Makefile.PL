@@ -45,6 +45,7 @@ WriteMakefile(
 
         'Set::Object' => '1.26',
 
+        'Module::Pluggable::Object' => 0,
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
         'Test::Memory::Cycle' => 0,
