@@ -11,7 +11,7 @@ use namespace::clean -except => 'meta';
 #KiokuDB::Backend::Serialize::Storable
 #KiokuDB::Backend::Serialize::Null
 with qw(
-    KiokuDB::Backend::Serialize::Storable
+    KiokuDB::Backend::Serialize::Memory
     KiokuDB::Backend
     KiokuDB::Backend::Query::Simple::Linear
     KiokuDB::Backend::Scan
