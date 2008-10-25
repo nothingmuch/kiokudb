@@ -14,7 +14,7 @@ use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB::Role::ID';
 
-use MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize;
+use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize };
 
 # FIXME lazy trait
 
@@ -26,7 +26,9 @@ use MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize;
 
     has bar => ( is => "rw", isa => "Bar" );
 
-    has trash => ( is => "ro", traits => [qw(DoNotSerialize)], lazy => 1, default => "lala" );
+    if ( ::HAVE_MX_STORAGE ) {
+        has trash => ( is => "ro", traits => [qw(DoNotSerialize)], lazy => 1, default => "lala" );
+    }
 
     package Bar;
     use Moose;
@@ -42,7 +44,7 @@ use MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize;
 
 my $obj = Foo->new( foo => "HALLO" );
 
-is( $obj->trash, "lala", "trash attr" );
+$obj->trash if HAVE_MX_STORAGE;
 
 my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai", id => "the_bar" ) );
 
@@ -85,8 +87,6 @@ foreach my $intrinsic ( 1, 0 ) {
         ok( !blessed($entry->data), "entry data is not blessed" );
         is( reftype($entry->data), reftype($obj), "reftype" );
 
-        ok( !exists($entry->data->{trash}), "DoNotSerialize trait honored" );
-
         my $sl = $l->live_objects->new_scope;
 
         my $expanded = $l->expand_object($entry);
@@ -94,7 +94,13 @@ foreach my $intrinsic ( 1, 0 ) {
         isa_ok( $expanded, "Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
         isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
-        is( $expanded->trash, "lala", "trash attr" );
+
+        SKIP: {
+            skip "MooseX::Storage required for DoNotSerialize test", 2 unless HAVE_MX_STORAGE;
+            ok( !exists($entry->data->{trash}), "DoNotSerialize trait honored" );
+            is( $expanded->trash, "lala", "trash attr" );
+        }
+
         is_deeply( $expanded, $obj, "is_deeply" );
     }
 
