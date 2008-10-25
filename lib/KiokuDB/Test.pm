@@ -21,7 +21,6 @@ sub run_all_fixtures {
     my $get_dir = blessed($with) ? sub { $with } : $with;
 
     SKIP: {
-        skip "fixtures ($@)" => 1, unless eval { require Data::Structure::Util };
         skip "fixtures ($@)" => 1, unless eval { require Module::Pluggable::Object };
 
         my $mp = Module::Pluggable::Object->new(
