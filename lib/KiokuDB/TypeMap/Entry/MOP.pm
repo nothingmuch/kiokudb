@@ -32,7 +32,9 @@ sub compile {
 sub compile_collapser {
     my ( $self, $meta ) = @_;
 
-    my @attrs = $meta->compute_all_applicable_attributes;
+    my @attrs = grep {
+        !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
+    } $meta->compute_all_applicable_attributes;
 
     my $self_id = !$self->intrinsic && $meta->does_role("KiokuDB::Role::ID");
 
