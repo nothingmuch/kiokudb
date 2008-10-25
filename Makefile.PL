@@ -18,6 +18,9 @@ WriteMakefile(
         'MooseX::AttributeHelpers' => 0,
         'MooseX::Types::Path::Class' => 0,
 
+        # Command line utilities
+        'MooseX::Getopt' => 0,
+
         # misc dev shit
         'Check::ISA' => 0,
         'Scalar::Util' => 0,
