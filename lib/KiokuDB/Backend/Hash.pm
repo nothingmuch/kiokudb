@@ -87,7 +87,7 @@ KiokuDB::Backend::Hash - In memory backend for testing purposes.
 =head1 DESCRIPTION
 
 This L<KiokuDB> backend provides in memory storage and retrieval of
-L<KiokuDB::Enty> objects using L<Storable>'s C<dclone> to make dumps of the
+L<KiokuDB::Entry> objects using L<Storable>'s C<dclone> to make dumps of the
 backend clear.
 
 =cut

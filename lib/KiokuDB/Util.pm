@@ -59,11 +59,11 @@ KiokuDB::Util - Utility functions for working with KiokuDB
 
 =head1 SYNOPSIS
 
-    use KiokuDB::Set::Easy qw(set weak_set);
+    use KiokuDB::Util qw(set weak_set);
 
-	my $set = set(@objects); # create a transient set
+    my $set = set(@objects); # create a transient set
 
-	my $weak = weak_set(@objects); # to avoid circular refs
+    my $weak = weak_set(@objects); # to avoid circular refs
 
 =head1 DESCRIPTION
 

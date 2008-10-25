@@ -185,7 +185,7 @@ By using this idiom:
 
     {
         my $scope = $dir->new_scope;
-        
+
         # do all KiokuDB work in here
     }
 

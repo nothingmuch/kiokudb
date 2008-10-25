@@ -240,7 +240,7 @@ KiokuDB::Cmd::Load - Load database dumps
 
     % kiokuload --verbose --file foo.yml --format yaml --clear --dsn bdb-gin:dir=data/
 
-    
+
     # programmatic API
 
     use KiokuDB::Cmd::Load;

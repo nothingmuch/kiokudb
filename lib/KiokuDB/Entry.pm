@@ -133,6 +133,11 @@ KiokuDB::Entry - An entry in the database
 
 =head1 SYNOPSIS
 
+    KiokuDB::Entry->new(
+        id => ...,
+        data => ...
+    );
+
 =head1 DESCRIPTION
 
 This object provides the meta data for a single storage entry.

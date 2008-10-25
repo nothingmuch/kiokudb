@@ -46,7 +46,7 @@ This role provides provides a consistent way to use serialization modules to
 handle backend serialization.
 
 See L<KiokuDB::Backend::Serialize::Storable> and
-L<KiokuDB::Backend::Serialize::JSPOn> for examples.
+L<KiokuDB::Backend::Serialize::JSPON> for examples.
 
 =head1 REQUIRED METHODS
 

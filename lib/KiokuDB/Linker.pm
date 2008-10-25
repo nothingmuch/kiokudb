@@ -229,6 +229,8 @@ KiokuDB::Linker - Relinks live objects from storage entries
 
 =head1 SYNOPSIS
 
+    # mostly internal
+
 =head1 DESCRIPTION
 
 The linker reconnects entry data, recreating the connected object graph in

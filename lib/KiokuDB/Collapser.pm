@@ -464,6 +464,8 @@ data
 
 =head1 SYNOPSIS
 
+    # mostly internal
+
 =head1 DESCRIPTION
 
 The collapser simplifies real objects into L<KiokuDB::Entry> objects to pass to

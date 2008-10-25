@@ -55,4 +55,6 @@ Create a new UUID
 
 Conversion subroutines for completeness.
 
+=back
+
 =cut
