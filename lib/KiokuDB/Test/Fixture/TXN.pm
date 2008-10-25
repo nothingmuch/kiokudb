@@ -147,19 +147,3 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
-
-=pod
-
-=head1 NAME
-
-KiokuDB::Test::Fixture::TXN - 
-
-=head1 SYNOPSIS
-
-	use KiokuDB::Test::Fixture::TXN;
-
-=head1 DESCRIPTION
-
-=cut
-
-
