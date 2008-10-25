@@ -5,7 +5,7 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-sub Moose::Meta::Attribute::Custom::Trait::KiokuDB::Lazy { __PACKAGE__ }
+sub Moose::Meta::Attribute::Custom::Trait::KiokuDB::Lazy::register_implementation { __PACKAGE__ }
 
 __PACKAGE__
 
