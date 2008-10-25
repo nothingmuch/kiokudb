@@ -39,7 +39,7 @@ KiokuDB::Backend::Query::Simple - Simple query api
 
 =head1 SYNOPSIS
 
-	with qw(KiokuDB::Backend::Query::Simple);
+    with qw(KiokuDB::Backend::Query::Simple);
 
     sub simple_search {
         my ( $self, $proto ) = @_;

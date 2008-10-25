@@ -29,7 +29,7 @@ KiokuDB::Backend::Scan - Root set iteration
 
 =head1 SYNOPSIS
 
-	with qw(KiokuDB::Backend::Scan);
+    with qw(KiokuDB::Backend::Scan);
 
     sub all_entries {
         my $self = shift;

@@ -211,7 +211,7 @@ KiokuDB::Cmd::Dump - Dump database entries for backup or munging purposes
 
     # programmatic API
 
-	use KiokuDB::Cmd::Dump;
+    use KiokuDB::Cmd::Dump;
 
     my $dumper = KiokuDB::Cmd::Dump->new(
         backend => $backend,

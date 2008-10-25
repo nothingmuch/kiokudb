@@ -243,7 +243,7 @@ KiokuDB::Cmd::Load - Load database dumps
     
     # programmatic API
 
-	use KiokuDB::Cmd::Load;
+    use KiokuDB::Cmd::Load;
 
     my $loader = KiokuDB::Cmd::Load->new(
         backend => $backend,

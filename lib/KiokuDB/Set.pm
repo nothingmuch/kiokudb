@@ -147,7 +147,7 @@ KiokuDB::Set - L<Set::Object> wrapper for KiokuDB with lazy loading.
 
 =head1 SYNOPSIS
 
-	use KiokuDB::Util qw(set);
+    use KiokuDB::Util qw(set);
 
     my $set = set(); # KiokuDB::Set::Transient
 

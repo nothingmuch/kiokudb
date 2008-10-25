@@ -49,7 +49,7 @@ KiokuDB::GIN - Gin assisted recollection
 
 =head1 SYNOPSIS
 
-	use KiokuDB::GIN;
+    use KiokuDB::GIN;
 
 =head1 DESCRIPTION
 

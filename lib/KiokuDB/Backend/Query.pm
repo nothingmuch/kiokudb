@@ -24,7 +24,7 @@ KiokuDB::Backend::Query - Backend specific query API
 
 =head1 SYNOPSIS
 
-	with qw(KiokuDB::Backend::Query);
+    with qw(KiokuDB::Backend::Query);
 
     sub search {
         my ( $self, @args ) = @_;
