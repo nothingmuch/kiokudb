@@ -101,3 +101,21 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Resolver - Caching resolver for L<KiokuDB::TypeMap>
+
+=head1 SYNOPSIS
+
+This object is used by L<KiokuDB::Linker> and L<KiokuDB::Collapser> to map
+class names to collapsing/expanding method bodies.
+
+Since L<KiokuDB::TypeMap>s are fairly complex, and L<KiokuDB::TypeMap::Entry>
+objects can benefit from specializing to a class by precomputing some things,
+resolution is performed once per class, and the results are cached in the
+resolver.
+
+=cut
