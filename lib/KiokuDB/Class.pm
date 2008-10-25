@@ -44,7 +44,7 @@ KiokuDB::Class - L<KiokuDB> specific metaclass
 =head1 SYNOPSIS
 
     package Foo;
-	use KiokuDB::Class; # instead of Moose
+    use KiokuDB::Class; # instead of Moose
 
     has bar => (
         traits => [qw(KiokuDB::Lazy)],

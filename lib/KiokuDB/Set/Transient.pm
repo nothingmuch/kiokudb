@@ -33,7 +33,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Set::Deferred - Implementation of in memory sets.
+KiokuDB::Set::Transient - Implementation of in memory sets.
 
 =head1 SYNOPSIS
 
