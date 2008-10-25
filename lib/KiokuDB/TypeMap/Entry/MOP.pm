@@ -7,12 +7,17 @@ no warnings 'recursion';
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry::Std);
+# not Std because of the ID role support needing to happen early
+has intrinsic => (
+    isa => "Bool",
+    is  => "ro",
+    default => 0,
+);
 
 # FIXME collapser and expaner should both be methods in Class::MOP::Class,
 # apart from the visit call
 
-sub compile_mappings {
+sub compile {
     my ( $self, $class ) = @_;
 
     my $meta = Class::MOP::get_metaclass_by_name($class);
@@ -29,21 +34,33 @@ sub compile_collapser {
 
     my @attrs = $meta->compute_all_applicable_attributes;
 
+    my $self_id = !$self->intrinsic && $meta->does_role("KiokuDB::Role::ID");
+
+    my $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
+
     return sub {
-        my ( $self, %args ) = @_;
+        my $self = shift;
 
-        my $object = $args{object};
-
-        my %collapsed;
-
-        foreach my $attr ( @attrs ) {
-            if ( $attr->has_value($object) ) {
-                my $value = $attr->get_value($object);
-                $collapsed{$attr->name} = ref($value) ? $self->visit($value) : $value;
-            }
+        if ( $self_id ) {
+            push @_, id => $_[0]->kiokudb_object_id;
         }
 
-        return \%collapsed;
+        $self->$method(sub {
+            my ( $self, %args ) = @_;
+
+            my %collapsed;
+
+            my $object = $args{object};
+
+            foreach my $attr ( @attrs ) {
+                if ( $attr->has_value($object) ) {
+                    my $value = $attr->get_value($object);
+                    $collapsed{$attr->name} = ref($value) ? $self->visit($value) : $value;
+                }
+            }
+
+            return \%collapsed;
+        }, @_);
     }
 }
 

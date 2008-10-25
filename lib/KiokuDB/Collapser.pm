@@ -385,7 +385,7 @@ sub collapse_first_class {
     # Data::Visitor stuff for circular refs
     $self->_register_mapping( $object, $object );
 
-    my $id = $self->_object_id($object) || return;
+    my $id = $self->_object_id($object, @entry_args) || return;
 
     if ( my $only = $self->_options->{only} ) {
         unless ( $only->contains($object) ) {
@@ -433,8 +433,14 @@ sub collapse_intrinsic {
 }
 
 sub _object_id {
-    my ( $self, $object ) = @_;
-    $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
+    my ( $self, $object, %args ) = @_;
+
+    if ( defined(my $id = $args{id}) ) {
+        $self->_options->{live_objects}->insert( $id => $object ); # FIXME always?
+        return $id;
+    } else {
+        $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
+    }
 }
 
 # we don't reblass in collapse_naive
