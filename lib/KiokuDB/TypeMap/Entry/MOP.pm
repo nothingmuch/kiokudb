@@ -99,7 +99,7 @@ sub compile_expander {
 
             if ( $lazy{$name} and ref($value) eq 'KiokuDB::Reference' ) {
                 my $thunk = KiokuDB::Thunk->new( id => $value->id, linker => $self, attr => $attr );
-                $meta_instance->set_slot_value($instance, $attr->name, $thunk);
+                $meta_instance->set_slot_value($instance, $attr->name, $thunk); # FIXME low level variant of $attr->set_value
             } else {
                 $self->inflate_data($value, \$value) if ref $value;
                 $attr->set_value($instance, $value);
