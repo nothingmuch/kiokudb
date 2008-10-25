@@ -1,0 +1,12 @@
+0.02
+    - Lazy meta trait for attributes
+    - DoNotSerialize meta trait is now respected
+    - Documentation updates
+    - Removes several unrelated files form the dist
+    - NoGetopt related fixes for command line tools
+    - Remove JSPON backend files
+    - Dependency fixes
+    - KiokuDB::Role::ID
+
+0.01
+    - Initial Release
