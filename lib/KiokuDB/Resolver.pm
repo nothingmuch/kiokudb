@@ -83,16 +83,58 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Resolver - UID <-> refaddr mapping
+KiokuDB::Resolver - Assigns UIDs as necessary to objects
 
 =head1 SYNOPSIS
 
     use KiokuDB::Resolver;
 
+    my $r = KiokuDB::Resolver->new(
+        live_objects => $live_objects,
+    );
+
+    my $id = $r->object_to_id($object);
+
 =head1 DESCRIPTION
 
 This object wraps the live object set but also handles UID extraction and
 generation.
+
+This is used during collapsing in order to provide IDs for unencountered
+objects.
+
+This class may be superseded by the typemap in the future.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item live_objects
+
+The underlying live object set.
+
+=back
+
+=head1 METHODS
+
+=over 4
+
+=item get_object_id $object
+
+Generates an ID for an object automatically.
+
+=item object_to_id $object
+
+=item objects_to_ids @objects
+
+Returns or assigns IDS to the given objects.
+
+=item register_new_ids
+
+Delegates to C<insert>. Called by C<objects_to_ids> when new IDs have been
+generated.
+
+=back
 
 =cut
 
