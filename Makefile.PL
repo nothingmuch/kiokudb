@@ -28,8 +28,9 @@ WriteMakefile(
         'namespace::clean' => '0.08',
 
         # Identity is important
-        'Data::GUID' => 0,
-        #'Data::UUID::LibUUID' => 0, # reccomended
+        ( eval { require Data::UUID::LibUUID }
+            ? ( "Data::UUID::LibUUID" => 0 )
+            : ( "Data::UUID"          => 0 ) ),
 
         # visits are also important
         'Data::Visitor' => '0.20',
