@@ -6,6 +6,9 @@ KiokuDB::Tutorial - Getting started with L<KiokuDB>
 
 =head1 INSTALLATION
 
+The easiest way to install L<KiokuDB> and a number of backends is
+L<Task::KiokuDB>.
+
 L<KiokuDB> depends on L<Moose> and a few other modules out of the box, but no
 specific storage module.
 
