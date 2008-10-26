@@ -33,8 +33,6 @@
         * Reference in class field?
             * fully DB resident metaclass?
 	* class version upgrade path
-	* DoNotSerialize
-	* Lazy attrs
 
 * tools
     * consistency checker
