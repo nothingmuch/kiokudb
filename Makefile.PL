@@ -35,6 +35,7 @@ WriteMakefile(
         # visits are also important
         'Data::Visitor' => '0.20',
         'Tie::ToObject' => 0,
+        'Task::Weaken'  => 0,
 
         # scanning and searching
         'Data::Stream::Bulk' => "0.03",
