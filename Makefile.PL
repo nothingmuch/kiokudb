@@ -17,7 +17,7 @@ WriteMakefile(
     EXE_FILES    => [ grep { /\w$/ } glob("bin/*") ],
     PREREQ_PM    => {
         'Moose' => '0.60',
-        'MooseX::AttributeHelpers' => 0,
+        'MooseX::AttributeHelpers' => '0.14',
         'MooseX::Types::Path::Class' => 0,
 
         # Command line utilities
