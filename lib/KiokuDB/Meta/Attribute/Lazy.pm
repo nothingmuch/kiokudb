@@ -3,9 +3,21 @@
 package KiokuDB::Meta::Attribute::Lazy;
 use Moose::Role;
 
+use Moose::Util qw(does_role);
+
 use namespace::clean -except => 'meta';
 
 sub Moose::Meta::Attribute::Custom::Trait::KiokuDB::Lazy::register_implementation { __PACKAGE__ }
+
+before attach_to_class => sub {
+    my ( $self, $class ) = @_;
+
+    my $mi = $class->get_meta_instance;
+
+    unless ( does_role( $mi, "KiokuDB::Meta::Instance" ) ) {
+        $self->throw_error("Can't attach to a class whose meta instance doesn't do KiokuDB::Meta::Instance", data => $class );
+    }
+};
 
 __PACKAGE__
 
