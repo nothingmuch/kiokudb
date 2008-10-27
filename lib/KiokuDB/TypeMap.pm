@@ -13,8 +13,11 @@ use namespace::clean -except => 'meta';
 has [qw(entries isa_entries)] => (
     #isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]", # dog slow regex
     is  => "ro",
-    default => sub { return {} },
+    lazy_build => 1,
 );
+
+sub _build_entries { +{} }
+sub _build_isa_entries { +{} }
 
 has [qw(all_entries all_isa_entries)] => (
     #isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]", # dog slow regex
@@ -31,8 +34,10 @@ has all_isa_entry_classes => (
 has includes => (
     isa => "ArrayRef[KiokuDB::TypeMap]",
     is  => "ro",
-    default => sub { [] },
+    lazy_build => 1,
 );
+
+sub _build_includes { [] }
 
 sub resolve {
     my ( $self, $class ) = @_; # FIXME resolve by object?
