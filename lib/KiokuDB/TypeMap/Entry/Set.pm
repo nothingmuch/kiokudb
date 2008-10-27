@@ -95,7 +95,7 @@ sub _compile_expand {
         if ( !$defer or grep { ref } @$members ) {
             my $inner_set = Set::Object::Weak->new;
             # inflate the set
-            my $set = KiokuDB::Set::Loaded->new( set => $inner_set, , _linker => $linker );
+            my $set = KiokuDB::Set::Loaded->new( set => $inner_set, _linker => $linker );
 
             $linker->register_object( $entry => $set );
 
