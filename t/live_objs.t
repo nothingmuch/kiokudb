@@ -202,9 +202,13 @@ use ok 'KiokuDB::Entry';
 
                 $l->insert( blah => Foo->new );
 
+                is( scalar($l->live_objects), 2, "two live objects" );
+
+                isa_ok( $l->id_to_object("blah"), "Foo" );
+
                 is_deeply(
                     [ sort $l->live_objects ],
-                    [ sort $foo, Foo->new ], # is deeply compares deeply
+                    [ sort $foo, $l->id_to_object("blah") ],
                     "live object set has new anon member"
                 );
             }
