@@ -254,7 +254,7 @@ sub insert {
 
         croak($object, " is not a reference") unless ref($object);
         croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
-        croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object};
+        croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object} and $o->{$object}{id} ne $id;;
 
         if ( exists $i->{$id} ) {
             croak "An object with the id '$id' is already registered";

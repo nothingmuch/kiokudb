@@ -378,7 +378,11 @@ sub visit_object {
 sub collapse_first_class {
     my ( $self, $collapse, $object, @entry_args ) = @_;
 
-    if ( my $entry = $self->_options->{only_new} && $self->_options->{live_objects}->object_to_entry($object) ) {
+    my $o = $self->_options;
+
+    my $l = $o->{live_objects};
+
+    if ( my $entry = $o->{only_new} && $l->object_to_entry($object) ) {
         return $self->make_ref( $entry->id => $_[1] );
     }
 
@@ -435,11 +439,21 @@ sub collapse_intrinsic {
 sub _object_id {
     my ( $self, $object, %args ) = @_;
 
+    my $o = $self->_options;
+
     if ( defined(my $id = $args{id}) ) {
-        $self->_options->{live_objects}->insert( $id => $object ); # FIXME always?
+        my $l = $o->{live_objects};
+        if ( my $reg_id = $l->object_to_id($object) ) {
+            unless ( $id eq $reg_id ) {
+                croak "Object already registered as $reg_id";
+            }
+        } else {
+            $l->insert( $id => $object ); # FIXME always?
+        }
+
         return $id;
     } else {
-        $self->_options->{resolver}->object_to_id($object) or die { unknown => $object };
+        return $o->{resolver}->object_to_id($object) || die { unknown => $object };
     }
 }
 
