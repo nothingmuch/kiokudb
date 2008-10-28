@@ -24,7 +24,6 @@ WriteMakefile(
         'MooseX::Getopt' => 0,
 
         # misc dev shit
-        'Check::ISA' => 0,
         'Scalar::Util' => 0,
         #'Devel::PartialDump' => '0.06',
         'namespace::clean' => '0.08',
