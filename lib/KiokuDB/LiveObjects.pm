@@ -9,7 +9,7 @@ use Scalar::Util qw(weaken);
 use Scope::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
 use Carp qw(croak);
-use Devel::PartialDump qw(croak);
+BEGIN { local $@; eval 'use Devel::PartialDump qw(croak)' };
 use Set::Object;
 
 use KiokuDB::LiveObjects::Scope;

@@ -26,7 +26,7 @@ WriteMakefile(
         # misc dev shit
         'Check::ISA' => 0,
         'Scalar::Util' => 0,
-        'Devel::PartialDump' => '0.06',
+        #'Devel::PartialDump' => '0.06',
         'namespace::clean' => '0.08',
 
         # Identity is important
