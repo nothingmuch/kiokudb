@@ -3,8 +3,6 @@
 package KiokuDB::LiveObjects;
 use Moose;
 
-use MooseX::AttributeHelpers;
-
 use Scalar::Util qw(weaken);
 use Scope::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
@@ -25,17 +23,30 @@ has _objects => (
 );
 
 has _ids => (
-    metaclass => 'Collection::Hash',
+    #metaclass => 'Collection::Hash',
     isa => "HashRef",
     is  => "ro",
     init_arg => undef,
     default => sub { return {} },
-    provides => {
-        get    => "ids_to_objects",
-        keys   => "live_ids",
-        values => "live_objects",
-    },
+    #provides => {
+    #    get    => "ids_to_objects",
+    #    keys   => "live_ids",
+    #    values => "live_objects",
+    #},
 );
+
+sub ids_to_objects {
+    my ( $self, @ids ) = @_;
+    @{ $self->_ids }{@ids};
+}
+
+sub live_ids {
+    keys %{ shift->_ids };
+}
+
+sub live_objects {
+    values %{ shift->_ids };
+}
 
 has _entry_objects => (
     isa => "HashRef",
@@ -45,17 +56,30 @@ has _entry_objects => (
 );
 
 has _entry_ids => (
-    metaclass => 'Collection::Hash',
+    #metaclass => 'Collection::Hash',
     isa => "HashRef",
     is  => "ro",
     init_arg => undef,
     default  => sub { return {} },
-    provides => {
-        get    => "ids_to_entries",
-        keys   => "loaded_ids",
-        values => "live_entries",
-    },
+    #provides => {
+    #    get    => "ids_to_entries",
+    #    keys   => "loaded_ids",
+    #    values => "live_entries",
+    #},
 );
+
+sub ids_to_entries {
+    my ( $self, @ids ) = @_;
+    @{ $self->_entry_ids }{@ids}
+}
+
+sub loaded_ids {
+    keys %{ shift->_entry_ids };
+}
+
+sub live_entries {
+    values %{ shift->_enty_ids };
+}
 
 has current_scope => (
     isa => "KiokuDB::LiveObjects::Scope",
