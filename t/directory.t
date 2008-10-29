@@ -4,8 +4,9 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
-use Test::Memory::Cycle;
 use Test::Exception;
+
+BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok {}' }
 
 use Scalar::Util qw(blessed weaken isweak refaddr);
 

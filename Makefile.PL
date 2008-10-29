@@ -53,7 +53,6 @@ WriteMakefile(
         'Module::Pluggable::Object' => 0,
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
-        'Test::Memory::Cycle' => 0,
         'Test::More' => 0,
 
         # used in testing... add skip logic?
