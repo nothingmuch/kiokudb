@@ -55,7 +55,6 @@ WriteMakefile(
         'Test::Exception' => 0,
         'Test::Memory::Cycle' => 0,
         'Test::More' => 0,
-        'Test::TempDir' => 0,
 
         # used in testing... add skip logic?
         'URI' => 0,

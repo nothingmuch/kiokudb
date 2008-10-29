@@ -4,7 +4,6 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
-use Test::TempDir;
 
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB::Entry';
