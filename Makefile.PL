@@ -6,8 +6,6 @@ use ExtUtils::MakeMaker;
 
 require 5.008; # utf8 and what not
 
-my $have_fieldhash = eval { require Hash::Util::FieldHash };
-
 WriteMakefile(
     NAME         => 'KiokuDB',
     VERSION_FROM => 'lib/KiokuDB.pm',
@@ -43,7 +41,7 @@ WriteMakefile(
 
         # live objects
         'Hash::Util::FieldHash::Compat' => 0,
-        ( $have_fieldhash ? () : (
+        ( eval { require Hash::Util::FieldHash } ? () : (
             # for 5.8 we need some specific versions of fieldhash deps
             'Tie::RefHash::Weak' => '0.9',
             'Variable::Magic'    => '0.24',
