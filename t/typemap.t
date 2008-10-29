@@ -21,7 +21,6 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
     extends qw(Foo);
 
     package CA;
-    use base qw(Class::Accessor);
 
     package CA::Sub;
     use base qw(CA);
