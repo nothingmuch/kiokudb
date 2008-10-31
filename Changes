@@ -1,3 +1,6 @@
+0.04
+    - Fix ->clear in KiokuDB::GIN
+
 0.03
     - Lots of new docs
     - Smaller set of dependencies
