@@ -5,10 +5,10 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use URI;
 use Set::Object;
-use DateTime;
-use Path::Class;
+use constant HAVE_URI        => eval { require URI };
+use constant HAVE_DATETIME   => eval { require DateTime };
+use constant HAVE_PATH_CLASS => eval { require Path::Class };
 
 use ok "KiokuDB::TypeMap::Entry::Callback";
 use ok "KiokuDB::TypeMap::Entry::Passthrough";
@@ -25,23 +25,29 @@ use ok "KiokuDB";
         is  => "ro",
     );
 
-    has date => (
-        isa => "DateTime",
-        is  => "ro",
-        default => sub { DateTime->now },
-    );
+    if ( ::HAVE_DATETIME ) {
+        has date => (
+            isa => "DateTime",
+            is  => "ro",
+            default => sub { DateTime->now },
+        );
+    }
 
-    has uri => (
-        isa => "URI",
-        is  => "ro",
-        default => sub { URI->new("http://www.google.com") },
-    );
+    if ( ::HAVE_URI ) {
+        has uri => (
+            isa => "URI",
+            is  => "ro",
+            default => sub { URI->new("http://www.google.com") },
+        );
+    }
 
-    has stuff => (
-        isa => "Path::Class::File",
-        is  => "ro",
-        default => sub { ::file("foo.jpg") },
-    );
+    if ( ::HAVE_PATH_CLASS ) {
+        has stuff => (
+            isa => "Path::Class::File",
+            is  => "ro",
+            default => sub { Path::Class::file("foo.jpg") },
+        );
+    }
 }
 
 my $t = KiokuDB::TypeMap->new(
@@ -100,15 +106,21 @@ my $id;
 
     isa_ok( $foo, "Foo" );
 
-    isa_ok( $foo->date, "DateTime" );
+    if ( HAVE_DATETIME ) {
+        isa_ok( $foo->date, "DateTime" );
+    }
 
-    isa_ok( $foo->uri, "URI" );
+    if ( HAVE_URI ) {
+        isa_ok( $foo->uri, "URI" );
+    }
 
-    isa_ok( $foo->stuff, "Path::Class::File" );
+    if ( HAVE_PATH_CLASS ) {
+        isa_ok( $foo->stuff, "Path::Class::File" );
+
+        is( $foo->stuff->basename, 'foo.jpg', "value" );
+    }
 
     isa_ok( $foo->foo, "Set::Object" );
-
-    is( $foo->stuff->basename, 'foo.jpg', "value" );
 
     isa_ok( ( $foo->foo->members )[0], "Foo", 'set enumeration' );
 }

@@ -55,10 +55,6 @@ WriteMakefile(
         'Test::Exception' => 0,
         'Test::More' => 0,
 
-        # used in testing... add skip logic?
-        'URI' => 0,
-        'DateTime' => 0,
-
         'Search::GIN' => 0.03,
     },
 );
