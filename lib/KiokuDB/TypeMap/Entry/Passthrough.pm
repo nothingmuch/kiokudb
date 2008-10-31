@@ -5,21 +5,47 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry::Std);
+with qw(KiokuDB::TypeMap::Entry);
 
-sub compile_mappings {
-    my ( $self, $class ) = @_;
+has intrinsic => (
+    isa => "Bool",
+    is  => "ro",
+    default => 0,
+);
 
-    return (
-        sub {
-            my ( $collapser, %args ) = @_;
-            return $args{object};
-        },
-        sub {
-            my ( $linker, $entry ) = @_;
-            return $entry->data;
-        },
-    );
+sub compile {
+    my ( $self, @args ) = @_;
+
+    if ( $self->intrinsic ) {
+        return (
+            sub {
+                my ( $collapser, $obj ) = @_;
+                return $obj;
+            },
+            sub {
+                my ( $linker, $obj ) = @_;
+                return $obj;
+            },
+        );
+    } else {
+        return (
+            sub {
+                my ( $collapser, @args ) = @_;
+
+                $collapser->collapse_first_class(
+                    sub {
+                        my ( $collapser, %args ) = @_;
+                        return $args{object};
+                    },
+                    @args,
+                );
+            },
+            sub {
+                my ( $linker, $entry ) = @_;
+                return $entry->data;
+            },
+        );
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

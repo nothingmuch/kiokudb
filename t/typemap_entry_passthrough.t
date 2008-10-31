@@ -86,9 +86,8 @@ my $sl = $l->live_objects->new_scope;
     my $entry = ( values %$entries )[0];
 
     is( (blessed($entry->data)||''), '', "entry data not blessed" );
-    isa_ok( $entry->data->{foo}, "KiokuDB::Entry", "intrinsic entry" );
-    isa_ok( $entry->data->{foo}->data, "Bar", "intrinsic passthrough entry data" );
-    is( refaddr($entry->data->{foo}->data), refaddr($bar->foo), "refaddr equals" );
+    isa_ok( $entry->data->{foo}, "Bar", "intrinsic entry" );
+    is( refaddr($entry->data->{foo}), refaddr($bar->foo), "refaddr equals" );
 
     my $expanded = $l->expand_object($entry);
 
