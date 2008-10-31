@@ -8,6 +8,8 @@ use warnings;
 use Scalar::Util qw(blessed);
 use Test::More;
 
+use Module::Pluggable::Object;
+
 use namespace::clean;
 
 use Sub::Exporter -setup => {
@@ -15,20 +17,21 @@ use Sub::Exporter -setup => {
     groups  => { default => [-all] },
 };
 
+my $mp = Module::Pluggable::Object->new(
+    search_path => "KiokuDB::Test::Fixture",
+    require     => 1,
+);
+
+my @fixtures = sort { $a->sort <=> $b->sort } $mp->plugins;
+
 sub run_all_fixtures {
     my ( $with ) = @_;
 
     my $get_dir = blessed($with) ? sub { $with } : $with;
 
     SKIP: {
-        skip "fixtures ($@)" => 1, unless eval { require Module::Pluggable::Object };
 
-        my $mp = Module::Pluggable::Object->new(
-            search_path => "KiokuDB::Test::Fixture",
-            require     => 1,
-        );
-
-        foreach my $fixture ( sort { $a->sort <=> $b->sort } $mp->plugins ) {
+        foreach my $fixture ( @fixtures ) {
             $fixture->new( directory => $fixture->$get_dir )->run;
         }
     }

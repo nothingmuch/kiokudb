@@ -5,7 +5,6 @@ use warnings;
 
 use Test::More 'no_plan';
 
-
 use Storable qw(dclone);
 
 use ok 'KiokuDB::Entry';
