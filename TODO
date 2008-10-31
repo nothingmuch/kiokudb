@@ -24,10 +24,6 @@
         * exclusive write lock TXNs using deferred writes
 
 * typemap
-    * default types
-        * per backend
-        * backend_typemap => 0 to avoid inheriting the user typemap and the
-          backend typemap
     * runtime role support
         * json in class field?
         * Reference in class field?
