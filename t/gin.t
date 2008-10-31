@@ -31,6 +31,14 @@ use ok 'Search::GIN::Extract::Class';
         ),
     );
 
+    sub clear {
+        my $self = shift;
+
+        # UGH
+        $self->Search::GIN::Driver::Hash::clear(@_);
+        $self->SUPER::clear(@_);
+    }
+
     __PACKAGE__->meta->make_immutable;
 }
 

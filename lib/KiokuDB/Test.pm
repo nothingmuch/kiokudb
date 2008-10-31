@@ -29,8 +29,8 @@ sub run_all_fixtures {
 
     my $get_dir = blessed($with) ? sub { $with } : $with;
 
-    SKIP: {
-
+    for ( 1 .. ( $ENV{KIOKUDB_REPEAT_FIXTURES} || 1 ) ) {
+        require List::Util and @fixtures = List::Util::shuffle(@fixtures) if $ENV{KIOKUDB_SHUFFLE_FIXTURES};
         foreach my $fixture ( @fixtures ) {
             $fixture->new( directory => $fixture->$get_dir )->run;
         }

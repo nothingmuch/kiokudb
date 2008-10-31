@@ -59,6 +59,6 @@ WriteMakefile(
         'URI' => 0,
         'DateTime' => 0,
 
-        'Search::GIN' => 0,
+        'Search::GIN' => 0.03,
     },
 );
