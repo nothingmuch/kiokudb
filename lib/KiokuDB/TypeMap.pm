@@ -10,6 +10,8 @@ use KiokuDB::TypeMap::Entry::Alias;
 
 use namespace::clean -except => 'meta';
 
+with qw(KiokuDB::Role::TypeMap);
+
 has [qw(entries isa_entries)] => (
     #isa => "HashRef[KiokuDB::TypeMap::Entry|KiokuDB::TypeMap::Entry::Alias]", # dog slow regex
     is  => "ro",

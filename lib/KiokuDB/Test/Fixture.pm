@@ -152,7 +152,7 @@ sub store_ok {
 
     local $Test::Builder::Level = 1;
 
-    _lives_and_ret { $self->store( @objects ) } "stored " . scalar(@objects) . " objects";
+    _lives_and_ret { $self->store( @objects ) } "stored " . scalar(grep { ref } @objects) . " objects";
 }
 
 sub update_ok {

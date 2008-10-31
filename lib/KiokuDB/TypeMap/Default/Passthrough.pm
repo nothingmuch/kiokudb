@@ -43,6 +43,12 @@ sub _build_uri_typemap {
                 intrinsic => 1,
             },
         },
+        entries => {
+            'URI::WithBase' => {
+                type      => "KiokuDB::TypeMap::Entry::Passthrough",
+                intrinsic => 1,
+            },
+        },
     );
 }
 

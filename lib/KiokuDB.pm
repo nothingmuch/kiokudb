@@ -13,6 +13,7 @@ use KiokuDB::Collapser;
 use KiokuDB::Linker;
 use KiokuDB::LiveObjects;
 use KiokuDB::TypeMap;
+use KiokuDB::TypeMap::Shadow;
 use KiokuDB::TypeMap::Resolver;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
@@ -27,13 +28,34 @@ sub connect {
 }
 
 has typemap => (
-    isa => "KiokuDB::TypeMap",
-    is  => "ro",
+    does => "KiokuDB::Role::TypeMap",
+    is   => "ro",
     lazy_build => 1,
 );
 
 sub _build_typemap {
     KiokuDB::TypeMap->new;
+}
+
+has merged_typemap => (
+    does => "KiokuDB::Role::TypeMap",
+    is   => "ro",
+    lazy_build => 1,
+);
+
+sub _build_merged_typemap {
+    my $self = shift;
+
+    if ( $self->backend->can("default_typemap") ) {
+        return KiokuDB::TypeMap::Shadow->new(
+            typemaps => [
+                $self->typemap,
+                $self->backend->default_typemap,
+            ],
+        );
+    } else {
+        return $self->typemap;
+    }
 }
 
 has typemap_resolver => (
@@ -44,8 +66,9 @@ has typemap_resolver => (
 
 sub _build_typemap_resolver {
     my $self = shift;
+
     KiokuDB::TypeMap::Resolver->new(
-        typemap => $self->typemap,
+        typemap => $self->merged_typemap,
     );
 }
 

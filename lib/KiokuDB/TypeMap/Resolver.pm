@@ -9,8 +9,8 @@ use KiokuDB::TypeMap::Entry::MOP;
 use namespace::clean -except => 'meta';
 
 has typemap => (
-    isa => "KiokuDB::TypeMap",
-    is  => "ro",
+    does => "KiokuDB::Role::TypeMap",
+    is   => "ro",
 );
 
 has [qw(_collapse _expand)] => (

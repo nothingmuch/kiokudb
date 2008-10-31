@@ -11,6 +11,7 @@ with qw(
     KiokuDB::Backend::Serialize
     KiokuDB::Backend::UnicodeSafe
     KiokuDB::Backend::BinarySafe
+    KiokuDB::Backend::TypeMap::Default::Storable
 );
 
 sub serialize {

@@ -18,14 +18,8 @@ sub compile {
 
     if ( $self->intrinsic ) {
         return (
-            sub {
-                my ( $collapser, $obj ) = @_;
-                return $obj;
-            },
-            sub {
-                my ( $linker, $obj ) = @_;
-                return $obj;
-            },
+            sub { $_[1] },
+            sub { $_[1] },
         );
     } else {
         return (

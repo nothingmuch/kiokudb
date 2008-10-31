@@ -46,7 +46,7 @@ has [qw(
     authen_passphrase_typemap
 )] => (
     traits     => [qw(KiokuDB::TypeMap::Default)],
-    isa        => "KiokuDB::TypeMap",
+    does       => "KiokuDB::Role::TypeMap",
     is         => "ro",
     lazy_build => 1,
 );
