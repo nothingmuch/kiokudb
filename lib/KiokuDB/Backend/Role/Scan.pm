@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::Scan;
+package KiokuDB::Backend::Role::Scan;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
@@ -25,11 +25,11 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::Scan - Root set iteration
+KiokuDB::Backend::Role::Scan - Root set iteration
 
 =head1 SYNOPSIS
 
-    with qw(KiokuDB::Backend::Scan);
+    with qw(KiokuDB::Backend::Role::Scan);
 
     sub all_entries {
         my $self = shift;

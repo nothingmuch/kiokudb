@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::TXN;
+package KiokuDB::Backend::Role::TXN;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
@@ -15,7 +15,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::TXN - Backend level transaction support.
+KiokuDB::Backend::Role::TXN - Backend level transaction support.
 
 =head1 SYNOPSIS
 
@@ -24,7 +24,7 @@ KiokuDB::Backend::TXN - Backend level transaction support.
 
     with qw(
         KiokuDB::Backend
-        KiokuDB::Backend::TXN
+        KiokuDB::Backend::Role::TXN
     );
 
     sub txn_begin { ... }

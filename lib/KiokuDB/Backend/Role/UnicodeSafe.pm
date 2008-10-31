@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::UnicodeSafe;
+package KiokuDB::Backend::Role::UnicodeSafe;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
@@ -15,7 +15,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::UnicodeSafe - An informational role for binary data safe
+KiokuDB::Backend::Role::UnicodeSafe - An informational role for binary data safe
 backends.
 
 =head1 SYNOPSIS
@@ -25,7 +25,7 @@ backends.
 
     use namespace::clean -except => 'meta';
 
-    with qw(KiokuDB::Backend::UnicodeSafe);
+    with qw(KiokuDB::Backend::Role::UnicodeSafe);
 
 =head1 DESCRIPTION
 

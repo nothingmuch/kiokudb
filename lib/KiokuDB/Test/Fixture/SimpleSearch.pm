@@ -25,7 +25,7 @@ sub precheck {
     my $self = shift;
 
     $self->skip_fixture(ref($self->backend) . " does not implement Query::Simple")
-        unless $self->backend->does("KiokuDB::Backend::Query::Simple");
+        unless $self->backend->does("KiokuDB::Backend::Role::Query::Simple");
 }
 
 sub verify {

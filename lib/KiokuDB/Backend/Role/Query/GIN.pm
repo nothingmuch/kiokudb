@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::Query::GIN;
+package KiokuDB::Backend::Role::Query::GIN;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';

@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::Query::Simple::Linear;
+package KiokuDB::Backend::Role::Query::Simple::Linear;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Backend::Query::Simple);
+with qw(KiokuDB::Backend::Role::Query::Simple);
 
 requires "root_entries";
 

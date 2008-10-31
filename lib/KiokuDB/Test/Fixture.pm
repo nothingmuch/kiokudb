@@ -70,11 +70,11 @@ sub precheck {
     my @missing;
 
     foreach my $role ( $self->required_backend_roles ) {
-        push @missing, $role unless $backend->does($role) or $backend->does("KiokuDB::Backend::$role");
+        push @missing, $role unless $backend->does($role) or $backend->does("KiokuDB::Backend::Role::$role");
     }
 
     if ( @missing ) {
-        $_ =~ s/^KiokuDB::Backend::// for @missing;
+        $_ =~ s/^KiokuDB::Backend::Role::// for @missing;
         $self->skip_fixture("Backend does not implement required roles (@missing)")
     }
 }
@@ -85,7 +85,7 @@ sub run {
     SKIP: {
         local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-        my $txn = $self->backend->does("KiokuDB::Backend::TXN") && $self->backend->txn_begin;
+        my $txn = $self->backend->does("KiokuDB::Backend::Role::TXN") && $self->backend->txn_begin;
 
         $self->precheck;
 

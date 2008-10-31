@@ -77,11 +77,11 @@ KiokuDB::Backend - Backend interface role
     with qw(
         KiokuDB::Backend
 
-        KiokuDB::Backend::TXN
-        KiokuDB::Backend::Clear
-        KiokuDB::Backend::Scan
-        KiokuDB::Backend::UnicodeSafe
-        KiokuDB::Backend::BinarySafe
+        KiokuDB::Backend::Role::TXN
+        KiokuDB::Backend::Role::Clear
+        KiokuDB::Backend::Role::Scan
+        KiokuDB::Backend::Role::UnicodeSafe
+        KiokuDB::Backend::Role::BinarySafe
     );
 
     sub insert { ... }
@@ -108,19 +108,19 @@ This role defines the minimal API for writing new backends.
 
 =head1 TRANSACTIONS
 
-This role is supplemented by L<KiokuDB::Backend::Transactional>, a role for
+This role is supplemented by L<KiokuDB::Backend::Role::TXN>, a role for
 first class transaction support that issues rollbacks using the
 L<KiokuDB::Entry> objects.
 
 =head1 QUERYING
 
-This role is supplemented by L<KiokuDB::Backend::Query>, a role for
+This role is supplemented by L<KiokuDB::Backend::Role::Query>, a role for
 backend specific queries.
 
-L<KiokuDB::Backend::Query::Simple> provides a universal query api for
+L<KiokuDB::Backend::Role::Query::Simple> provides a universal query api for
 backends that can perform property based lookup.
 
-L<KiokuDB::Backend::Query::GIN> is a role for using L<Search::GIN> based
+L<KiokuDB::Backend::Role::Query::GIN> is a role for using L<Search::GIN> based
 indexing/querying with backends that do not natively support querying.
 
 =head1 REQUIRED METHODS
@@ -231,22 +231,22 @@ Your backend may include more roles, based on its capabilities.
 For the actual serialization of entries, there are a number of serialization
 roles.
 
-=item L<KiokuDB::Backend::BinarySafe>
+=item L<KiokuDB::Backend::Role::BinarySafe>
 
-=item L<KiokuDB::Backend::UnicodeSafe>
+=item L<KiokuDB::Backend::Role::UnicodeSafe>
 
 If your serialization is able to store arbitrary binary data and/or unicode
 strings, these informational roles should be included.
 
-=item L<KiokuDB::Backend::TXN>
+=item L<KiokuDB::Backend::Role::TXN>
 
 If your storage supports nested transactions (C<txn_begin>, C<txn_commit> etc)
 this role provides the api to expose that functionality to the high level
 L<KiokuDB> api.
 
-=item L<KiokuDB::Backend::Query>
+=item L<KiokuDB::Backend::Role::Query>
 
-=item L<KiokuDB::Backend::Query::GIN>
+=item L<KiokuDB::Backend::Role::Query::GIN>
 
 If your backend supports querying of some sort, these are the roles to include.
 

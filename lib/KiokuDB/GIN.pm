@@ -6,7 +6,7 @@ use Moose::Role;
 use namespace::clean -except => 'meta';
 
 with qw(
-    KiokuDB::Backend::Query::GIN
+    KiokuDB::Backend::Role::Query::GIN
     Search::GIN::Driver
 );
 

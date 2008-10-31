@@ -13,9 +13,9 @@ use namespace::clean -except => 'meta';
 with qw(
     KiokuDB::Backend::Serialize::Memory
     KiokuDB::Backend
-    KiokuDB::Backend::Query::Simple::Linear
-    KiokuDB::Backend::Scan
-    KiokuDB::Backend::Clear
+    KiokuDB::Backend::Role::Query::Simple::Linear
+    KiokuDB::Backend::Role::Scan
+    KiokuDB::Backend::Role::Clear
 );
 
 has storage => (

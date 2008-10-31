@@ -7,8 +7,8 @@ use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Backend::Serialize
-    KiokuDB::Backend::UnicodeSafe
-    KiokuDB::Backend::BinarySafe
+    KiokuDB::Backend::Role::UnicodeSafe
+    KiokuDB::Backend::Role::BinarySafe
 );
 
 sub serialize {

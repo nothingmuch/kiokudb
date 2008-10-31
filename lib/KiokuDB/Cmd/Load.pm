@@ -50,13 +50,13 @@ sub _build_backend {
 
     $self->v(" $b\n");
 
-    if ( $b->does("KiokuDB::Backend::TXN") ) {
+    if ( $b->does("KiokuDB::Backend::Role::TXN") ) {
         $self->v("starting transaction\n");
         $self->_txn( $b->txn_begin );
     }
 
     if ( $self->clear ) {
-        unless ( $b->does("KiokuDB::Backend::Clear") ) {
+        unless ( $b->does("KiokuDB::Backend::Role::Clear") ) {
             croak "--clear specified but $b does not support clearing";
 
         }
@@ -261,7 +261,7 @@ This class loads dumps created by L<KiokuDB::Cmd::Dump>.
 Entries will be read sequentially from C<input_handle>, deserialized, and
 inserted into the database.
 
-If the backend supports L<KiokuDB::Backend::TXN> then the load is performed in
+If the backend supports L<KiokuDB::Backend::Role::TXN> then the load is performed in
 a single transaction.
 
 =head1 COMMAND LINE API
@@ -310,7 +310,7 @@ It is applied to the handle repeatedly until no more entries are returned.
 
 =item clear
 
-If set, L<KiokuDB::Backend::Clear>'s interface will be used to wipe the
+If set, L<KiokuDB::Backend::Role::Clear>'s interface will be used to wipe the
 database before loading.
 
 =item file

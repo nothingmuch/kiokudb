@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::Clear;
+package KiokuDB::Backend::Role::Clear;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
@@ -15,7 +15,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::Clear - Backend clearing api
+KiokuDB::Backend::Role::Clear - Backend clearing api
 
 =head1 SYNOPSIS
 
@@ -26,7 +26,7 @@ KiokuDB::Backend::Clear - Backend clearing api
 
     with qw(
         KiokuDB::Backend
-        KiokuDB::Backend::Clear
+        KiokuDB::Backend::Role::Clear
     );
 
     sub clear {

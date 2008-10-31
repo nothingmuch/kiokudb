@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Backend::Query::Simple;
+package KiokuDB::Backend::Role::Query::Simple;
 use Moose::Role;
 
 use namespace::clean -except => 'meta';
@@ -35,11 +35,11 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::Query::Simple - Simple query api
+KiokuDB::Backend::Role::Query::Simple - Simple query api
 
 =head1 SYNOPSIS
 
-    with qw(KiokuDB::Backend::Query::Simple);
+    with qw(KiokuDB::Backend::Role::Query::Simple);
 
     sub simple_search {
         my ( $self, $proto ) = @_;

@@ -3,7 +3,7 @@
 package KiokuDB::Cmd::Dump;
 use Moose;
 
-use KiokuDB::Backend::Scan ();
+use KiokuDB::Backend::Role::Scan ();
 
 use Carp qw(croak);
 
@@ -24,7 +24,7 @@ has dsn => (
 
 has backend => (
     traits => [qw(NoGetopt)],
-    does => "KiokuDB::Backend::Scan",
+    does => "KiokuDB::Backend::Role::Scan",
     is   => "ro",
     lazy_build => 1,
 );
@@ -223,12 +223,12 @@ KiokuDB::Cmd::Dump - Dump database entries for backup or munging purposes
 
 =head1 DESCRIPTION
 
-Using the L<KiokuDB::Backend::Scan> interface, any supporting backend can be
+Using the L<KiokuDB::Backend::Role::Scan> interface, any supporting backend can be
 dumped using this api.
 
 The data can then be edited or simply retained for backup purposes.
 
-The data can be loaded using L<KiokuDB::Backend::Load>.
+The data can be loaded using L<KiokuDB::Cmd::Load>.
 
 =head1 COMMAND LINE API
 

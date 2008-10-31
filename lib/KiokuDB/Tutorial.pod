@@ -452,7 +452,7 @@ code could be written more concisely as:
 
 =head1 TRANSACTIONS
 
-Some backends (ones which do the L<KiokuDB::Backend::TXN> role) can be used
+Some backends (ones which do the L<KiokuDB::Backend::Role::TXN> role) can be used
 with transactions.
 
 If you are familiar with L<DBIx::Class> this should be very familiar:
