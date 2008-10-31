@@ -50,10 +50,10 @@ sub _build_datetime_typemap {
         isa_entries => {
             'DateTime' => => {
                 type      => 'KiokuDB::TypeMap::Entry::Callback',
-                collapse  => "iso8601",
+                collapse  => "epoch",
                 expand    => sub {
-                    my ( $class, $datetime ) = @_;
-                    DateTime::Format::ISO8601->parse_datetime($datetime);
+                    my ( $class, $epoch ) = @_;
+                    $class->from_epoch( epoch => $epoch );
                 },
                 intrinsic => 1,
             },
