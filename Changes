@@ -1,3 +1,6 @@
+0.05
+    - Add default typemaps for JSON and Storable serialization
+
 0.04
     - Fix ->clear in KiokuDB::GIN
 
