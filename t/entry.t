@@ -73,13 +73,20 @@ my $l = KiokuDB::LiveObjects->new;
             $attr->clear_value($ent);
         }
 
-        {
-            local $TODO = "broken storable hook" if $ent->id =~ /,/;
-            is( $copy->id, $ent->id, "ID is the same" );
+        is( $copy->id, $ent->id, "ID is the same" );
 
-            is_deeply( $copy, $ent, "copy is_deeply orig" );
-        }
+        is_deeply( $copy, $ent, "copy is_deeply orig" );
 
         is_deeply( dclone($copy), $copy, "round trip of copy" );
+
+        unless ( $ent->id =~ /,/ ) {
+            my $new = KiokuDB::Entry->new;
+
+            $new->_unpack( $ent->_pack_old );
+
+            foreach my $field (qw(id class root deleted tied ) ) {
+                is( $new->$field, $ent->$field, "$field in old pack format" );
+            }
+        }
     }
 }

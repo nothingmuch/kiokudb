@@ -35,17 +35,10 @@ has class => (
     predicate => "has_class",
 );
 
-my %tied = (
-    "H" => "HASH",
-    "S" => "SCALAR",
-    "A" => "ARRAY",
-    "G" => "GLOB",
-);
-
-my %tied_r = reverse %tied;
+my @tied = ( qw(HASH SCALAR ARRAY GLOB) );
 
 has tied => (
-    isa => enum([ values %tied ]),
+    isa => enum(\@tied),
     is  => "rw",
     predicate => "has_tied",
 );
@@ -82,18 +75,95 @@ sub deletion_entry {
     );
 }
 
+use constant _version => 1;
+
+use constant _root      => 0x01;
+use constant _deleted   => 0x02;
+
+use constant _tied_shift => 2;
+use constant _tied_mask => 0x03 << _tied_shift;
+
+my %tied; @tied{@tied} = ( 1 .. scalar(@tied) );
+
+my %tied_old; @tied_old{@tied} = qw(H S A G);
+my %tied_old_r = reverse %tied_old;
+
+sub _pack {
+    my $self = shift;
+
+    my $flags = 0;
+
+    $flags |= _root if $self->root;
+    $flags |= _deleted if $self->deleted;
+
+    if ( $self->has_tied ) {
+        $flags |= $tied{$self->tied} << _tied_shift;
+    }
+
+    no warnings 'uninitialized';
+    pack( "C C w/a* w/a*", _version, $flags, $self->id, $self->class );
+}
+
+sub _unpack {
+    my ( $self, $packed ) = @_;
+
+    my ( $v, $body ) = unpack("C a*", $packed);
+
+    if ( $v == _version ) {
+        my ( $flags, $id, $class, $extra ) = unpack("C w/a w/a a*", $body);
+
+        return $self->_unpack_old($packed) if length($extra);
+
+        $self->id($id) if length($id);
+
+        $self->class($class) if length($class);
+
+        $self->root(1) if $flags & _root;
+        $self->deleted(1) if $flags & _deleted;
+
+        if ( my $tied = ( $flags & _tied_mask ) >> _tied_shift ) {
+            $self->tied( $tied[$tied - 1] );
+        }
+    } else {
+        $self->_unpack_old($packed);
+    }
+}
+
+
+sub _pack_old {
+    my $self = shift;
+
+    no warnings 'uninitialized';
+    join(",",
+        $self->id,
+        !!$self->root,
+        $self->class,
+        $tied_old{$self->tied},
+        !!$self->deleted,
+    );
+}
+
+sub _unpack_old {
+    my ( $self, $packed ) = @_;
+
+    my ( $id, $root, $class, $tied, $deleted ) = split ',', $packed;
+
+    die "bad entry format: $packed" if $root and $root ne '1';
+    die "bad entry format: $packed" if $deleted and $deleted ne '1';
+    die "bad entry format: $packed" if $tied and not exists $tied_old_r{$tied};
+
+    $self->id($id) if $id;
+    $self->root(1) if $root;
+    $self->class($class) if $class;
+    $self->tied($tied_old_r{$tied}) if $tied;
+    $self->deleted(1) if $deleted;
+}
+
 sub STORABLE_freeze {
     my ( $self, $cloning ) = @_;
 
-    no warnings 'uninitialized';
     return (
-        join(",",
-            $self->id,
-            !!$self->root,
-            $self->class,
-            $tied_r{$self->tied},
-            !!$self->deleted,
-        ),
+        $self->_pack,
         [
             ( $self->has_data         ? $self->data         : undef ),
             ( $self->has_backend_data ? $self->backend_data : undef ),
@@ -104,13 +174,7 @@ sub STORABLE_freeze {
 sub STORABLE_thaw {
     my ( $self, $cloning, $attrs, $refs ) = @_;
 
-    my ( $id, $root, $class, $tied, $deleted ) = split ',', $attrs;
-
-    $self->id($id) if $id;
-    $self->root(1) if $root;;
-    $self->class($class) if $class;
-    $self->tied($tied{$tied}) if $tied;
-    $self->deleted(1) if $deleted;
+    $self->_unpack($attrs);
 
     if ( $refs ) {
         my ( $data, $backend_data ) = @$refs;
