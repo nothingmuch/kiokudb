@@ -56,5 +56,7 @@ WriteMakefile(
         'Test::More' => 0,
 
         'Search::GIN' => 0.03,
+
+        'JSON' => 0,
     },
 );

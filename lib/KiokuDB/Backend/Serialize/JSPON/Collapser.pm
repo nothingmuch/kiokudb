@@ -5,6 +5,7 @@ use Moose;
 
 use KiokuDB::Entry;
 use KiokuDB::Reference;
+use JSON;
 
 use namespace::clean -except => 'meta';
 
@@ -35,6 +36,9 @@ sub visit_object {
         return {
             ( $object->has_class ? ( __CLASS__ => $object->class ) : () ),
             ( $id ? ( id => $id ) : () ),
+            ( $object->root ? ( root => JSON::true() ) : () ),
+            ( $object->deleted ? ( deleted => JSON::true() ) : () ),
+            ( $object->has_tied ? ( tied => $object->tied ) : () ),
             data => $self->visit($object->data),
         };
     } else {

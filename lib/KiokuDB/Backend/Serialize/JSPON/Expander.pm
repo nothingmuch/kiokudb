@@ -23,7 +23,13 @@ sub expand_jspon {
         push @attrs, class => $class;
     }
 
-    push @attrs, data => $self->visit($data->{data});
+    foreach my $key ( qw(deleted root) ) {
+        push @attrs, $key => ( $data->{$key} ? 1 : 0 ) if exists $data->{$key};
+    }
+
+    my $obj = $self->visit($data->{data});
+
+    push @attrs, data => $obj;
 
     return KiokuDB::Entry->new(
         %$data,
@@ -44,7 +50,11 @@ sub visit_hash {
         $id =~ s/\.data$//;
         return KiokuDB::Reference->new( id => $id, ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
     } else {
-        return $self->SUPER::visit_hash($hash);
+        if ( exists $hash->{__CLASS__} or exists $hash->{id} ) {
+            return $self->expand_jspon($hash);
+        } else {
+            return $self->SUPER::visit_hash($hash);
+        }
     }
 }
 
