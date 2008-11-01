@@ -400,6 +400,12 @@ This behavior is usually more appropriate for objects that aren't mutated, but
 are instead cloned and replaced, and for which creating a first class entry in
 the backend with its own ID is undesired.
 
+=head2 The Default Typemap
+
+Each backend comes with a default typemap, with some built in entries for
+common CPAN modules' objects. L<KiokuDB::TypeMap::Default> contains more
+details.
+
 =head1 GETTING STARTED WITH BDB
 
 So far we've only made use of L<KiokuDB::Backend::Hash>, so while our objects
