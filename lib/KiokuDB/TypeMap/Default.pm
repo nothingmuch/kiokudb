@@ -182,3 +182,47 @@ sub _build_tie_typemap {
 __PACKAGE__
 
 __END__
+
+=head1 NAME
+
+KiokuDB::TypeMap::Default - A standard L<KiokuDB::TypeMap> with predefined
+entries.
+
+=head1 SYNOPSIS
+
+    # the user typemap implicitly inherits from the default one, which is
+    # provided by the backend.
+
+    my $dir = KiokuDB->new(
+        backend => $b,
+        typemap => $user_typemap,
+    );
+
+=head1 DESCRIPTION
+
+The default typemap is actually defined per backend, in
+L<KiokuDB::TypeMap::Default::JSON> and L<KiokuDB::TypeMap::Default::Storable>.
+The list of classes handled by both is the same, but the typemap entries
+themselves are tailored to the specific backends' requirements/capabilities.
+
+The entries have no impact unless you are actually using the listed modules.
+
+=head1 SUPPORTED TYPES
+
+=over 4
+
+=item L<KiokuDB::Set>
+
+=item L<Tie::RefHash>
+
+=item L<Tie::IxHash>
+
+=item L<DateTime>
+
+=item L<URI>, L<URI::WithBase>
+
+=item L<Path::Class::Entity>
+
+=item L<Authen::Passphrase>
+
+=back
