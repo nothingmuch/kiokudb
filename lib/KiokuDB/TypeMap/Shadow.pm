@@ -30,3 +30,34 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Shadow - Try a list of L<KiokuDB::TypeMap>s in order
+
+=head1 SYNOPSIS
+
+    KiokuDB->new(
+        backend => ...,
+        typemap => KiokuDB::TypeMap::Shadow->new(
+            typemaps => [
+                $first,
+                $second,
+            ],
+        ),
+    );
+
+=head1 DESCRIPTION
+
+This class is useful for performing mixin inheritence like merging of typemaps,
+by shadowing an ordered list.
+
+This is used internally to overlay the user typemap on top of the
+L<KiokuDB::TypeMap::Default> instance provided by the backend.
+
+This differs from using C<includes> in L<KiokuDB::TypeMap> because that
+inclusion is computed symmetrically, like roles.
+
+=cut
