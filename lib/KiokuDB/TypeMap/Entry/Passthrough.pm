@@ -19,7 +19,7 @@ sub compile {
     if ( $self->intrinsic ) {
         return (
             sub { $_[1] },
-            sub { $_[1] },
+            sub { $_[1]->data }, # only called on an Entry, if the object is just an object, this won't be called
         );
     } else {
         return (

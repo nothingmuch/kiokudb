@@ -62,9 +62,10 @@ my $l = KiokuDB::Linker->new(
     typemap_resolver => $tr,
 );
 
-my $sl = $l->live_objects->new_scope;
-
 {
+    $l->live_objects->clear;
+    my $sl = $l->live_objects->new_scope;
+
     my ( $entries ) = $v->collapse( objects => [ $foo ],  );
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -80,6 +81,9 @@ my $sl = $l->live_objects->new_scope;
 }
 
 {
+    $l->live_objects->clear;
+    my $sl = $l->live_objects->new_scope;
+
     my ( $entries ) = $v->collapse( objects => [ $bar ],  );
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -93,4 +97,45 @@ my $sl = $l->live_objects->new_scope;
 
     isa_ok( $expanded, "Gorch", "expanded object" );
     is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
+
+    is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
+}
+
+# inflate data edge cases for backwards compat
+{
+    $l->live_objects->clear;
+    my $sl = $l->live_objects->new_scope;
+
+    my ( $entries ) = $v->collapse( objects => [ $bar ],  );
+    is( scalar(keys %$entries), 1, "one entry" );
+
+    my $entry = ( values %$entries )[0];
+
+    $entry->data->{foo} = KiokuDB::Entry->new( data => $entry->data->{foo} );
+
+    my $expanded = $l->expand_object($entry);
+
+    isa_ok( $expanded, "Gorch", "expanded object" );
+    is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
+
+    is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
+}
+
+{
+    $l->live_objects->clear;
+    my $sl = $l->live_objects->new_scope;
+
+    my ( $entries ) = $v->collapse( objects => [ $bar ],  );
+    is( scalar(keys %$entries), 1, "one entry" );
+
+    my $entry = ( values %$entries )[0];
+
+    $entry->data->{foo} = KiokuDB::Entry->new( data => $entry->data->{foo}, class => ref($entry->data->{foo}) );
+
+    my $expanded = $l->expand_object($entry);
+
+    isa_ok( $expanded, "Gorch", "expanded object" );
+    is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
+
+    is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
 }
