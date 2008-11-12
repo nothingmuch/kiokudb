@@ -57,6 +57,6 @@ WriteMakefile(
 
         'Search::GIN' => 0.03,
 
-        'JSON' => 0,
+        'JSON' => 2.12,
     },
 );
