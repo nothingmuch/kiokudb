@@ -84,13 +84,12 @@ sub inflate_data {
         $$into = $self->get_or_load_object($id);
         weaken($$into) if $data->is_weak;
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
-        my $obj;
-
-
         if ( my $class = $data->class ) {
             my $expand_method = $self->expand_method($class);
             $$into = $self->$expand_method($data);
         } else {
+            my $obj;
+
             $self->inflate_data($data->data, \$obj, $data );
 
             if ( my $tie = $data->tied ) {
