@@ -134,6 +134,9 @@ has directory => (
         new_scope
 
         txn_do
+
+        object_to_id
+        objects_to_ids
     )],
 );
 
