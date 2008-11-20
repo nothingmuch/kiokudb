@@ -216,7 +216,16 @@ sub no_live_objects {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    is_deeply( [ $self->live_objects ], [ ], "no live objects" );
+    unless ( is( scalar(()=$self->live_objects), 0, "no live objects" ) ){
+        diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } $self->live_objects;
+        diag Data::Dumper::Dumper($self->live_objects);
+
+        #use Devel::FindRef;
+        #my $track = Devel::FindRef::track($self->live_objects);
+        #warn $track;
+        #my ( @ids ) = map { hex } ( $track =~ /by \w+\(0x([a-z0-9]+)\)/ );
+        #warn Data::Dumper::Dumper(map { Devel::FindRef::ptr2ref($_) } @ids);
+    }
 }
 
 sub live_objects_are {
