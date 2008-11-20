@@ -8,6 +8,7 @@ use Test::More 'no_plan';
 use Storable qw(dclone);
 
 use ok 'KiokuDB::Entry';
+use ok 'KiokuDB::Reference';
 use ok 'KiokuDB::LiveObjects';
 
 {
@@ -90,3 +91,41 @@ my $l = KiokuDB::LiveObjects->new;
         }
     }
 }
+
+
+my ( $foo, $bar, $gorch ) = map { KiokuDB::Reference->new( id => $_ ) } qw(foo bar gorch);
+
+is_deeply(
+    [ KiokuDB::Entry->new( data => $foo )->references ],
+    [ $foo ],
+    "simple ref",
+);
+
+is_deeply(
+    [ KiokuDB::Entry->new( data => { foo => $foo } )->references ],
+    [ $foo ],
+    "simple ref in hash",
+);
+
+is_deeply(
+    [ sort KiokuDB::Entry->new( data => { foo => [ $foo, $bar ] } )->references ],
+    [ sort $foo, $bar ],
+    "multiple refs",
+);
+
+is_deeply(
+    [ KiokuDB::Entry->new( data => { foo => KiokuDB::Entry->new( data => [ $foo ] ) } )->references ],
+    [ $foo ],
+    "intrinsic entry",
+);
+
+is_deeply(
+    [ KiokuDB::Entry->new(
+        data  => [qw(foo bar)],
+        class => 'KiokuDB::Set::Stored',
+        id    => 'the_set',
+    )->references ],
+    [ $foo, $bar ],
+    "set entry",
+);
+

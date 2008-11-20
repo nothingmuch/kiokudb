@@ -75,6 +75,38 @@ sub deletion_entry {
     );
 }
 
+has _references => (
+    isa => "ArrayRef",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build__references {
+    my $self = shift;
+
+    no warnings 'uninitialized';
+    if ( $self->class eq 'KiokuDB::Set::Stored' ) { # FIXME should the typemap somehow handle this?
+        return [ map { KiokuDB::Reference->new( id => $_ ) } @{ $self->data } ];
+    } else {
+        my @refs;
+
+        # overkill
+        use Data::Visitor::Callback;
+        Data::Visitor::Callback->new(
+            'KiokuDB::Reference' => sub { push @refs, $_ },
+            'KiokuDB::Entry'     => sub { push @refs, $_->references },
+        )->visit($self->data);
+
+        return \@refs;
+    }
+}
+
+sub references {
+    my $self = shift;
+
+    return @{ $self->_references };
+}
+
 use constant _version => 1;
 
 use constant _root      => 0x01;
