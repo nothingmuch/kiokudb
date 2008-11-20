@@ -107,6 +107,38 @@ sub references {
     return @{ $self->_references };
 }
 
+has _referenced_ids => (
+    isa => "ArrayRef",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build__referenced_ids {
+    my $self = shift;
+
+    no warnings 'uninitialized';
+    if ( $self->class eq 'KiokuDB::Set::Stored' ) { # FIXME should the typemap somehow handle this?
+        return $self->data;
+    } else {
+        my @refs;
+
+        # overkill
+        use Data::Visitor::Callback;
+        Data::Visitor::Callback->new(
+            'KiokuDB::Reference' => sub { push @refs, $_->id },
+            'KiokuDB::Entry'     => sub { push @refs, $_->referenced_ids },
+        )->visit($self->data);
+
+        return \@refs;
+    }
+}
+
+sub referenced_ids {
+    my $self = shift;
+
+    @{ $self->_referenced_ids };
+}
+
 use constant _version => 1;
 
 use constant _root      => 0x01;
