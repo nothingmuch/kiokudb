@@ -34,6 +34,20 @@ sub v {
     STDERR->print(@_);
 }
 
+sub run {
+    my $self = shift;
+
+    my $t = -time;
+    my $tc = -times;
+
+    inner();
+    
+    $t += time;
+    $tc += times;
+
+    $self->v(sprintf "completed in %.2fs (%.2fs cpu)\n", $t, $tc);
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

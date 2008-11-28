@@ -119,11 +119,8 @@ sub BUILD {
     }
 }
 
-sub run {
+augment run => sub {
     my $self = shift;
-
-    my $t = -time();
-    my $tc = -times();
 
     $self->v("dumping entries\n");
 
@@ -142,11 +139,8 @@ sub run {
         $self->v(" done.\n");
     }
 
-    $t += time;
-    $tc += times;
-
-    $self->v(sprintf " no blocks remain.\ndump completed in %.2fs (%.2fs cpu)\n", $t, $tc);
-}
+    $self->v("no blocks remain.\n");
+};
 
 __PACKAGE__->meta->make_immutable;
 

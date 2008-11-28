@@ -102,11 +102,8 @@ sub BUILD {
     }
 }
 
-sub run {
+augment run => sub {
     my $self = shift;
-
-    my $t = -time();
-    my $tc = -times();
 
     my $b = $self->backend;
 
@@ -132,13 +129,7 @@ sub run {
     $self->v("\rloaded $i entries      \n");
 
     $self->try_txn_commit($b);
-
-    $t += time;
-    $tc += times;
-
-    $self->v(sprintf "load finished in %.2fs (%.2fs cpu)\n", $t, $tc);
-}
-
+};
 
 __PACKAGE__->meta->make_immutable;
 
