@@ -3,9 +3,9 @@
 package KiokuDB::Cmd::Command::Dump;
 use Moose;
 
-use KiokuDB::Backend::Role::Scan ();
-
 use Carp qw(croak);
+
+use KiokuDB::Backend::Role::Scan ();
 
 BEGIN { local $@; eval "use Time::HiRes qw(time)" };
 
@@ -18,23 +18,8 @@ use namespace::clean -except => 'meta';
 extends qw(KiokuDB::Cmd::Base);
 
 with qw(
-    KiokuDB::Cmd::WithDSN
+    KiokuDB::Cmd::WithDSN::Read
 );
-
-sub _build_backend {
-    my $self = shift;
-
-    my $dsn = $self->dsn || croak("--dsn is required");
-
-    $self->v("Connecting to DSN $dsn...");
-
-    require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend( $dsn, readonly => 1 );
-
-    $self->v(" $b\n");
-
-    $b;
-}
 
 has format => (
     isa => enum([qw(yaml json storable)]),

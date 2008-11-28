@@ -3,8 +3,6 @@
 package KiokuDB::Cmd::Command::Load;
 use Moose;
 
-use Carp qw(croak);
-
 use MooseX::Types::Path::Class qw(File);
 
 use Moose::Util::TypeConstraints;
@@ -17,61 +15,8 @@ use namespace::clean -except => 'meta';
 extends qw(KiokuDB::Cmd::Base);
 
 with qw(
-    KiokuDB::Cmd::WithDSN
+    KiokuDB::Cmd::WithDSN::Create
 );
-
-has clear => (
-    isa => "Bool",
-    is  => "ro",
-    cmd_aliases => "x",
-    documentation => "clear the database before loading",
-);
-
-has create => (
-    isa => "Bool",
-    is  => "ro",
-    default => 1,
-    cmd_aliases => "c",
-    documentation => "create the database if it doesn't exist (defaults to true)",
-);
-
-has _txn => (
-    traits => [qw(NoGetopt)],
-    is => "rw",
-);
-
-sub _build_backend {
-    my $self = shift;
-
-    my $dsn = $self->dsn || croak("--dsn is required");
-
-    $self->v("Connecting to DSN $dsn...");
-
-    require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend( $dsn, create => $self->create );
-
-    $self->v(" $b\n");
-
-    if ( $b->does("KiokuDB::Backend::Role::TXN") ) {
-        $self->v("starting transaction\n");
-        $self->_txn( $b->txn_begin );
-    }
-
-    if ( $self->clear ) {
-        unless ( $b->does("KiokuDB::Backend::Role::Clear") ) {
-            croak "--clear specified but $b does not support clearing";
-
-        }
-        $self->v("clearing database....");
-
-        $b->clear;
-
-        $self->v(" done\n");
-
-    }
-
-    $b;
-}
 
 has format => (
     isa => enum([qw(yaml json storable)]),
@@ -202,12 +147,7 @@ sub run {
 
     $self->v("\rloaded $i entries      \n");
 
-    if ( my $txn = $self->_txn ) {
-        $self->v("comitting transaction...");
-        $b->txn_commit($txn);
-        $self->_txn(undef);
-        $self->v(" done\n");
-    }
+    $self->try_txn_commit($b);
 
     $t += time;
     $tc += times;
