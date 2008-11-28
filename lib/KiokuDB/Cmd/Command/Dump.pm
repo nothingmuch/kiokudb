@@ -108,19 +108,6 @@ has output_handle => (
     lazy_build => 1,
 );
 
-has verbose => (
-    isa => "Bool",
-    is  => "ro",
-);
-
-sub v {
-    my $self = shift;
-    return unless $self->verbose;
-
-    STDERR->autoflush(1);
-    STDERR->print(@_);
-}
-
 sub _build_output_handle {
     my $self = shift;
 

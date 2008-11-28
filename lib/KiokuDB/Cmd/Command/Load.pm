@@ -157,19 +157,6 @@ sub _build_input_handle {
     }
 }
 
-has verbose => (
-    isa => "Bool",
-    is  => "ro",
-);
-
-sub v {
-    my $self = shift;
-    return unless $self->verbose;
-
-    STDERR->autoflush(1);
-    STDERR->print(@_);
-}
-
 sub BUILD {
     my $self = shift;
 

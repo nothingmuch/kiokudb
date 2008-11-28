@@ -14,6 +14,18 @@ has '+usage' => ( required => 0 );
 
 has '+app'   => ( required => 0 );
 
+has verbose => (
+    isa => "Bool",
+    is  => "ro",
+);
+
+sub v {
+    my $self = shift;
+    return unless $self->verbose;
+
+    STDERR->autoflush(1);
+    STDERR->print(@_);
+}
 
 __PACKAGE__->meta->make_immutable;
 
