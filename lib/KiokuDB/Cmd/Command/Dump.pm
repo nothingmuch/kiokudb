@@ -7,8 +7,6 @@ use Carp qw(croak);
 
 use KiokuDB::Backend::Role::Scan ();
 
-BEGIN { local $@; eval "use Time::HiRes qw(time)" };
-
 use MooseX::Types::Path::Class qw(File);
 
 use namespace::clean -except => 'meta';

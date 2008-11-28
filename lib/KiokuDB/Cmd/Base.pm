@@ -3,10 +3,11 @@
 package KiokuDB::Cmd::Base;
 use Moose;
 
+BEGIN { local $@; eval "use Time::HiRes qw(time)" };
+
 use namespace::clean -except => 'meta';
 
 extends qw(MooseX::App::Cmd::Command);
-
 
 # this is to enable programatic usage:
 
@@ -44,12 +45,12 @@ sub v {
 sub run {
     my $self = shift;
 
-    my $t = -time;
+    my $t = -time();
     my $tc = -times;
 
     inner();
     
-    $t += time;
+    $t += time();
     $tc += times;
 
     $self->v(sprintf "completed in %.2fs (%.2fs cpu)\n", $t, $tc);
