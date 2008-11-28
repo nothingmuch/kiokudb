@@ -17,13 +17,20 @@ has '+app'   => ( required => 0 );
 has verbose => (
     isa => "Bool",
     is  => "ro",
+    cmd_aliases => "v",
+    documentation => "more output",
 );
+
+sub BUILD {
+    my $self = shift;
+
+    STDERR->autoflush(1) if $self->verbose;
+}
 
 sub v {
     my $self = shift;
     return unless $self->verbose;
 
-    STDERR->autoflush(1);
     STDERR->print(@_);
 }
 
