@@ -9,7 +9,7 @@ use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Cmd::WithDSN
-    KiokUDB::Cmd::TXN
+    KiokuDB::Cmd::TXN
 );
 
 requires "v";
