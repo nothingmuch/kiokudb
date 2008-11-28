@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+warn "'kiokudump' has been deprecated in favor of 'kioku dump'\n";
+
+exec(qw(kioku dump), @ARGV);
+

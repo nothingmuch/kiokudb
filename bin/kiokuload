@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 
-use KiokuDB::Cmd::Command::Load;
+warn "'kiokuload' has been deprecated in favor of 'kioku load'\n";
 
-KiokuDB::Cmd::Command::Load->new_with_options->run;
-
+exec(qw(kioku load), @ARGV);
