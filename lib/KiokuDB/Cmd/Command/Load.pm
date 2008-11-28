@@ -5,8 +5,6 @@ use Moose;
 
 use MooseX::Types::Path::Class qw(File);
 
-use Moose::Util::TypeConstraints;
-
 use KiokuDB::Entry;
 use KiokuDB::Reference;
 
@@ -16,21 +14,7 @@ extends qw(KiokuDB::Cmd::Base);
 
 with qw(
     KiokuDB::Cmd::WithDSN::Create
-);
-
-has format => (
-    isa => enum([qw(yaml json storable)]),
-    is  => "ro",
-    default => "yaml",
-    cmd_aliases => "f",
-    documentation => "dump format ('yaml', 'storable', etc)"
-);
-
-has formatter => (
-    traits => [qw(NoGetopt)],
-    isa => "CodeRef",
-    is  => "ro",
-    lazy_build => 1,
+    KiokuDB::Cmd::DumpFormatter
 );
 
 sub _build_formatter {
