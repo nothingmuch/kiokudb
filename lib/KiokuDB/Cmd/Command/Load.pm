@@ -16,26 +16,28 @@ use namespace::clean -except => 'meta';
 
 extends qw(KiokuDB::Cmd::Base);
 
+with qw(
+    KiokuDB::Cmd::WithDSN
+);
+
 has clear => (
     isa => "Bool",
     is  => "ro",
+    cmd_aliases => "x",
+    documentation => "clear the database before loading",
 );
 
-has dsn => (
-    isa => "Str",
+has create => (
+    isa => "Bool",
     is  => "ro",
+    default => 1,
+    cmd_aliases => "c",
+    documentation => "create the database if it doesn't exist (defaults to true)",
 );
 
 has _txn => (
     traits => [qw(NoGetopt)],
     is => "rw",
-);
-
-has backend => (
-    traits => [qw(NoGetopt)],
-    does => "KiokuDB::Backend",
-    is   => "ro",
-    lazy_build => 1,
 );
 
 sub _build_backend {
@@ -46,7 +48,7 @@ sub _build_backend {
     $self->v("Connecting to DSN $dsn...");
 
     require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend( $dsn, create => 1 );
+    my $b = KiokuDB::Util::dsn_to_backend( $dsn, create => $self->create );
 
     $self->v(" $b\n");
 
@@ -75,6 +77,8 @@ has format => (
     isa => enum([qw(yaml json storable)]),
     is  => "ro",
     default => "yaml",
+    cmd_aliases => "f",
+    documentation => "dump format ('yaml', 'storable', etc)"
 );
 
 has formatter => (
@@ -138,6 +142,8 @@ has file => (
     is  => "ro",
     coerce => 1,
     predicate => "has_file",
+    cmd_aliases => "i",
+    documentation => "input file (defaults to STDIN)",
 );
 
 has input_handle => (

@@ -17,16 +17,8 @@ use namespace::clean -except => 'meta';
 
 extends qw(KiokuDB::Cmd::Base);
 
-has dsn => (
-    isa => "Str",
-    is  => "ro",
-);
-
-has backend => (
-    traits => [qw(NoGetopt)],
-    does => "KiokuDB::Backend::Role::Scan",
-    is   => "ro",
-    lazy_build => 1,
+with qw(
+    KiokuDB::Cmd::WithDSN
 );
 
 sub _build_backend {
@@ -48,6 +40,8 @@ has format => (
     isa => enum([qw(yaml json storable)]),
     is  => "ro",
     default => "yaml",
+    cmd_aliases => "f",
+    documentation => "dump format ('yaml', 'storable', etc)"
 );
 
 has formatter => (
@@ -83,22 +77,30 @@ has file => (
     isa => File,
     is  => "ro",
     coerce => 1,
+    cmd_aliases => "o",
+    documentation => "output file (defaults to STDOUT)",
 );
 
 has force => (
     isa => "Bool",
     is  => "ro",
+    cmd_aliases => "F",
+    documentation => "allow overwriting of files",
 );
 
 has backup => (
     isa => "Bool",
     is  => "ro",
+    cmd_aliases => "b",
+    documentation => "rename file before writing",
 );
 
 has backup_ext => (
     isa => "Str",
     is  => "ro",
     default => ".bak",
+    cmd_aliases => "B",
+    documentation => "backup extension (defaults to .bak)",
 );
 
 has output_handle => (
