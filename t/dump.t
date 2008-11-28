@@ -7,8 +7,8 @@ use Scalar::Util qw(refaddr);
 
 use Test::More 'no_plan';
 
-use ok 'KiokuDB::Cmd::Dump';
-use ok 'KiokuDB::Cmd::Load';
+use ok 'KiokuDB::Cmd::Command::Dump';
+use ok 'KiokuDB::Cmd::Command::Load';
 
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB';
@@ -40,13 +40,13 @@ foreach my $format ( @formats ) {
 
     open my $fh, ">", \$buf;;
 
-    my $dump = KiokuDB::Cmd::Dump->new(
+    my $dump = KiokuDB::Cmd::Command::Dump->new(
         backend => $backend,
         output_handle => $fh,
         format => $format,
     );
 
-    isa_ok( $dump, "KiokuDB::Cmd::Dump", "$format dumper" );
+    isa_ok( $dump, "KiokuDB::Cmd::Command::Dump", "$format dumper" );
 
     is( $buf, "", "nothing in buffer" );
 
@@ -65,13 +65,13 @@ foreach my $format ( @formats ) {
 
         open my $read, "<", \$buf;
 
-        my $load = KiokuDB::Cmd::Load->new(
+        my $load = KiokuDB::Cmd::Command::Load->new(
             backend => $copy_backend,
             input_handle => $read,
             format => $format,
         );
 
-        isa_ok( $load, "KiokuDB::Cmd::Load", "$format loader" );
+        isa_ok( $load, "KiokuDB::Cmd::Command::Load", "$format loader" );
 
         is_deeply(
             [ $copy_backend->all_entries->all ],

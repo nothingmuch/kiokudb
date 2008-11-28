@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Cmd::Load;
+package KiokuDB::Cmd::Command::Load;
 use Moose;
 
 use Carp qw(croak);
@@ -14,7 +14,7 @@ use KiokuDB::Reference;
 
 use namespace::clean -except => 'meta';
 
-with qw(MooseX::Getopt);
+extends qw(KiokuDB::Cmd::Base);
 
 has clear => (
     isa => "Bool",
@@ -41,7 +41,7 @@ has backend => (
 sub _build_backend {
     my $self = shift;
 
-    my $dsn = $self->dsn || croak("'dsn' or 'backend' is required");
+    my $dsn = $self->dsn || croak("--dsn is required");
 
     $self->v("Connecting to DSN $dsn...");
 
@@ -173,9 +173,11 @@ sub v {
 sub BUILD {
     my $self = shift;
 
-    $self->backend;
-    $self->formatter;
-    $self->input_handle;
+    unless ( $self->app ) {
+        $self->backend;
+        $self->formatter;
+        $self->input_handle;
+    }
 }
 
 sub run {
@@ -231,7 +233,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Cmd::Load - Load database dumps
+KiokuDB::Cmd::Command::Load - Load database dumps
 
 =head1 SYNOPSIS
 
@@ -243,9 +245,9 @@ KiokuDB::Cmd::Load - Load database dumps
 
     # programmatic API
 
-    use KiokuDB::Cmd::Load;
+    use KiokuDB::Cmd::Command::Load;
 
-    my $loader = KiokuDB::Cmd::Load->new(
+    my $loader = KiokuDB::Cmd::Command::Load->new(
         backend => $backend,
         formatter => sub { ... },
         input_handle => $fh,
@@ -256,7 +258,7 @@ KiokuDB::Cmd::Load - Load database dumps
 
 =head1 DESCRIPTION
 
-This class loads dumps created by L<KiokuDB::Cmd::Dump>.
+This class loads dumps created by L<KiokuDB::Cmd::Command::Dump>.
 
 Entries will be read sequentially from C<input_handle>, deserialized, and
 inserted into the database.

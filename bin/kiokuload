@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use KiokuDB::Cmd::Load;
+use KiokuDB::Cmd::Command::Load;
 
-KiokuDB::Cmd::Load->new_with_options->run;
+KiokuDB::Cmd::Command::Load->new_with_options->run;
 

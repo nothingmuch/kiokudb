@@ -31,7 +31,7 @@ KiokuDB::Cmd - L<KiokuDB> command line tools
 
 This is an L<App::Cmd> based, pluggable suite of commands for L<KiokuDB>.
 
-Some commands such as L<KiokuDB::Cmd::Dump> are part of the core distributions,
+Some commands such as L<KiokuDB::Cmd::Command::Dump> are part of the core distributions,
 but backends can provide their own subcommands as well.
 
 =cut

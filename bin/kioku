@@ -3,5 +3,7 @@
 use strict;
 use warnings;
 
-use KiokuDB::Cmd -run;
+use KiokuDB::Cmd;
+
+KiokuDB::Cmd->run; # cleaner errors
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package KiokuDB::Cmd::Dump;
+package KiokuDB::Cmd::Command::Dump;
 use Moose;
 
 use KiokuDB::Backend::Role::Scan ();
@@ -15,7 +15,7 @@ use Moose::Util::TypeConstraints;
 
 use namespace::clean -except => 'meta';
 
-with qw(MooseX::Getopt);
+extends qw(KiokuDB::Cmd::Base);
 
 has dsn => (
     isa => "Str",
@@ -32,7 +32,7 @@ has backend => (
 sub _build_backend {
     my $self = shift;
 
-    my $dsn = $self->dsn || croak("Either 'dsn' or 'backend' is required");
+    my $dsn = $self->dsn || croak("--dsn is required");
 
     $self->v("Connecting to DSN $dsn...");
 
@@ -154,9 +154,11 @@ sub _build_output_handle {
 sub BUILD {
     my $self = shift;
 
-    $self->backend;
-    $self->formatter;
-    $self->output_handle;
+    unless ( $self->app ) {
+        $self->backend;
+        $self->formatter;
+        $self->output_handle;
+    }
 }
 
 sub run {
@@ -198,7 +200,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Cmd::Dump - Dump database entries for backup or munging purposes
+KiokuDB::Cmd::Command::Dump - Dump database entries for backup or munging purposes
 
 =head1 SYNOPSIS
 
@@ -211,9 +213,9 @@ KiokuDB::Cmd::Dump - Dump database entries for backup or munging purposes
 
     # programmatic API
 
-    use KiokuDB::Cmd::Dump;
+    use KiokuDB::Cmd::Command::Dump;
 
-    my $dumper = KiokuDB::Cmd::Dump->new(
+    my $dumper = KiokuDB::Cmd::Command::Dump->new(
         backend => $backend,
         formatter => sub { ... },
         output_handle => $fh,
@@ -228,7 +230,7 @@ dumped using this api.
 
 The data can then be edited or simply retained for backup purposes.
 
-The data can be loaded using L<KiokuDB::Cmd::Load>.
+The data can be loaded using L<KiokuDB::Cmd::Command::Load>.
 
 =head1 COMMAND LINE API
 
