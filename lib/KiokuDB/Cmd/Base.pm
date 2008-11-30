@@ -9,6 +9,8 @@ use namespace::clean -except => 'meta';
 
 extends qw(MooseX::App::Cmd::Command);
 
+with qw(KiokuDB::Cmd::Verbosity);
+
 # this is to enable programatic usage:
 
 has '+usage' => ( required => 0 );
@@ -21,26 +23,6 @@ has exit_code => (
     is  => "rw",
     predicate => "has_exit_code",
 );
-
-has verbose => (
-    isa => "Bool",
-    is  => "ro",
-    cmd_aliases => "v",
-    documentation => "more output",
-);
-
-sub BUILD {
-    my $self = shift;
-
-    STDERR->autoflush(1) if $self->verbose;
-}
-
-sub v {
-    my $self = shift;
-    return unless $self->verbose;
-
-    STDERR->print(@_);
-}
 
 sub run {
     my $self = shift;
