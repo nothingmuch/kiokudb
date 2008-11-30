@@ -16,6 +16,13 @@ with qw(
 
 has '+verbose' => ( default => 1 );
 
+has print => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+    documentation => "print broken entries to STDOUT at end",
+);
+
 augment run => sub {
     my $self = shift;
 
@@ -28,6 +35,10 @@ augment run => sub {
     if ( $l->missing->size == 0 ) {
         $self->v("No missing entries, everything is OK\n");
     } else {
+        if ( $self->print ) {
+            local $, = local $\ = "\n";
+            print STDOUT $l->broken->members;
+        }
         $self->exit_code(1);
     }
 };
