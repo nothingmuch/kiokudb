@@ -100,7 +100,7 @@ sub _build_output_handle {
             }
         }
 
-        $self->v("openining $file for writing\n");
+        $self->v("opening $file for writing\n");
 
         return $file->openw;
     } else {
@@ -128,6 +128,7 @@ augment run => sub {
         $self->v(" done.\n");
     }
 
+    $self->v("\r                             \r");
     $self->v("no blocks remain.\n");
 };
 
