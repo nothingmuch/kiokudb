@@ -11,6 +11,7 @@ extends qw(KiokuDB::Cmd::Base);
 
 with qw(
     KiokuDB::Cmd::WithDSN::Read
+    KiokuDB::Cmd::SpecifiedEntries
 );
 
 has '+verbose' => ( default => 1 );
@@ -18,7 +19,11 @@ has '+verbose' => ( default => 1 );
 augment run => sub {
     my $self = shift;
 
-    my $l = KiokuDB::LinkChecker->new( backend => $self->backend, verbose => $self->verbose );
+    my $l = KiokuDB::LinkChecker->new(
+        backend => $self->backend,
+        entries => $self->entries,
+        verbose => $self->verbose,
+    );
 
     if ( $l->missing->size == 0 ) {
         $self->v("No missing entries, everything is OK\n");
