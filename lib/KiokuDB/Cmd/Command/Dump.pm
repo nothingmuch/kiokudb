@@ -72,7 +72,7 @@ has backup_ext => (
 );
 
 has output_handle => (
-    traits => [qw(NoGetopt)],
+    traits => [qw(NoGetopt EarlyBuild)],
     isa => "FileHandle",
     is  => "ro",
     lazy_build => 1,
@@ -105,16 +105,6 @@ sub _build_output_handle {
         return $file->openw;
     } else {
         return \*STDOUT;
-    }
-}
-
-sub BUILD {
-    my $self = shift;
-
-    unless ( $self->app ) {
-        $self->backend;
-        $self->formatter;
-        $self->output_handle;
     }
 }
 

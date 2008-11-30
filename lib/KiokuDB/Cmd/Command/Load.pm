@@ -76,7 +76,7 @@ has file => (
 );
 
 has input_handle => (
-    traits => [qw(NoGetopt)],
+    traits => [qw(NoGetopt EarlyBuild)],
     isa => "FileHandle",
     is  => "ro",
     lazy_build => 1,
@@ -89,16 +89,6 @@ sub _build_input_handle {
         $self->file->openr;
     } else {
         \*STDIN;
-    }
-}
-
-sub BUILD {
-    my $self = shift;
-
-    unless ( $self->app ) {
-        $self->backend;
-        $self->formatter;
-        $self->input_handle;
     }
 }
 

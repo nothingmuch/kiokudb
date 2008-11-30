@@ -13,7 +13,7 @@ has dsn => (
 );
 
 has backend => (
-    traits => [qw(NoGetopt)],
+    traits => [qw(NoGetopt EarlyBuild)],
     does => "KiokuDB::Backend",
     is   => "ro",
     lazy_build => 1,

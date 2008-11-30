@@ -16,7 +16,7 @@ has format => (
 );
 
 has formatter => (
-    traits => [qw(NoGetopt)],
+    traits => [qw(NoGetopt EarlyBuild)],
     isa => "CodeRef",
     is  => "ro",
     lazy_build => 1,
