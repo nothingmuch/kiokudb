@@ -3,8 +3,6 @@
 package KiokuDB::Cmd::Command::Load;
 use Moose;
 
-use MooseX::Types::Path::Class qw(File);
-
 use KiokuDB::Entry;
 use KiokuDB::Reference;
 
@@ -15,6 +13,7 @@ extends qw(KiokuDB::Cmd::Base);
 with qw(
     KiokuDB::Cmd::WithDSN::Create
     KiokuDB::Cmd::DumpFormatter
+    KiokuDB::Cmd::InputHandle
 );
 
 sub _build_formatter_yaml {
@@ -57,32 +56,6 @@ sub _build_formatter_storable {
     require Storable;
     return sub {
         !$_[0]->eof && Storable::fd_retrieve($_[0]) || return ();
-    }
-}
-
-has file => (
-    isa => File,
-    is  => "ro",
-    coerce => 1,
-    predicate => "has_file",
-    cmd_aliases => "i",
-    documentation => "input file (defaults to STDIN)",
-);
-
-has input_handle => (
-    traits => [qw(NoGetopt EarlyBuild)],
-    isa => "FileHandle",
-    is  => "ro",
-    lazy_build => 1,
-);
-
-sub _build_input_handle {
-    my $self = shift;
-
-    if ( $self->has_file ) {
-        $self->file->openr;
-    } else {
-        \*STDIN;
     }
 }
 

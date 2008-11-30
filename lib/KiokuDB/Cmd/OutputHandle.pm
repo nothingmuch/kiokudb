@@ -8,6 +8,8 @@ use MooseX::Types::Path::Class qw(File);
 
 use namespace::clean -except => 'meta';
 
+excludes qw(KiokuDB::Cmd::InputHandle);
+
 has file => (
     isa => File,
     is  => "ro",
