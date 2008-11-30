@@ -8,13 +8,18 @@ use Test::More 'no_plan';
 use ok 'KiokuDB::LinkChecker';
 use ok 'KiokuDB::Entry';
 use ok 'KiokuDB::Reference';
+use ok 'KiokuDB::Backend::Hash';
 
 use Data::Stream::Bulk::Util qw(bulk);
 
 {
+    my $b = KiokuDB::Backend::Hash->new;
+
     my @entries = KiokuDB::Entry->new( data => [ "foo" ], id => "bar" );
 
-    my $l = KiokuDB::LinkChecker->new( entries => bulk(@entries) );
+    $b->insert(@entries);
+
+    my $l = KiokuDB::LinkChecker->new( backend => $b );
 
     is( $l->missing->size, 0, "no missing entries" );
 
@@ -26,9 +31,13 @@ use Data::Stream::Bulk::Util qw(bulk);
 }
 
 {
+    my $b = KiokuDB::Backend::Hash->new;
+
     my @entries = KiokuDB::Entry->new( data => [ KiokuDB::Reference->new( id => "bar" ) ], id => "bar" );
 
-    my $l = KiokuDB::LinkChecker->new( entries => bulk(@entries) );
+    $b->insert(@entries);
+
+    my $l = KiokuDB::LinkChecker->new( backend => $b );
 
     is( $l->missing->size, 0, "no missing entries" );
 
@@ -40,10 +49,15 @@ use Data::Stream::Bulk::Util qw(bulk);
 
     is_deeply( [ $l->referenced->members ], [ "bar" ], "referenced ID is 'bar'" );
 }
+
 {
+    my $b = KiokuDB::Backend::Hash->new;
+
     my @entries = KiokuDB::Entry->new( data => [ KiokuDB::Reference->new( id => "gorch" ) ], id => "bar" );
 
-    my $l = KiokuDB::LinkChecker->new( entries => bulk(@entries) );
+    $b->insert(@entries);
+
+    my $l = KiokuDB::LinkChecker->new( backend => $b );
 
     is( $l->missing->size, 1, "one missing entry" );
 
@@ -71,8 +85,12 @@ use Data::Stream::Bulk::Util qw(bulk);
         ),
     );
 
+    my $b = KiokuDB::Backend::Hash->new;
+
+    $b->insert(@entries);
+
     foreach my $entries ( \@entries, [ reverse @entries ] ) {
-        my $l = KiokuDB::LinkChecker->new( entries => bulk(@$entries) );
+        my $l = KiokuDB::LinkChecker->new( backend => $b, entries => bulk(@$entries) );
 
         is( $l->missing->size, 1, "one missing entry" );
 

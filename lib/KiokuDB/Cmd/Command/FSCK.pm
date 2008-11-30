@@ -13,12 +13,12 @@ with qw(
     KiokuDB::Cmd::WithDSN::Read
 );
 
+has '+verbose' => ( default => 1 );
+
 augment run => sub {
     my $self = shift;
 
-    my $backend = $self->backend;
-
-    my $l = KiokuDB::LinkChecker->new( entries => $backend->all_entries );
+    my $l = KiokuDB::LinkChecker->new( backend => $self->backend, verbose => $self->verbose );
 
     if ( $l->missing->size == 0 ) {
         $self->v("No missing entries, everything is OK\n");

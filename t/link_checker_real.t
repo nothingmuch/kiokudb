@@ -19,7 +19,7 @@ my $f = KiokuDB::Test::Fixture::ObjectGraph->new( directory => $dir );
 $f->populate;
 
 {
-    my $l = KiokuDB::LinkChecker->new( entries => $backend->all_entries );
+    my $l = KiokuDB::LinkChecker->new( backend => $backend );
 
     cmp_ok( $l->seen->size, '>', 0, "seen some entries" );
     cmp_ok( $l->missing->size, '==', 0, "no missing entries" );
@@ -28,7 +28,7 @@ $f->populate;
 $f->verify; # deletes putin, and removes the ref from Dubya
 
 {
-    my $l = KiokuDB::LinkChecker->new( entries => $backend->all_entries );
+    my $l = KiokuDB::LinkChecker->new( backend => $backend );
 
     cmp_ok( $l->seen->size, '>', 0, "seen some entries" );
     cmp_ok( $l->missing->size, '==', 0, "no missing entries" );
@@ -47,7 +47,7 @@ my $deleted_id = do {
 };
 
 {
-    my $l = KiokuDB::LinkChecker->new( entries => $backend->all_entries );
+    my $l = KiokuDB::LinkChecker->new( backend => $backend );
 
     cmp_ok( $l->seen->size, '>', 0, "seen some entries" );
     cmp_ok( $l->missing->size, '==', 1, "one missing entry" );

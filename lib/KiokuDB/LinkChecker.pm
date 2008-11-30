@@ -3,84 +3,80 @@
 package KiokuDB::LinkChecker;
 use Moose;
 
-use Set::Object;
+use KiokuDB::LinkChecker::Results;
 
 use namespace::clean -except => 'meta';
 
-has entries => (
-    does => "Data::Stream::Bulk",
+with qw(KiokuDB::Cmd::Verbosity);
+
+has backend => (
+    does => "KiokuDB::Backend",
     is   => "ro",
     required => 1,
 );
 
-# Set::Object of 1 million IDs is roughly 100mb of memory == 100 bytes per ID
-# no need to scale anything more, if you have that many objects you should
-# probably write your own tool
-has [qw(seen referenced missing)] => (
-    isa => "Set::Object",
-    is  => "ro",
+has entries => (
+    does => "Data::Stream::Bulk",
+    is   => "ro",
     lazy_build => 1,
 );
 
-sub _build_missing {
-    my $self = shift;
-
-    $self->referenced->difference( $self->seen );
+sub _build_entries {
+    shift->backend->all_entries;
 }
 
-sub missing_ids {
-    my $self = shift;
-    $self->missing->members;
-}
+has [qw(block_callback entry_callback)] => (
+    isa => "CodeRef|Str",
+    is  => "ro",
+);
 
-sub _build_seen {
-    my $self = shift;
+has results => (
+    isa => "KiokuDB::LinkChecker::Results",
+    handles => qr/.*/,
+    lazy_build => 1,
+);
 
-    my ( $seen, $referenced ) = $self->_visit_entries;
-
-    $self->meta->find_attribute_by_name("referenced")->set_value( $self, $referenced );
-
-    return $seen;
-}
-
-sub _build_referenced {
+sub _build_results {
     my $self = shift;
 
-    my ( $seen, $referenced ) = $self->_visit_entries;
+    my $res = KiokuDB::LinkChecker::Results->new;
 
-    $self->meta->find_attribute_by_name("seen")->set_value( $self, $seen );
+    my ( $seen, $referenced, $missing, $broken ) = map { $res->$_ } qw(seen referenced missing broken);
 
-    return $referenced;
-}
-
-sub _visit_entries {
-    my $self = shift;
-
-    my ( $seen, $referenced ) = map { Set::Object->new } 1 .. 2;
+    my $i = my $j = 0;
 
     while ( my $next = $self->entries->next ) {
+        $i += @$next;
+        $j += @$next;
+
+        if ( $j > 13 ) { # luv primes
+            $j = 0;
+            $self->v("\rchecking... $i");
+        }
+
         foreach my $entry ( @$next ) {
-            # FIXME progress report?
             $seen->insert($entry->id);
 
             my @ids = $entry->referenced_ids;
 
+            my @new = grep { !$referenced->includes($_) && !$seen->includes($_) } @ids;
+
+            my %exists;
+            @exists{@new} = $self->backend->exists(@new);
+
+            if ( my @missing = grep { not $exists{$_} } @new ) {
+                $self->v("\rfound broken entry: " . $entry->id . " (references nonexisting IDs @missing)\n");
+                $missing->insert(@missing);
+                $broken->insert($entry->id);
+            }
+
             $referenced->insert(@ids);
-
-            # incremental pass requires backend... implement?
-
-            #my @new_ids = grep { !$seen->includes($_) && !$missing->includes($_) } @ids;
-
-            #my %exists; @exists{@new_ids} = $self->backend->exists(@new_ids);
-
-            #foreach my $id ( @new_ids ) {
-            #    ( $exists{$id} ? $seen : $missing )->insert($id);
-            #}
-
         }
     }
 
-    return ( $seen, $referenced );
+    $self->v("\rchecked $i entries      \n");
+
+    return $res;
 }
 
 __PACKAGE__->meta->make_immutable;
