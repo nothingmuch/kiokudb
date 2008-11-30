@@ -18,13 +18,6 @@ with qw(
     KiokuDB::Cmd::DumpFormatter
     KiokuDB::Cmd::SpecifiedEntries
 );
-
-sub _build_formatter {
-    my $self = shift;
-    my $builder = "_build_formatter_" . $self->format;
-    $self->$builder;
-}
-
 sub _build_formatter_yaml {
     require YAML::XS;
     sub { $_[1]->print(YAML::XS::Dump($_[0])) };

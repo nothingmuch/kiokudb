@@ -17,12 +17,6 @@ with qw(
     KiokuDB::Cmd::DumpFormatter
 );
 
-sub _build_formatter {
-    my $self = shift;
-    my $builder = "_build_formatter_" . $self->format;
-    $self->$builder;
-}
-
 sub _build_formatter_yaml {
     require YAML::XS;
 

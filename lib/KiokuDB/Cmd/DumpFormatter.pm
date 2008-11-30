@@ -22,7 +22,16 @@ has formatter => (
     lazy_build => 1,
 );
 
-requires '_build_formatter';
+
+sub _build_formatter {
+    my $self = shift;
+    my $builder = "_build_formatter_" . $self->format;
+    $self->$builder;
+}
+
+requires '_build_formatter_yaml';
+requires '_build_formatter_storable';
+requires '_build_formatter_json';
 
 __PACKAGE__
 
