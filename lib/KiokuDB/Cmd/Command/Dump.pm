@@ -7,6 +7,8 @@ use Carp qw(croak);
 
 use KiokuDB::Backend::Role::Scan ();
 
+use Data::Stream::Bulk::Util qw(bulk);
+
 use MooseX::Types::Path::Class qw(File);
 
 use namespace::clean -except => 'meta';
@@ -107,6 +109,30 @@ sub _build_output_handle {
     }
 }
 
+has ids => (
+    does => "ArrayRef[Str]",
+    is   => "ro",
+    predicate => "has_ids",
+    documentation => "dump only these entries (can be specified multiple times)",
+);
+
+has entries => (
+    traits => [qw(NoGetopt)],
+    does => "Data::Stream::Bulk",
+    is   => "ro",
+    lazy_build => 1,
+);
+
+sub _build_entries {
+    my $self = shift;
+
+    if ( $self->has_ids ) {
+        return bulk($self->backend->get(@{ $self->ids }));
+    } else {
+        return $self->backend->all_entries;
+    }
+}
+
 sub BUILD {
     my $self = shift;
 
@@ -122,7 +148,7 @@ augment run => sub {
 
     $self->v("dumping entries\n");
 
-    my $stream = $self->backend->all_entries;
+    my $stream = $self->entries;
 
     my $out = $self->output_handle;
     my $fmt = $self->formatter;
