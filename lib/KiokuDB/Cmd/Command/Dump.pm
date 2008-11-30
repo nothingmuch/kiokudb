@@ -7,8 +7,6 @@ use Carp qw(croak);
 
 use KiokuDB::Backend::Role::Scan ();
 
-use Data::Stream::Bulk::Util qw(bulk);
-
 use MooseX::Types::Path::Class qw(File);
 
 use namespace::clean -except => 'meta';
@@ -18,6 +16,7 @@ extends qw(KiokuDB::Cmd::Base);
 with qw(
     KiokuDB::Cmd::WithDSN::Read
     KiokuDB::Cmd::DumpFormatter
+    KiokuDB::Cmd::SpecifiedEntries
 );
 
 sub _build_formatter {
@@ -106,30 +105,6 @@ sub _build_output_handle {
         return $file->openw;
     } else {
         return \*STDOUT;
-    }
-}
-
-has ids => (
-    does => "ArrayRef[Str]",
-    is   => "ro",
-    predicate => "has_ids",
-    documentation => "dump only these entries (can be specified multiple times)",
-);
-
-has entries => (
-    traits => [qw(NoGetopt)],
-    does => "Data::Stream::Bulk",
-    is   => "ro",
-    lazy_build => 1,
-);
-
-sub _build_entries {
-    my $self = shift;
-
-    if ( $self->has_ids ) {
-        return bulk($self->backend->get(@{ $self->ids }));
-    } else {
-        return $self->backend->all_entries;
     }
 }
 
