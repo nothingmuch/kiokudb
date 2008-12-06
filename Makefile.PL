@@ -17,11 +17,15 @@ WriteMakefile(
         'Moose' => '0.60',
         #'MooseX::AttributeHelpers' => '0.14',
         'MooseX::Types::Path::Class' => 0,
+        'Path::Class' => 0,
 
         # Command line utilities
         'MooseX::Getopt' => 0,
         'App::Cmd' => 0.202,
         'MooseX::App::Cmd' => 0,
+
+        # configure
+        'MooseX::YAML' => 0.02,
 
         # misc dev shit
         'Scalar::Util' => 0,

@@ -23,8 +23,28 @@ use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
 sub connect {
     my ( $class, $dsn, @args ) = @_;
+
+    if ( -d $dsn ) {
+        return $class->configure($dsn, @args);
+    } else {
+        require KiokuDB::Util;
+        return $class->new( backend => KiokuDB::Util::dsn_to_backend($dsn, @args), @args );
+    }
+}
+
+sub configure {
+    my ( $class, $base, @args ) = @_;
+
+    require Path::Class;
+    $base = Path::Class::dir($base) unless blessed $base;
+
     require KiokuDB::Util;
-    $class->new( backend => KiokuDB::Util::dsn_to_backend($dsn, @args), @args );
+    my $config = KiokuDB::Util::load_config($base);
+
+    my $backend = KiokuDB::Util::config_to_backend( $config, base => $base, @args );
+
+    # FIXME gin extractor, typemap, etc
+    $class->new( %$config, @args, backend => $backend );
 }
 
 has typemap => (

@@ -5,9 +5,10 @@ package KiokuDB::Util;
 use strict;
 use warnings;
 
-use Path::Class::File;
+use Path::Class;
 
 use Carp qw(croak);
+use Scalar::Util qw(blessed);
 
 use namespace::clean;
 
@@ -45,6 +46,36 @@ sub dsn_to_backend {
     } else {
         croak "Malformed DSN: $dsn";
     }
+}
+
+sub load_config {
+    my ( $base ) = @_;
+
+    my $config_file = dir($base)->file("kiokudb.yml");
+
+    $config_file->openr;
+
+    require MooseX::YAML;
+    MooseX::YAML::LoadFile($config_file);
+}
+
+sub config_to_backend {
+    my ( $config, %args ) = @_;
+
+    my $base = delete($args{base});
+
+    my $backend = $config->{backend};
+
+    return $backend if blessed($backend);
+
+    my $backend_class = $backend->{class};
+    Class::MOP::load_class($backend_class);
+
+    return $backend_class->new_from_dsn_params(
+        ( defined($base) ? ( dir => $base->subdir("data") ) : () ),
+        %$backend,
+        %args,
+    );
 }
 
 __PACKAGE__
