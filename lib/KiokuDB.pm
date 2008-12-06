@@ -453,7 +453,8 @@ L<KiokuDB> is meant to solve two related persistence problems:
 =item Transparent persistence
 
 Store arbitrary objects without changing their class definitions or worrying
-about schema details.
+about schema details, and without needing to conform to the limitations of
+a relational model.
 
 =item Interoperability
 
