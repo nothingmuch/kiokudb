@@ -32,6 +32,8 @@ sub _build_formatter_storable {
     return \&Storable::nstore_fd;
 }
 
+has '+entries_in_args' => ( default => 1 );
+
 augment run => sub {
     my $self = shift;
 
