@@ -478,13 +478,16 @@ limitations.
 
 =head2 Collapsing
 
-When an object is introduced to L<KiokuDB> it's collapsed into an
+When an object is stored using L<KiokuDB> it's collapsed into an
 L<KiokDB::Entry|Entry>.
 
 An entry is a simplified representation of the object, allowing the data to be
-saved independently of other objects in formats as simple as JSON.
+saved in formats as simple as JSON.
 
-References to other objects are converted to symbolic references in the entry.
+References to other objects are converted to symbolic references in the entry,
+so objects can be saved independently of each other.
+
+The entries are given to the L<KiokuDB::Backend|Backend> for actual storage.
 
 Collapsing is explained in detail in L<KiokuDB::Collapser>. The way an entry is
 created varies with the object's class.
