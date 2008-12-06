@@ -119,7 +119,6 @@ has directory => (
         clear_live_objects
         
         backend
-        resolver
         linker
         collapser
 
