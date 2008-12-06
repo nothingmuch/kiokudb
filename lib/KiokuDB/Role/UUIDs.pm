@@ -37,8 +37,6 @@ Depending on the C<$SERIAL_IDS> variable being true at compile time, and
 availability of UUID generation module (L<Data::UUID::LibUUID> falling back to
 L<Data::UUID>) an implementation role is selected.
 
-This is used by L<KiokuDB::Resolver>.
-
 =head1 METHODS
 
 =over 4

@@ -495,7 +495,8 @@ Object collapsing is detailed in L</"COLLAPSING STRATEGIES">.
 The object's data will be copied into the L<KiokuDB::Entry> with references to
 other data structures translated into L<KiokuDB::Reference> objects.
 
-Reference addresses are resolved to UIDs by L<KiokuDB::Resolver>.
+Reference addresses are mapped to unique identifiers, which are generated as
+necessary.
 
 =head2 Compacting
 
