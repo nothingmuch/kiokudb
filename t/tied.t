@@ -9,9 +9,10 @@ use Scalar::Util qw(refaddr reftype blessed);
 use Storable qw(dclone);
 
 use ok 'KiokuDB::TypeMap::Entry::Callback';
+use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Linker';
 use ok 'KiokuDB::LiveObjects';
-use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::Backend::Hash';
 
 use Tie::RefHash;
@@ -55,9 +56,7 @@ for my $i ( 0, 1 ) {
     );
 
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
-        ),
+        live_objects => KiokuDB::LiveObjects->new,
         typemap_resolver => $tr,
     );
 
@@ -67,7 +66,7 @@ for my $i ( 0, 1 ) {
         typemap_resolver => $tr,
     );
 
-    my $sv = $v->resolver->live_objects->new_scope;
+    my $sv = $v->live_objects->new_scope;
     my $sl = $l->live_objects->new_scope;
 
     my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );

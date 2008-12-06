@@ -3,9 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 41;
-
-use ok 'KiokuDB'; # constants
+use Test::More tests => 40;
 
 sub check_role ($) {
     my $role = shift;

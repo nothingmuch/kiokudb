@@ -32,7 +32,7 @@ sub compile {
 
     my $expand = $self->_compile_expand(@args);
 
-    return ( $collapse, $expand );
+    return ( $collapse, $expand, "generate_uuid" );
 }
 
 sub _compile_collapse_intrinsic {

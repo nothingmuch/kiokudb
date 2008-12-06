@@ -8,9 +8,10 @@ use Test::More 'no_plan';
 use Scalar::Util qw(refaddr reftype blessed);
 
 use ok 'KiokuDB::TypeMap::Entry::Callback';
+use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Linker';
 use ok 'KiokuDB::LiveObjects';
-use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::Backend::Hash';
 
 {
@@ -63,9 +64,7 @@ my $tr = KiokuDB::TypeMap::Resolver->new(
 );
 
 my $v = KiokuDB::Collapser->new(
-    resolver => KiokuDB::Resolver->new(
-        live_objects => KiokuDB::LiveObjects->new
-    ),
+    live_objects => KiokuDB::LiveObjects->new,
     typemap_resolver => $tr,
 );
 
@@ -76,7 +75,7 @@ my $l = KiokuDB::Linker->new(
 );
 
 {
-    my $s = $v->resolver->live_objects->new_scope;
+    my $s = $v->live_objects->new_scope;
 
     my ( $entries ) = $v->collapse( objects => [ $obj ],  );
     is( scalar(keys %$entries), 1, "one entry" );

@@ -9,9 +9,10 @@ use Scalar::Util qw(refaddr blessed);
 
 use ok 'KiokuDB::TypeMap::Entry::Passthrough';
 use ok 'KiokuDB::TypeMap::Entry::Naive';
+use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Linker';
 use ok 'KiokuDB::LiveObjects';
-use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::Backend::Hash';
 
 {
@@ -48,13 +49,11 @@ my $tr = KiokuDB::TypeMap::Resolver->new(
 );
 
 my $v = KiokuDB::Collapser->new(
-    resolver => KiokuDB::Resolver->new(
-        live_objects => KiokuDB::LiveObjects->new
-    ),
+    live_objects => KiokuDB::LiveObjects->new,
     typemap_resolver => $tr,
 );
 
-my $sc = $v->resolver->live_objects->new_scope;
+my $sc = $v->live_objects->new_scope;
 
 my $l = KiokuDB::Linker->new(
     backend => KiokuDB::Backend::Hash->new,

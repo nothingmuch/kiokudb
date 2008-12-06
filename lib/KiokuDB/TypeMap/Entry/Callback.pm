@@ -15,6 +15,11 @@ has [qw(collapse expand)] => (
     required => 1,
 );
 
+has id => (
+    is  => "ro",
+    isa => "Str|CodeRef",
+);
+
 sub compile_mappings {
     my ( $self, @args ) = @_;
 
@@ -42,7 +47,13 @@ sub compile_mappings {
         return $object;
     };
 
-    return ( $collapse, $expand );
+    my $get_id = $self->id;
+    my $id = $get_id && sub {
+        my ( $self, $object ) = @_;
+        $object->$get_id;
+    };
+
+    return ( $collapse, $expand, $id );
 }
 
 __PACKAGE__->meta->make_immutable;

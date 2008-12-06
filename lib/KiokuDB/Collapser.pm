@@ -20,10 +20,12 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
+with qw(KiokuDB::Role::UUIDs);
+
 has '+tied_as_objects' => ( default => 1 );
 
-has resolver => (
-    isa => "KiokuDB::Resolver",
+has live_objects => (
+    isa => "KiokuDB::LiveObjects",
     is  => "ro",
     required => 1,
 );
@@ -31,7 +33,7 @@ has resolver => (
 has typemap_resolver => (
     isa => "KiokuDB::TypeMap::Resolver",
     is  => "ro",
-    handles => [qw(collapse_method)],
+    handles => [qw(collapse_method id_method)],
     required => 1,
 );
 
@@ -122,14 +124,6 @@ sub collapse {
 
     my $r;
 
-    if ( $args{only_known} ) {
-        $args{live_objects}  ||= $self->resolver->live_objects;
-        $r = $args{resolver} ||= $args{live_objects};
-    } else {
-        $r = $args{resolver} ||= $self->resolver;
-        $args{live_objects}  ||= $args{resolver}->live_objects;
-    }
-
     if ( $args{shallow} ) {
         $args{only} = set(@$objects);
     }
@@ -148,7 +142,7 @@ sub collapse {
     # recurse through the object, accumilating entries
     $self->visit(@$objects);
 
-    my @ids = $args{live_objects}->objects_to_ids(@$objects);
+    my @ids = $self->live_objects->objects_to_ids(@$objects);
     @fc{@ids} = ();
 
     # compact UUID space by merging simple non shared structures into a single
@@ -168,8 +162,7 @@ sub compact_entries {
         my $flatten = {};
         @{$flatten}{@flatten} = delete @{$entries}{@flatten};
 
-
-        $options->{resolver}->remove(@flatten);
+        $self->live_objects->remove(@flatten);
 
         $self->compact_entry($_, $flatten) for values %$entries;
     }
@@ -222,7 +215,7 @@ sub make_entry {
 
     my $object = $args{object};
 
-    my $live_objects = $self->_options->{live_objects};
+    my $live_objects = $self->live_objects;
 
     if ( my $id = $args{id} ) {
         my $prev = $live_objects->object_to_entry($object);
@@ -266,7 +259,7 @@ sub visit_seen {
 sub _seen_id {
     my ( $self, $seen ) = @_;
 
-    if ( my $id = $self->_options->{live_objects}->object_to_id($seen) ) {
+    if ( my $id = $self->live_objects->object_to_id($seen) ) {
         return $id;
     }
 
@@ -276,7 +269,7 @@ sub _seen_id {
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    if ( my $entry = $self->_options->{only_new} && $self->_options->{live_objects}->object_to_entry($ref) ) {
+    if ( my $entry = $self->_options->{only_new} && $self->live_objects->object_to_entry($ref) ) {
         return $self->make_ref( $entry->id => $_[1] );
     }
 
@@ -319,15 +312,23 @@ sub visit_ref_data {
 sub _ref_id {
     my ( $self, $ref ) = @_;
 
-    if ( my $id = $self->_options->{resolver}->object_to_id($ref) ) {
-        return $id;
-    } elsif ( $self->compact ) {
-        # if we're compacting this is not an error, we just compact in place
-        # and we generate an error if we encounter this data again in _seen_id
-        return;
-    }
+    my $l = $self->live_objects;
 
-    die { unknown => $ref };
+    if ( my $id = $l->object_to_id($ref) ) {
+        return $id;
+    } elsif ( $self->_options->{only_known} ) {
+        if ( $self->compact ) {
+            # if we're compacting this is not an error, we just compact in place
+            # and we generate an error if we encounter this data again in _seen_id
+            return;
+        } else {
+            die { unknown => $ref };
+        }
+    } else {
+        my $id = $self->generate_uuid;
+        $l->insert( $id => $ref ); # FIXME see _object_id... this shouldn't be "comitted" to the live objects yet
+        return $id;
+    }
 }
 
 # avoid retying, we want to get back Reference or Entry objects
@@ -380,7 +381,7 @@ sub collapse_first_class {
 
     my $o = $self->_options;
 
-    my $l = $o->{live_objects};
+    my $l = $self->live_objects;
 
     if ( my $entry = $o->{only_new} && $l->object_to_entry($object) ) {
         return $self->make_ref( $entry->id => $_[1] );
@@ -441,8 +442,9 @@ sub _object_id {
 
     my $o = $self->_options;
 
+    my $l = $self->live_objects;
+
     if ( defined(my $id = $args{id}) ) {
-        my $l = $o->{live_objects};
         if ( my $reg_id = $l->object_to_id($object) ) {
             unless ( $id eq $reg_id ) {
                 croak "Object already registered as $reg_id";
@@ -453,7 +455,20 @@ sub _object_id {
 
         return $id;
     } else {
-        return $o->{resolver}->object_to_id($object) || die { unknown => $object };
+        if ( my $id = $l->object_to_id($object) ) {
+            return $id;
+        } else {
+            if ( $o->{only_known} ) {
+                die { unknown => $object };
+            }
+
+            my $method = $self->id_method(ref $object);
+            my $id = $self->$method($object) || die "ID method failed to return an ID";
+
+            $l->insert( $id => $object ); # FIXME only do this when about to insert an entry? maybe some sort of accumilation zone?
+
+            return $id;
+        }
     }
 }
 

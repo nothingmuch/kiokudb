@@ -50,13 +50,11 @@ SKIP: {
 
     require KiokuDB::Collapser;
     require KiokuDB::LiveObjects;
-    require KiokuDB::Resolver;
 
     my $l = KiokuDB::LiveObjects->new;
 
     my $c = KiokuDB::Collapser->new(
         live_objects => $l,
-        resolver => KiokuDB::Resolver->new( live_objects => $l ),
         typemap_resolver => $tr,
     );
 

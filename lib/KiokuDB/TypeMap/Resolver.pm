@@ -13,7 +13,7 @@ has typemap => (
     is   => "ro",
 );
 
-has [qw(_collapse _expand)] => (
+has [qw(_collapse _expand _id)] => (
     isa => "HashRef",
     is  => "ro",
     default => sub { return {} },
@@ -47,18 +47,28 @@ sub expand_method {
     }
 }
 
+sub id_method {
+    my ( $self, $class ) = @_;
+
+    if ( my $method = $self->_id->{$class} ) {
+        return $method;
+    } else {
+        $self->resolve($class);
+        return $self->_id->{$class};
+    }
+}
+
 sub compile_entry {
     my ( $self, $class, $entry ) = @_;
 
-    my ( $collapse, $expand ) = $entry->compile($class);
-
-    $self->register_compiled( $class, $collapse, $expand );
+    $self->register_compiled( $class, $entry->compile($class) );
 }
 
 sub register_compiled {
-    my ( $self, $class, $collapse, $expand ) = @_;
+    my ( $self, $class, $collapse, $expand, $id ) = @_;
     $self->_collapse->{$class} = $collapse;
     $self->_expand->{$class}   = $expand;
+    $self->_id->{$class}       = $id;
 }
 
 sub resolve {

@@ -3,11 +3,9 @@
 package KiokuDB::Role::UUIDs;
 use Moose::Role;
 
-use KiokuDB ();
-
 use namespace::clean -except => 'meta';
 
-if ( KiokuDB::SERIAL_IDS() ) {
+if ( defined &KiokuDB::SERIAL_IDS and KiokuDB::SERIAL_IDS() ) {
     with qw(KiokuDB::Role::UUIDs::SerialIDs);
 } else {
     my $have_libuuid = do { local $@; eval { require Data::UUID::LibUUID; 1 } };

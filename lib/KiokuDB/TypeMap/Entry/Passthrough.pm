@@ -20,6 +20,7 @@ sub compile {
         return (
             sub { $_[1] },
             sub { $_[1]->data }, # only called on an Entry, if the object is just an object, this won't be called
+            "generate_uuid",
         );
     } else {
         return (
@@ -38,6 +39,7 @@ sub compile {
                 my ( $linker, $entry ) = @_;
                 return $entry->data;
             },
+            "generate_uuid",
         );
     }
 }

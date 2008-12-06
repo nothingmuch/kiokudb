@@ -7,7 +7,10 @@ no warnings 'recursion';
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry);
+with qw(
+    KiokuDB::TypeMap::Entry
+    KiokuDB::Role::UUIDs
+);
 
 requires "compile_mappings";
 
@@ -20,13 +23,13 @@ has intrinsic => (
 sub compile {
     my ( $self, @args ) = @_;
 
-    my ( $collapse_map, $expand_map ) = $self->compile_mappings(@args);
+    my ( $collapse_map, $expand_map, $id_map ) = $self->compile_mappings(@args);
 
     my $collapse = $self->intrinsic
         ? sub { shift->collapse_intrinsic( $collapse_map, @_ ) }
         : sub { shift->collapse_first_class( $collapse_map, @_ ) };
 
-    return ( $collapse, $expand_map );
+    return ( $collapse, $expand_map, $id_map || "generate_uuid" );
 }
 
 __PACKAGE__

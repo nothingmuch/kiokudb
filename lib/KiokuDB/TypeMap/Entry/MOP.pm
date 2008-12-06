@@ -38,16 +38,10 @@ sub compile_collapser {
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->compute_all_applicable_attributes;
 
-    my $self_id = !$self->intrinsic && $meta->does_role("KiokuDB::Role::ID");
-
     my $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
 
     return sub {
         my $self = shift;
-
-        if ( $self_id ) {
-            push @_, id => $_[0]->kiokudb_object_id;
-        }
 
         $self->$method(sub {
             my ( $self, %args ) = @_;
@@ -110,11 +104,25 @@ sub compile_expander {
     }
 }
 
+sub compile_id {
+    my ( $self, $meta ) = @_;
+
+    if ( $meta->does_role("KiokuDB::Role::ID") ) {
+        return sub {
+            my ( $self, $object ) = @_;
+            return $object->kiokudb_object_id;
+        }
+    } else {
+        return "generate_uuid";
+    }
+}
+
 sub compile_mappings_immutable {
     my ( $self, $meta ) = @_;
     return (
         $self->compile_collapser($meta),
         $self->compile_expander($meta),
+        $self->compile_id($meta),
     );
 }
 
@@ -131,6 +139,10 @@ sub compile_mappings_mutable {
         sub {
             my $expander = $self->compile_expander($meta);
             shift->$expander(@_);
+        },
+        sub {
+            my $id = $self->compile_id($meta);
+            shift->$id(@_);
         },
     );
 }

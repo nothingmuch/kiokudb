@@ -8,9 +8,10 @@ use Test::More 'no_plan';
 use Scalar::Util qw(refaddr reftype blessed);
 
 use ok 'KiokuDB::TypeMap::Entry::MOP';
+use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::Collapser';
+use ok 'KiokuDB::Linker';
 use ok 'KiokuDB::LiveObjects';
-use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB::Role::ID';
 
@@ -62,9 +63,7 @@ foreach my $intrinsic ( 1, 0 ) {
     );
 
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => KiokuDB::LiveObjects->new
-        ),
+        live_objects => KiokuDB::LiveObjects->new,
         typemap_resolver => $tr,
     );
 
@@ -75,7 +74,7 @@ foreach my $intrinsic ( 1, 0 ) {
     );
 
     {
-        my $s = $v->resolver->live_objects->new_scope;
+        my $s = $v->live_objects->new_scope;
 
         my ( $entries, $id ) = $v->collapse( objects => [ $obj ],  );
 
@@ -105,7 +104,7 @@ foreach my $intrinsic ( 1, 0 ) {
     }
 
     {
-        my $s = $v->resolver->live_objects->new_scope;
+        my $s = $v->live_objects->new_scope;
 
         my $bar = $deep->bar;
 

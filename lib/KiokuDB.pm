@@ -8,7 +8,6 @@ our $VERSION = "0.08";
 use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
 use KiokuDB::Backend;
-use KiokuDB::Resolver;
 use KiokuDB::Collapser;
 use KiokuDB::Linker;
 use KiokuDB::LiveObjects;
@@ -107,20 +106,6 @@ has live_objects => (
 
 sub _build_live_objects { KiokuDB::LiveObjects->new }
 
-has resolver => (
-    isa => "KiokuDB::Resolver",
-    is  => "ro",
-    lazy_build => 1,
-);
-
-sub _build_resolver {
-    my $self = shift;
-
-    KiokuDB::Resolver->new(
-        live_objects => $self->live_objects,
-    );
-}
-
 has collapser => (
     isa => "KiokuDB::Collapser",
     is  => "ro",
@@ -131,7 +116,7 @@ sub _build_collapser {
     my $self = shift;
 
     KiokuDB::Collapser->new(
-        resolver => $self->resolver,
+        live_objects => $self->live_objects,
         typemap_resolver => $self->typemap_resolver,
     );
 }
@@ -703,13 +688,6 @@ L<KiokuDB::Linker>
 
 The linker links entries into functioning instances, loading necessary
 dependencies from the backend.
-
-=item resolver
-
-L<KiokuDB::Resolver>
-
-The resolver swizzles reference addresses to UIDs and back, and handles ID
-creation and assignment.
 
 =item live_objects
 

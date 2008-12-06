@@ -9,7 +9,6 @@ use Scalar::Util qw(weaken isweak);
 use Storable qw(dclone);
 
 use ok 'KiokuDB::Collapser';
-use ok 'KiokuDB::Resolver';
 use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
@@ -43,11 +42,9 @@ use Tie::RefHash;
 
 {
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -73,14 +70,14 @@ use Tie::RefHash;
     {
         my $obj = Foo->new( bar => $foo->bar );
 
-        $v->resolver->object_to_id($obj);
+        $v->_object_id($obj);
 
         my @partial = eval { $v->collapse_known_objects($obj) };
         is_deeply( $@, { unknown => $foo->bar }, "error" );
         is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
     }
 
-    $v->resolver->object_to_id($foo->bar);
+    $v->_object_id($foo->bar);
 
     {
         my @partial = eval { $v->collapse_known_objects($foo) };
@@ -94,7 +91,7 @@ use Tie::RefHash;
         is( scalar(grep { defined } @partial), 1, "one entry for known obj collapse" );
     }
 
-    $v->resolver->object_to_id($foo->bar);
+    $v->_object_id($foo->bar);
 
     my @entries = $v->collapse_objects($foo);
 
@@ -129,11 +126,9 @@ use Tie::RefHash;
 
 {
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -178,11 +173,9 @@ use Tie::RefHash;
 {
     # circular ref
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -229,11 +222,9 @@ use Tie::RefHash;
 
 {
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -279,11 +270,9 @@ use Tie::RefHash;
 
 {
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -330,11 +319,9 @@ use Tie::RefHash;
 
 {
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new
+            typemap => KiokuDB::TypeMap->new,
         ),
     );
 
@@ -345,7 +332,7 @@ use Tie::RefHash;
 
     my $obj = Foo->new( bar => $data );
 
-    $v->resolver->object_to_id($obj);
+    $v->_object_id($obj);
 
     my @partial = eval { $v->collapse_known_objects($obj) };
     is_deeply( $@, { unknown => $data }, "error" );
@@ -357,12 +344,10 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             compact => 0,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new
+                typemap => KiokuDB::TypeMap->new,
             ),
         );
 
@@ -374,12 +359,10 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             compact => 1,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new
+                typemap => KiokuDB::TypeMap->new,
             ),
         );
 
@@ -395,11 +378,9 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new
+                typemap => KiokuDB::TypeMap->new,
             ),
         );
 
@@ -427,9 +408,7 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
@@ -472,9 +451,7 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
@@ -529,9 +506,7 @@ use Tie::RefHash;
 
     {
         my $v = KiokuDB::Collapser->new(
-            resolver => KiokuDB::Resolver->new(
-                live_objects => my $lo = KiokuDB::LiveObjects->new
-            ),
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
@@ -594,9 +569,7 @@ use Tie::RefHash;
     );
 
     my $v = KiokuDB::Collapser->new(
-        resolver => KiokuDB::Resolver->new(
-            live_objects => my $lo = KiokuDB::LiveObjects->new
-        ),
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
             typemap => KiokuDB::TypeMap->new(),
         ),
