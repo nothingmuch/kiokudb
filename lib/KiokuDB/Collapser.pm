@@ -440,35 +440,22 @@ sub collapse_intrinsic {
 sub _object_id {
     my ( $self, $object, %args ) = @_;
 
-    my $o = $self->_options;
-
     my $l = $self->live_objects;
 
-    if ( defined(my $id = $args{id}) ) {
-        if ( my $reg_id = $l->object_to_id($object) ) {
-            unless ( $id eq $reg_id ) {
-                croak "Object already registered as $reg_id";
-            }
-        } else {
-            $l->insert( $id => $object ); # FIXME always?
-        }
-
+    if ( my $id = $l->object_to_id($object) ) {
         return $id;
     } else {
-        if ( my $id = $l->object_to_id($object) ) {
-            return $id;
-        } else {
-            if ( $o->{only_known} ) {
-                die { unknown => $object };
-            }
-
-            my $method = $self->id_method(ref $object);
-            my $id = $self->$method($object) || die "ID method failed to return an ID";
-
-            $l->insert( $id => $object ); # FIXME only do this when about to insert an entry? maybe some sort of accumilation zone?
-
-            return $id;
+        my $o = $self->_options;
+        if ( $o && $o->{only_known} ) {
+            die { unknown => $object };
         }
+
+        my $method = $self->id_method(ref $object);
+        my $id = $self->$method($object) || die "ID method failed to return an ID";
+
+        $l->insert( $id => $object ); # FIXME only do this when about to insert an entry? maybe some sort of accumilation zone?
+
+        return $id;
     }
 }
 
