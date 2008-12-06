@@ -41,7 +41,7 @@ sub _build_results {
 
     my $res = KiokuDB::LinkChecker::Results->new;
 
-    my ( $seen, $referenced, $missing, $broken ) = map { $res->$_ } qw(seen referenced missing broken);
+    my ( $seen, $root, $referenced, $unreferenced, $missing, $broken ) = map { $res->$_ } qw(seen root referenced unreferenced missing broken);
 
     my $i = my $j = 0;
 
@@ -55,7 +55,14 @@ sub _build_results {
         }
 
         foreach my $entry ( @$next ) {
-            $seen->insert($entry->id);
+            my $id = $entry->id;
+
+            $seen->insert($id);
+            $root->insert($id) if $entry->root;
+
+            unless ( $referenced->includes($id) ) {
+                $unreferenced->insert($id);
+            }
 
             my @ids = $entry->referenced_ids;
 
@@ -71,6 +78,7 @@ sub _build_results {
             }
 
             $referenced->insert(@ids);
+            $unreferenced->remove(@ids);
         }
     }
 
