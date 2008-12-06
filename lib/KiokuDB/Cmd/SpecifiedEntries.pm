@@ -24,11 +24,37 @@ has entries => (
     lazy_build => 1,
 );
 
+has entries_in_args => (
+    traits => [qw(NoGetopt)],
+    isa => "Bool",
+    is  => "ro",
+    default => 0,
+);
+
 sub _build_entries {
     my $self = shift;
 
+    my ( @ids, @entries );
+
     if ( $self->has_ids ) {
-        return bulk($self->backend->get(@{ $self->ids }));
+        @ids = @{ $self->ids };
+    } elsif ( $self->entries_in_args and my $args = $self->args ) {
+        @ids = @$args;
+    }
+
+    if ( @ids ) {
+        @entries = $self->backend->get(@ids);
+
+        if ( @entries != @ids or grep { not defined } @entries ) {
+            my %exists;
+            @exists{@ids} = $self->backend->exists(@ids);
+
+            my @missing = grep { not $exists{$_} } @ids;
+
+            die "The specified entries do not exist in the database: @missing\n";
+        }
+
+        return bulk(@entries);
     } else {
         return $self->backend->all_entries;
     }
