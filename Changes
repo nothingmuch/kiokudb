@@ -1,3 +1,7 @@
+0.09
+    - Remove KiokuDB::Resolver, moving ID assignment functionality into the
+      collapser and the typemap
+
 0.08
     - Fix a breakage in inflating passthrough intrinsic objects created with
       older versions of KiokuDB
