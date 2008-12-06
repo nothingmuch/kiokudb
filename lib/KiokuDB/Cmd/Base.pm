@@ -22,6 +22,13 @@ has '+usage' => ( required => 0 );
 
 has '+app'   => ( required => 0 );
 
+has args => (
+    isa => "ArrayRef",
+    is  => "ro",
+    writer => "_args",
+    predicate => "has_args",
+);
+
 has exit_code => (
     traits => [qw(NoGetopt)],
     isa => "Int",
@@ -38,7 +45,9 @@ sub _build_attrs {
 }
 
 sub run {
-    my $self = shift;
+    my ( $self, $opts, $args ) = @_;
+
+    $self->_args($args) if ref $args;
 
     $self->_build_attrs;
 
