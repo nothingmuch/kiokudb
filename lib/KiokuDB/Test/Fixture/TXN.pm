@@ -82,6 +82,8 @@ sub verify {
             is( $joe->name, "YASE", "name not rolled back in live object" );
         }
 
+        $self->no_live_objects;
+
         {
             my $s = $self->new_scope;
 
@@ -89,9 +91,10 @@ sub verify {
             
             is( $joe->name, "HALLO", "name rolled back in DB" );
         }
-    }
 
-    $self->no_live_objects;
+        $self->no_live_objects;
+
+    }
 
     {
         {
@@ -130,6 +133,8 @@ sub verify {
             is( $joe->name, "oi", "name attr of object" );
         }
 
+        $self->no_live_objects;
+
         {
             my $s = $self->new_scope;
 
@@ -137,9 +142,9 @@ sub verify {
 
             is( $joe->name, "HALLO", "name rolled back in DB" );
         }
-    }
 
-    $self->no_live_objects;
+        $self->no_live_objects;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
