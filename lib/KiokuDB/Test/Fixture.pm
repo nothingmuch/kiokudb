@@ -225,6 +225,8 @@ sub no_live_objects {
         #my ( @ids ) = map { hex } ( $track =~ /by \w+\(0x([a-z0-9]+)\)/ );
         #warn Data::Dumper::Dumper(map { Devel::FindRef::ptr2ref($_) } @ids);
     }
+
+    $self->directory->live_objects->clear;
 }
 
 sub live_objects_are {
