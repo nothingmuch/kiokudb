@@ -343,11 +343,6 @@ sub clear {
     %{ $self->_entry_objects } = ();
 }
 
-sub DEMOLISH {
-    my $self = shift;
-    $self->clear;
-}
-
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
