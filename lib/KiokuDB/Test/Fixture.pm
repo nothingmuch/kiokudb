@@ -70,7 +70,9 @@ sub precheck {
     my @missing;
 
     foreach my $role ( $self->required_backend_roles ) {
-        push @missing, $role unless $backend->does($role) or $backend->does("KiokuDB::Backend::Role::$role");
+        push @missing, $role unless $backend->does($role)
+            or $backend->does("KiokuDB::Backend::Role::$role")
+            or $backend->does("KiokuDB::Backend::$role");
     }
 
     if ( @missing ) {
