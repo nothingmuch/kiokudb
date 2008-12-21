@@ -385,12 +385,18 @@ sub delete {
 sub txn_do {
     my ( $self, $code, %args ) = @_;
 
-    my $scope = $self->live_objects->new_txn;
+    my $backend = $self->backend;
 
-    my $rollback = $args{rollback};
-    $args{rollback} = sub { $scope->rollback; $rollback && $rollback->() };
+    if ( $backend->can("txn_do") ) {
+        my $scope = $self->live_objects->new_txn;
 
-    $self->backend->txn_do( $code, %args );
+        my $rollback = $args{rollback};
+        $args{rollback} = sub { $scope->rollback; $rollback && $rollback->() };
+
+        $backend->txn_do( $code, %args );
+    } else {
+        return $code->();
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
