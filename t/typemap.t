@@ -92,7 +92,10 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         isa_entries => {
             CA => $n,
             Foo => KiokuDB::TypeMap::Entry::Alias->new( to => "CA" ),
-        }
+        },
+        entries => {
+            'Unknown::Foo' => KiokuDB::TypeMap::Entry::Alias->new( to => "CA" ),
+        },
     );
 
     isa_ok( $t, "KiokuDB::TypeMap" );
@@ -102,6 +105,7 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
     is( $t->resolve("Foo"), $n, "alias resolution of isa entry" );
     is( $t->resolve("Bar"), $n, "alias resolution of isa entry" );
     is( $t->resolve("Blarfla"), undef, "failed resolution of random string" );
+    is( $t->resolve("Unknown::Foo"), $n, "alias to isa entry" );
 }
 
 {
