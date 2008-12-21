@@ -57,9 +57,19 @@ sub _build_authen_passphrase_typemap {
 
     $self->_create_typemap(
         isa_entries => {
+            # since Authen::Passphrase dynamically loads subcomponents based on
+            # type, passthrough causes issues with the class not being defined
+            # at load time unless explicitly loaded by the user.
+            # this works around this issue
+            #'Authen::Passphrase' => {
+            #    type      => "KiokuDB::TypeMap::Entry::Passthrough",
+            #    intrinsic => 1,
+            #},
             'Authen::Passphrase' => {
-                type      => "KiokuDB::TypeMap::Entry::Passthrough",
+                type      => "KiokuDB::TypeMap::Entry::Callback",
                 intrinsic => 1,
+                collapse  => "as_rfc2307",
+                expand    => "from_rfc2307",
             },
         },
     );
