@@ -42,7 +42,10 @@ has includes => (
 sub _build_includes { [] }
 
 sub resolve {
-    my ( $self, $class ) = @_; # FIXME resolve by object?
+    my ( $self, $class ) = @_;
+
+    # if we're linking it might not be set
+    Class::MOP::_try_load_one_class($class);
 
     if ( my $entry = $self->all_entries->{$class} || $self->all_isa_entries->{$class} ) {
         return $self->resolve_entry( $entry );
