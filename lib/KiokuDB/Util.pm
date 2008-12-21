@@ -13,7 +13,7 @@ use Scalar::Util qw(blessed);
 use namespace::clean;
 
 use Sub::Exporter -setup => {
-    exports => [qw(set weak_set dsn_to_backend)],
+    exports => [qw(set weak_set dsn_to_backend import_yaml)],
 };
 
 sub weak_set {
@@ -78,6 +78,65 @@ sub config_to_backend {
     );
 }
 
+sub import_yaml {
+    my ( $kiokudb, @src ) = @_;
+
+    my @objects = load_yaml_files( find_yaml_files(@src) );
+
+    $kiokudb->txn_do(sub {
+        my $scope = $kiokudb->new_scope;
+        $kiokudb->insert(@objects);
+    });
+}
+
+sub find_yaml_files {
+    my ( @src ) = @_;
+
+    my @files;
+
+    foreach my $src ( @src ) {
+        if ( -d $src ) {
+            dir($src)->recurse( callback => sub {
+                my $file = shift;
+
+                if ( -f $file && $file->basename =~ /\.yml$/ ) {
+                    push @files, $file;
+                }
+            });
+        } else {
+            push @files, $src;
+        }
+    }
+
+    return @files;
+}
+
+sub load_yaml_files {
+    my ( @files ) = @_;
+
+    my @objects;
+
+    require MooseX::YAML;
+
+    foreach my $file ( @files ) {
+        my @data = MooseX::YAML::LoadFile($file);
+
+        if ( @data == 1 ) {
+            unless ( blessed $data[0] ) {
+                if ( ref $data[0] eq 'ARRAY' ) {
+                    @data = @{ $data[0] };
+                } else {
+                    @data = %{ $data[0] }; # with IDs
+                }
+            }
+        }
+
+        push @objects, @data;
+    }
+
+    return @objects;
+}
+
 __PACKAGE__
 
 __END__
@@ -110,6 +169,35 @@ This module provides various helper functions for working with L<KiokuDB>.
 
 Instantiate a L<Set::Object> or L<Set::Object::Weak> from the arguments, and
 then creates a L<KiokuDB::Set::Transient> with the result.
+
+=item import_yaml $kiokudb, @files_or_dirs
+
+Loads YAML files with L<MooseX::YAML> (if given a directory it will be searched
+recursively for files with a C<.yml> extension are) into the specified KiokuDB
+directory in a single transaction.
+
+The YAML files can contain multiple documents, with each document treated as an
+object. If the YAML file contains a single non blessed array or hash then that
+structure will be dereferenced as part of the arguments to C<insert>.
+
+Here is an example of an array of objects, and a custom tag alias to ease
+authoring of the YAML file:
+
+    %YAML 1.1
+    %TAG ! !MyFoo::
+    ---
+    - !User
+      id:        foo
+      real_name: Foo Bar
+      email:     foo@myfoo.com
+      password:  '{cleartext}test123'
+
+You can use a hash to specify custom IDs:
+
+    %YAML 1.1
+    ---
+    the_id: !Some::Class
+        attr: moose
 
 =back
 
