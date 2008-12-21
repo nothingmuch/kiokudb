@@ -12,7 +12,12 @@ extends qw(KiokuDB::Test::Fixture::Small);
 
 use constant required_backend_roles => qw(TXN);
 
-sub sort { 100 }
+sub sort { 150 }
+
+around populate => sub {
+    my ( $next, $self, @args ) = @_;
+    $self->txn_do(sub { $self->$next(@args) });
+};
 
 sub verify {
     my $self = shift;
@@ -99,9 +104,9 @@ sub verify {
         }
 
         $self->no_live_objects;
-
     }
 
+    # txn_do nesting should still work, even if nested transactions are not supported
     {
         {
             my $s = $self->new_scope;

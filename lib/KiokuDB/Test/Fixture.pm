@@ -85,7 +85,8 @@ sub run {
     SKIP: {
         local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-        my $txn = $self->backend->does("KiokuDB::Backend::Role::TXN") && $self->backend->txn_begin;
+        # disable txn wrapping for TXN related fixtures
+        my $txn = ref($self) =~ /TXN/ ? sub { shift->() } : sub { $self->directory->txn_do(@_) };
 
         $self->precheck;
 
@@ -94,13 +95,13 @@ sub run {
         is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name . " fixture" );
 
         lives_ok {
-            my $s = $self->new_scope;
-            local $Test::Builder::Level = $Test::Builder::Level - 1;
-            $self->populate;
-            $self->verify;
+            $txn->(sub {
+                my $s = $self->new_scope;
+                local $Test::Builder::Level = $Test::Builder::Level - 1;
+                $txn->(sub { $self->populate });
+                $txn->(sub { $self->verify });
+            });
         } "no error in fixture";
-
-        $self->backend->txn_commit($txn) if $txn;
 
         is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name . " fixture" );
 
