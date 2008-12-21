@@ -1,6 +1,7 @@
 0.10
     - Load classes in the typemap resolution code, so that objects whose
       classes aren't necessarily loaded at compile time can still be inflated.
+    - add 'import_yaml' to KiokuDB::Util
 
 0.09
     - Remove KiokuDB::Resolver, moving ID assignment functionality into the
