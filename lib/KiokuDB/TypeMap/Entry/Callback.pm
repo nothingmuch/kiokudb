@@ -29,7 +29,12 @@ sub compile_mappings {
 
         my @data = $args{object}->$collapse_object;
 
-        return [ map { $self->visit($_) } @data ];
+        # FIXME KiokuDB::Entry->data cannot be nonref yet
+        #if ( @data == 1 and not ref $data[0] ) {
+        #    return $data[0];
+        #} else {
+            return [ map { $self->visit($_) } @data ];
+        #}
     };
 
     my $expand_object = $self->expand;
@@ -40,7 +45,7 @@ sub compile_mappings {
 
         # does *NOT* support circular refs
         # document it as such
-        my $object = $entry->class->$expand_object(@$args);
+        my $object = $entry->class->$expand_object(ref $args ? @$args : $args);
 
         $self->register_object( $entry => $object );
 
