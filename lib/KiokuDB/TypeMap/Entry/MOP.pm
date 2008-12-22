@@ -105,18 +105,35 @@ sub compile_expander {
 
         my $data = $entry->data;
 
+        my @values;
+
+        use Devel::PartialDump qw(warn);
+
         foreach my $name ( keys %$data ) {
             my $value = $data->{$name};
             my $attr = $attrs{$name};
 
-            if ( $lazy{$name} and ref($value) eq 'KiokuDB::Reference' ) {
-                my $thunk = KiokuDB::Thunk->new( id => $value->id, linker => $self, attr => $attr );
-                $meta_instance->set_slot_value($instance, $attr->name, $thunk); # FIXME low level variant of $attr->set_value
+            if ( ref $value ) {
+                if ( $lazy{$name} and ref($value) eq 'KiokuDB::Reference' ) {
+                    my $thunk = KiokuDB::Thunk->new( id => $value->id, linker => $self, attr => $attr );
+                    $meta_instance->set_slot_value($instance, $attr->name, $thunk); # FIXME low level variant of $attr->set_value
+                } else {
+                    my @pair = ( $attr, undef );
+
+                    $self->inflate_data($value, \$pair[1]) if ref $value;
+                    push @values, \@pair;
+                }
             } else {
-                $self->inflate_data($value, \$value) if ref $value;
                 $attr->set_value($instance, $value);
             }
         }
+
+        push @{ $self->_deferred }, sub {
+            foreach my $pair ( @values ) {
+                my ( $attr, $value ) = @$pair;
+                $attr->set_value($instance, $value);
+            }
+        };
 
         return $instance;
     }

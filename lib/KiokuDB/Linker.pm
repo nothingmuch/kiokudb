@@ -36,6 +36,18 @@ has typemap_resolver => (
     required => 1,
 );
 
+has _queue => (
+    isa => "ArrayRef",
+    is  => "ro",
+    default => sub { [] },
+);
+
+has _deferred => (
+    isa => "ArrayRef",
+    is  => "ro",
+    default => sub { [] },
+);
+
 sub register_object {
     my ( $self, $entry, $object ) = @_;
 
@@ -55,9 +67,11 @@ sub expand_objects {
         if ( defined ( my $obj = $l->id_to_object($entry->id) ) ) {
             push @objects, $obj;
         } else {
-            push @objects, $self->expand_object($entry);
+            push @objects, $self->_expand_object($entry);
         }
     }
+
+    $self->load_queue;
 
     return @objects;
 }
@@ -65,9 +79,52 @@ sub expand_objects {
 sub expand_object {
     my ( $self, $entry ) = @_;
 
+    my $obj = $self->_expand_object($entry);
+
+    $self->load_queue;
+
+    return $obj;
+}
+
+sub _expand_object {
+    my ( $self, $entry ) = @_;
+
     $self->inflate_data( $entry, \(my $data) );
 
-    $data;
+    return $data;
+}
+
+sub load_queue {
+    my $self = shift;
+
+    my $queue = $self->_queue;
+    my $deferred = $self->_deferred;
+
+    my @queue = @$queue;
+    my @deferred = @$deferred;
+
+    @$queue = ();
+    @$deferred = ();
+
+    if ( @queue ) {
+        my @ids = map { $_->[0]->id } @queue;
+        my @objects = $self->get_or_load_objects(@ids);
+
+        foreach my $item ( @queue ) {
+            my ( $data, $into ) = @$item;
+            my $obj = shift @objects;
+
+            $$into = $obj;
+
+            weaken $$into if $data->is_weak;
+        }
+    }
+
+    if ( @deferred ) {
+        foreach my $item ( @deferred ) {
+            $self->$item;
+        }
+    }
 }
 
 sub inflate_data {
@@ -80,9 +137,7 @@ sub inflate_data {
     unless ( ref $data ) {
         $$into = $data;
     } elsif ( ref $data eq 'KiokuDB::Reference' ) {
-        my $id = $data->id;
-        $$into = $self->get_or_load_object($id);
-        weaken($$into) if $data->is_weak;
+        push @{ $self->_queue }, [ $data, $into ];
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         if ( my $class = $data->class ) {
             my $expand_method = $self->expand_method($class);
@@ -90,7 +145,9 @@ sub inflate_data {
         } else {
             my $obj;
 
-            $self->inflate_data($data->data, \$obj, $data );
+            $self->inflate_data($data->data, \$obj, $data);
+
+            $self->load_queue; # force vivification of $obj
 
             if ( my $tie = $data->tied ) {
                 if ( $tie eq 'HASH' ) {
@@ -118,7 +175,7 @@ sub inflate_data {
         my %targ;
         $self->register_object( $entry => \%targ ) if $entry;
         foreach my $key ( keys %$data ) {
-            $self->inflate_data( $data->{$key}, \$targ{$key});
+            $self->inflate_data( $data->{$key}, \$targ{$key} );
         }
         $$into = \%targ;
     } elsif ( ref($data) eq 'ARRAY' ) {
@@ -126,7 +183,7 @@ sub inflate_data {
         $self->register_object( $entry => \@targ ) if $entry;
         for (@$data ) {
             push @targ, undef;
-            $self->inflate_data($_, \$targ[-1]);
+            $self->inflate_data( $_, \$targ[-1] );
         }
         $$into = \@targ;
     } elsif ( ref($data) eq 'SCALAR' ) {
@@ -157,7 +214,7 @@ sub get_or_load_objects {
     my %objects;
     @objects{@ids} = $self->live_objects->ids_to_objects(@ids);
 
-    my @missing = grep { not defined $objects{$_} } @ids;
+    my @missing = grep { not defined $objects{$_} } keys %objects; # @ids may contain duplicates
 
     @objects{@missing} = $self->load_objects(@missing);
 

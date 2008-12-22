@@ -221,6 +221,7 @@ sub no_live_objects {
     unless ( is( scalar(()=$self->live_objects), 0, "no live objects" ) ){
         my @l = $self->live_objects;
         diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } @l;
+        require Data::Dumper;
         diag Data::Dumper::Dumper(@l);
 
         #use Scalar::Util qw(weaken);

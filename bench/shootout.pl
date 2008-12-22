@@ -53,13 +53,11 @@ sub bench {
 
     $mxsd_sqlite->backend->deploy;
 
-    my $mxsd_mysql = KiokuDB->connect("dbi:mysql:test");
+    my $mxsd_mysql = eval { KiokuDB->connect("dbi:mysql:test") }; warn $@ if $@;
+    $mxsd_mysql && $mxsd_mysql->backend->deploy({ add_drop_table => 1, producer_args => { mysql_version => 5 } });
 
-    $mxsd_mysql->backend->deploy({ add_drop_table => 1, producer_args => { mysql_version => 5 } });
-
-    my $mxsd_pg = KiokuDB->connect("dbi:Pg:dbname=test", user => "postgres", password => "290685kj");
-
-    $mxsd_pg->backend->deploy({ add_drop_table => 1 });
+    my $mxsd_pg = eval { KiokuDB->connect("dbi:Pg:dbname=test") }; warn $@ if $@;
+    $mxsd_pg && $mxsd_pg->backend->deploy({ add_drop_table => 1 });
 
     $dir->subdir("mxsd_bdb_dumb")->mkpath;
     my $mxsd_bdb_dumb = KiokuDB->new(
@@ -106,8 +104,8 @@ sub bench {
             mxsd_bdb     => sub { my @objs = construct(); my $s = $mxsd_bdb_dumb->new_scope; $mxsd_bdb_dumb->store(grep { blessed($_) } @objs) },
             mxsd_bdb_txn => sub { my @objs = construct(); my $s = $mxsd_bdb_txn->new_scope; $mxsd_bdb_txn->store(grep { blessed($_) } @objs) },
             mxsd_sqlite  => sub { my @objs = construct(); my $s = $mxsd_sqlite->new_scope; $mxsd_sqlite->store(grep { blessed($_) } @objs) },
-            mxsd_mysql   => sub { my @objs = construct(); my $s = $mxsd_mysql->new_scope; $mxsd_mysql->store(grep { blessed($_) } @objs) },
-            mxsd_pg      => sub { my @objs = construct(); my $s = $mxsd_pg->new_scope; $mxsd_pg->store(grep { blessed($_) } @objs) },
+            ( $mxsd_mysql ? ( mxsd_mysql => sub { my @objs = construct(); my $s = $mxsd_mysql->new_scope; $mxsd_mysql->store(grep { blessed($_) } @objs) } ) : () ),
+            ( $mxsd_pg    ? ( mxsd_pg    => sub { my @objs = construct(); my $s = $mxsd_pg->new_scope; $mxsd_pg->store(grep { blessed($_) } @objs) } ) : () ),
             ( $mxsd_couch ? ( mxsd_couch => sub { my @objs = construct(); my $s = $mxsd_couch->new_scope; $mxsd_couch->store(grep { blessed($_) } @objs) } ) : () ),
             storable   => sub { nstore([ construct() ], $storable) },
         });
@@ -122,8 +120,8 @@ sub bench {
     my @bdb_d_ids = do { my @objs = construct(); my $s = $mxsd_bdb_dumb->new_scope; $mxsd_bdb_dumb->store(grep { blessed($_) } @objs) };
     my @bdb_t_ids = do { my @objs = construct(); my $s = $mxsd_bdb_txn->new_scope; $mxsd_bdb_txn->backend->txn_do(sub { $mxsd_bdb_txn->store(grep { blessed($_) } @objs) }); };
     my @sqlite_t_ids = do { my @objs = construct(); my $s = $mxsd_sqlite->new_scope; $mxsd_sqlite->backend->txn_do(sub { $mxsd_sqlite->store(grep { blessed($_) } @objs) }); };
-    my @mysql_t_ids = do { my @objs = construct(); my $s = $mxsd_mysql->new_scope; $mxsd_mysql->backend->txn_do(sub { $mxsd_mysql->store(grep { blessed($_) } @objs) }); };
-    my @pg_t_ids = do { my @objs = construct(); my $s = $mxsd_pg->new_scope; $mxsd_pg->backend->txn_do(sub { $mxsd_pg->store(grep { blessed($_) } @objs) }); };
+    my @mysql_t_ids = $mxsd_mysql ? do { my @objs = construct(); my $s = $mxsd_mysql->new_scope; $mxsd_mysql->backend->txn_do(sub { $mxsd_mysql->store(grep { blessed($_) } @objs) }); } : (); 
+    my @pg_t_ids = $mxsd_pg ? do { my @objs = construct(); my $s = $mxsd_pg->new_scope; $mxsd_pg->backend->txn_do(sub { $mxsd_pg->store(grep { blessed($_) } @objs) }); } : ();
     my @couch_ids = $mxsd_couch ? do { my @objs = construct(); my $s = $mxsd_couch->new_scope; $mxsd_couch->store(grep { blessed($_) } @objs) } : ();
 
     cmpthese(-3, {
@@ -133,8 +131,8 @@ sub bench {
         mxsd_bdb     => sub { my $s = $mxsd_bdb_dumb->new_scope; my @objs = $mxsd_bdb_dumb->lookup(@bdb_d_ids) },
         mxsd_bdb_txn => sub { my $s = $mxsd_bdb_txn->new_scope; my @objs = $mxsd_bdb_txn->lookup(@bdb_t_ids) },
         mxsd_sqlite  => sub { my $s = $mxsd_sqlite->new_scope; my @objs = $mxsd_sqlite->lookup(@sqlite_t_ids) },
-        mxsd_mysql   => sub { my $s = $mxsd_mysql->new_scope; my @objs = $mxsd_mysql->lookup(@mysql_t_ids) },
-        mxsd_pg      => sub { my $s = $mxsd_pg->new_scope; my @objs = $mxsd_pg->lookup(@pg_t_ids) },
+        ( $mxsd_mysql ? ( mxsd_mysql   => sub { my $s = $mxsd_mysql->new_scope; my @objs = $mxsd_mysql->lookup(@mysql_t_ids) } ) : () ),
+        ( $mxsd_pg    ? ( mxsd_pg      => sub { my $s = $mxsd_pg->new_scope; my @objs = $mxsd_pg->lookup(@pg_t_ids) } ) : () ),
         ( $mxsd_couch ? ( mxsd_couch => sub { my $s = $mxsd_couch->new_scope; my @objs = $mxsd_couch->lookup(@couch_ids) } ) : () ),
     });
 }

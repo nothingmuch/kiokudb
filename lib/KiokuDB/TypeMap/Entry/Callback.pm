@@ -43,6 +43,8 @@ sub compile_mappings {
 
         $self->inflate_data($entry->data, \( my $args ));
 
+        $self->load_queue; # force $args to vivify
+
         # does *NOT* support circular refs
         # document it as such
         my $object = $entry->class->$expand_object(ref $args ? @$args : $args);
