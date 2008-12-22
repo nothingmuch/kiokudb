@@ -9,10 +9,16 @@ with qw(
     KiokuDB::Backend::Serialize::JSPON
 );
 
-has pretty => (
+has [qw(utf8 pretty)] => (
     isa => "Bool",
     is  => "rw",
     default => 0,
+);
+
+has canonical => (
+    isa => "Bool",
+    is  => "rw",
+    default => 1,
 );
 
 has json => (
@@ -24,8 +30,13 @@ has json => (
 
 sub _build_json {
     my $self = shift;
-    my $json = JSON->new->canonical;
-    $json->pretty if $self->pretty;
+
+    my $json = JSON->new;
+
+    foreach my $flag (qw(utf8 pretty canonical)) {
+        $json->$flag if $self->$flag;
+    }
+
     return $json;
 }
 
