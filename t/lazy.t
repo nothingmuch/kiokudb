@@ -14,6 +14,8 @@ use ok 'KiokuDB::Backend::Hash';
     package Simple;
     use KiokuDB::Class;
 
+    has name => ( is => "rw" );
+
     has foo => (
         traits => [qw(KiokuDB::Lazy)],
         isa    => __PACKAGE__,
@@ -63,3 +65,60 @@ my $dir = KiokuDB->new( backend => KiokuDB::Backend::Hash->new );
         "both objects are live",
     );
 }
+
+{
+    my $s = $dir->new_scope;
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [],
+        "no live objects",
+    );
+
+    my $bar = $dir->lookup("bar");
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [ $bar ],
+        "only bar is live",
+    );
+
+    $bar->name("moose");
+
+    $dir->update($bar);
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [ $bar ],
+        "only bar is live",
+    );
+}
+
+{
+    my $s = $dir->new_scope;
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [],
+        "no live objects",
+    );
+
+    my $bar = $dir->lookup("bar");
+
+    is( $bar->name, "moose", "name updated" );
+
+    is_deeply(
+        [ $dir->live_objects->live_objects ],
+        [ $bar ],
+        "only bar is live",
+    );
+
+    my $foo = $bar->foo;
+
+    is_deeply(
+        [ sort $dir->live_objects->live_objects ],
+        [ sort $foo, $bar ],
+        "both objects are live",
+    );
+}
+

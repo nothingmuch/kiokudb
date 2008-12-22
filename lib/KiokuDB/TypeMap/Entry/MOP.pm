@@ -38,6 +38,13 @@ sub compile_collapser {
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->compute_all_applicable_attributes;
 
+    my %lazy;
+    foreach my $attr ( @attrs ) {
+        $lazy{$attr->name}  = $attr->does("KiokuDB::Meta::Attribute::Lazy");
+    }
+
+    my $meta_instance = $meta->get_meta_instance;
+
     my $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
 
     return sub {
@@ -50,10 +57,20 @@ sub compile_collapser {
 
             my $object = $args{object};
 
-            foreach my $attr ( @attrs ) {
+            attr: foreach my $attr ( @attrs ) {
+                my $name = $attr->name;
                 if ( $attr->has_value($object) ) {
+                    if ( $lazy{$name} ) {
+                        my $value = $meta_instance->Class::MOP::Instance::get_slot_value($object, $name); # FIXME fix KiokuDB::Meta::Instance to allow fetching thunk
+
+                        if ( ref $value eq 'KiokuDB::Thunk' ) {
+                            $collapsed{$name} = KiokuDB::Reference->new( id => $value->id );
+                            next attr;
+                        }
+                    }
+
                     my $value = $attr->get_value($object);
-                    $collapsed{$attr->name} = ref($value) ? $self->visit($value) : $value;
+                    $collapsed{$name} = ref($value) ? $self->visit($value) : $value;
                 }
             }
 
@@ -76,10 +93,11 @@ sub compile_expander {
         $lazy{$attr->name}  = $attr->does("KiokuDB::Meta::Attribute::Lazy");
     }
 
+    my $meta_instance = $meta->get_meta_instance;
+
     return sub {
         my ( $self, $entry ) = @_;
 
-        my $meta_instance = $meta->get_meta_instance;
         my $instance = $meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
