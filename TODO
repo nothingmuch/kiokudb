@@ -6,12 +6,7 @@
         * Dir
             * Flat
             * Trie
-    * DBI
-        * props + blob column with Serialize role
-    * SQLite
-        * with dynamic alter table statements?
-        * audrey style indexing?
-    * BDB
+    * BDB/DBI
         * Set::Object/Hash sharding
     * RDF
         * generate triples
@@ -25,14 +20,12 @@
 
 * typemap
     * runtime role support
-        * json in class field?
-        * Reference in class field?
-            * fully DB resident metaclass?
-	* class version upgrade path
+        * hashref in new 'meta' field
+        * what about DB resident metaclass? like a smalltalk image
+	* class version upgrade path as part of class field
 
 * tools
-    * consistency checker
-    * generic garbage collector
+    * generic garbage collector? 'root' isn't really that accurate.. think of a better way
 
 * query
     * http://www.ietf.org/rfc/rfc1960.txt
