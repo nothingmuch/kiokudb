@@ -2,6 +2,12 @@
     - Load classes in the typemap resolution code, so that objects whose
       classes aren't necessarily loaded at compile time can still be inflated.
     - add 'import_yaml' to KiokuDB::Util
+    - Refactor parts of the JSPON file backend into a JSON serialization role
+    - Don't load thunks when updating partially loaded objects
+    - No longer dies if txn_do is used but the backend doesn't supports it
+      (implicit noop)
+    - Add a new role and test for nested transaction supporting backends
+      (partial rollback)
 
 0.09
     - Remove KiokuDB::Resolver, moving ID assignment functionality into the
