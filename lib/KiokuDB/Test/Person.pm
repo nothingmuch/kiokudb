@@ -5,7 +5,7 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-has [qw(name age job)] => (
+has [qw(name age job binary)] => (
     isa => "Str",
     is  => "rw",
 );

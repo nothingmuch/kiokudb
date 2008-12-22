@@ -28,10 +28,10 @@ sub create {
 
     return (
         KiokuDB::Test::Person->new(
-            name => $utf8,
+            binary => $utf8,
         ),
         KiokuDB::Test::Person->new(
-            name => $bytes,
+            binary => $bytes,
         ),
     );
 }
@@ -44,14 +44,14 @@ sub verify {
     isa_ok( $enc, "KiokuDB::Test::Person" );
     isa_ok( $bin, "KiokuDB::Test::Person" );
 
-    ok( !Encode::is_utf8($enc->name), "preserved utf8 bytes" );
-    my $enc_decoded = Encode::decode( utf8 => $enc->name );
+    ok( !Encode::is_utf8($enc->binary), "preserved utf8 bytes" );
+    my $enc_decoded = Encode::decode( utf8 => $enc->binary );
     ok( Encode::is_utf8($enc_decoded), "decoded cleanly" );
     is( $enc_decoded, "חיים", "decoded to correct value" );
 
-    ok( !Encode::is_utf8($bin->name), "preserved arbitrary bytes" );
-    is( length($bin->name), length($bytes), "bytes not truncated" );
-    is( unpack("H*", $bin->name), unpack("H*", $bytes), "bytes equal" );
+    ok( !Encode::is_utf8($bin->binary), "preserved arbitrary bytes" );
+    is( length($bin->binary), length($bytes), "bytes not truncated" );
+    is( unpack("H*", $bin->binary), unpack("H*", $bytes), "bytes equal" );
 
 }
 
