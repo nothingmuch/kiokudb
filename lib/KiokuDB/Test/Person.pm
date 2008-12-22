@@ -5,12 +5,7 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-has name => (
-    isa => "Str",
-    is  => "rw",
-);
-
-has job => (
+has [qw(name age job)] => (
     isa => "Str",
     is  => "rw",
 );
@@ -21,19 +16,7 @@ has so => (
     weak_ref => 1,
 );
 
-has parents => (
-    isa => "ArrayRef[KiokuDB::Test::Person]",
-    is  => "rw",
-    default => sub { [] },
-);
-
-has kids => (
-    isa => "ArrayRef[KiokuDB::Test::Person]",
-    is  => "rw",
-    default => sub { [] },
-);
-
-has friends => (
+has [qw(parents kids friends)] => (
     isa => "ArrayRef[KiokuDB::Test::Person]",
     is  => "rw",
     default => sub { [] },
