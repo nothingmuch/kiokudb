@@ -7,6 +7,7 @@ use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Backend::Serialize
+    KiokuDB::Backend::Role::UnicodeSafe
     KiokuDB::Backend::Serialize::JSPON
 );
 
@@ -49,6 +50,31 @@ sub serialize {
 sub deserialize {
     my ( $self, $json, @args ) = @_;
     $self->expand_jspon( $self->decode($json), @args );
+}
+
+sub serialize_to_stream {
+    my ( $self, $fh, $entry ) = @_;
+    $fh->print( $self->serialize($entry) );
+}
+
+sub deserialize_from_stream {
+    my ( $self, $fh ) = @_;
+
+    local $_;
+    local $/ = \5;
+
+    my $json = $self->json;
+
+    while ( <$fh> ) {
+        if ( my @docs = $json->incr_parse($_) ) {
+            my @entries = map { $self->expand_jspon($_) } @docs;
+            return @entries;
+        } else {
+            return if $fh->eof;
+        }
+    }
+
+    return;
 }
 
 __PACKAGE__

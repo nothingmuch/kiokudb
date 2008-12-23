@@ -16,22 +16,6 @@ with qw(
     KiokuDB::Cmd::OutputHandle
 );
 
-sub _build_formatter_yaml {
-    require YAML::XS;
-    sub { $_[1]->print(YAML::XS::Dump($_[0])) };
-}
-
-sub _build_formatter_json {
-    require JSON;
-    my $json = JSON->new->utf8;
-    sub { $_[1]->print($json->encode($_[0])) }
-}
-
-sub _build_formatter_storable {
-    require Storable;
-    return \&Storable::nstore_fd;
-}
-
 has '+entries_in_args' => ( default => 1 );
 
 augment run => sub {
@@ -42,14 +26,14 @@ augment run => sub {
     my $stream = $self->entries;
 
     my $out = $self->output_handle;
-    my $fmt = $self->formatter;
+    my $ser = $self->serializer;
 
     my $i;
 
     while ( $self->v("loading block #", ++$i, "..."), my $block = $stream->next ) {
         $self->v(" dumping ", scalar(@$block), " entries...");
         foreach my $entry ( @$block ) {
-            $entry->$fmt($out);
+            $ser->serialize_to_stream($out, $entry);
         }
         $self->v(" done.\n");
     }

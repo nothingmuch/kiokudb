@@ -15,7 +15,7 @@ use ok 'KiokuDB';
 
 use ok 'KiokuDB::Test::Fixture::ObjectGraph';
 
-my @formats = qw(storable);
+my @formats = qw(storable json);
 
 push @formats, "yaml" if eval { require YAML::XS };
 

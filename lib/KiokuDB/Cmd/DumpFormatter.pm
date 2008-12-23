@@ -5,6 +5,8 @@ use Moose::Role;
 
 use Moose::Util::TypeConstraints;
 
+use KiokuDB::Serializer;
+
 use namespace::clean -except => 'meta';
 
 has format => (
@@ -15,23 +17,19 @@ has format => (
     documentation => "dump format ('yaml', 'storable', etc)"
 );
 
-has formatter => (
+has serializer => (
     traits => [qw(NoGetopt EarlyBuild)],
-    isa => "CodeRef",
+    isa => "KiokuDB::Serializer",
     is  => "ro",
+    coerce => 1,
     lazy_build => 1,
 );
 
 
-sub _build_formatter {
+sub _build_serializer {
     my $self = shift;
-    my $builder = "_build_formatter_" . $self->format;
-    $self->$builder;
+    $self->format;
 }
-
-requires '_build_formatter_yaml';
-requires '_build_formatter_storable';
-requires '_build_formatter_json';
 
 __PACKAGE__
 

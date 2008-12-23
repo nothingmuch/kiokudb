@@ -3,7 +3,7 @@
 package KiokuDB::Backend::Serialize::Storable;
 use Moose::Role;
 
-use Storable qw(nfreeze thaw);
+use Storable qw(nfreeze thaw nstore_fd fd_retrieve);
 
 use namespace::clean -except => 'meta';
 
@@ -24,6 +24,21 @@ sub deserialize {
     my ( $self, $blob ) = @_;
 
     return thaw($blob);
+}
+
+sub serialize_to_stream {
+    my ( $self, $fh, $entry ) = @_;
+    nstore_fd($entry, $fh);
+}
+
+sub deserialize_from_stream {
+    my ( $self, $fh ) = @_;
+
+    if ( $fh->eof ) {
+        return;
+    } else {
+        return fd_retrieve($fh);
+    }
 }
 
 __PACKAGE__

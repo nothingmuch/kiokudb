@@ -16,60 +16,17 @@ with qw(
     KiokuDB::Cmd::InputHandle
 );
 
-sub _build_formatter_yaml {
-    require YAML::XS;
-
-    my $buf = '';
-
-    sub {
-        my $fh = shift;
-
-        local $_;
-        local $/ = "\n";
-
-        while ( <$fh> ) {
-            if ( /^---/ and length($buf) ) {
-                my @data = YAML::XS::Load($buf);
-                $buf = $_;
-                return @data;
-            } else {
-                $buf .= $_;
-            }
-        }
-
-        if ( length $buf ) {
-            my @data = YAML::XS::Load($buf);
-            $buf = '';
-            return @data;
-        } else {
-            return;
-        }
-    }
-}
-
-sub _build_formatter_json {
-    require JSON;
-    die "json inc parsing";
-}
-
-sub _build_formatter_storable {
-    require Storable;
-    return sub {
-        !$_[0]->eof && Storable::fd_retrieve($_[0]) || return ();
-    }
-}
-
 augment run => sub {
     my $self = shift;
 
     my $b = $self->backend;
 
     my $in = $self->input_handle;
-    my $fmt = $self->formatter;
+    my $ser = $self->serializer;
 
     my $i = my $j = 0;
 
-    while ( my @entries = $in->$fmt ) {
+    while ( my @entries = $ser->deserialize_from_stream($in) ) {
         if ( $self->verbose ) {
             $i += @entries;
             $j += @entries;
