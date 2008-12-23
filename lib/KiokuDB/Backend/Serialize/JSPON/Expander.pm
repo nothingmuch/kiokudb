@@ -31,8 +31,8 @@ sub expand_jspon {
 
     push @attrs, id      => delete $copy{$self->id_field} if exists $copy{$self->id_field};
     push @attrs, tied    => delete $copy{$self->tied_field} if exists $copy{$self->tied_field};
-    push @attrs, root    => delete $copy{$self->root_field} ? 1 : 0;
-    push @attrs, deleted => delete $copy{$self->deleted_field} ? 1 : 0;
+    push @attrs, root    => delete $copy{$self->root_field} ? 1 : 0 if exists $copy{$self->root_field};
+    push @attrs, deleted => delete $copy{$self->deleted_field} ? 1 : 0 if exists $copy{$self->deleted_field};
 
     push @attrs, data => $self->visit( $self->inline_data ? \%copy : $copy{$self->data_field} );
 
