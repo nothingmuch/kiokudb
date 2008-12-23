@@ -5,6 +5,7 @@
     - fill in SimpleSearch stub fixture
     - Various fixes for Binary fixture
     - Make the various fields of the JSPON format customizable
+    - Serialization is now pluggable using the Delegate serialization role
 
 0.10
     - Load classes in the typemap resolution code, so that objects whose

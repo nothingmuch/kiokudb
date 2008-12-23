@@ -61,7 +61,7 @@ sub deserialize_from_stream {
     my ( $self, $fh ) = @_;
 
     local $_;
-    local $/ = \5;
+    local $/ = \4096;
 
     my $json = $self->json;
 
