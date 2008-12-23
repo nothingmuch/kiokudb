@@ -12,29 +12,31 @@ use namespace::clean -except => 'meta';
 
 extends qw(Data::Visitor);
 
+with qw(KiokuDB::Backend::Serialize::JSPON::Converter);
+
 # Note: this method is destructive
 # maybe it's a good idea to copy $hash before deleting items out of it?
 sub expand_jspon {
     my ( $self, $data, @attrs ) = @_;
 
-    if ( exists $data->{__CLASS__} ) {
+    my %copy = %$data;
+
+    my $class_field = $self->class_field;
+
+    if ( exists $copy{$class_field} ) {
         # check the class more thoroughly here ...
-        my ($class, $version, $authority) = (split '-' => $data->{__CLASS__});
+        my ($class, $version, $authority) = (split '-' => delete $copy{$class_field});
         push @attrs, class => $class;
     }
 
-    foreach my $key ( qw(deleted root) ) {
-        push @attrs, $key => ( $data->{$key} ? 1 : 0 ) if exists $data->{$key};
-    }
+    push @attrs, id      => delete $copy{$self->id_field} if exists $copy{$self->id_field};
+    push @attrs, tied    => delete $copy{$self->tied_field} if exists $copy{$self->tied_field};
+    push @attrs, root    => delete $copy{$self->root_field} ? 1 : 0;
+    push @attrs, deleted => delete $copy{$self->deleted_field} ? 1 : 0;
 
-    my $obj = $self->visit($data->{data});
+    push @attrs, data => $self->visit( $self->inline_data ? \%copy : $copy{$self->data_field} );
 
-    push @attrs, data => $obj;
-
-    return KiokuDB::Entry->new(
-        %$data,
-        @attrs,
-    );
+    return KiokuDB::Entry->new( @attrs );
 }
 
 sub visit_hash_key {
@@ -46,11 +48,14 @@ sub visit_hash_key {
 sub visit_hash {
     my ( $self, $hash ) = @_;
 
-    if ( my $id = $hash->{'$ref'} ) {
-        $id =~ s/\.data$//;
+    if ( my $id = $hash->{$self->ref_field} ) {
+        $id =~ s/\.data$// unless $self->inline_data;
         return KiokuDB::Reference->new( id => $id, ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
     } else {
-        if ( exists $hash->{__CLASS__} or exists $hash->{id} ) {
+        if ( exists $hash->{$self->class_field}
+          or exists $hash->{$self->id_field}
+          or exists $hash->{$self->tied_field}
+        ) {
             return $self->expand_jspon($hash);
         } else {
             return $self->SUPER::visit_hash($hash);

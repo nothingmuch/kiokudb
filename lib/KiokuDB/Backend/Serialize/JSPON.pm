@@ -10,6 +10,7 @@ use namespace::clean -except => 'meta';
 
 with qw(
     KiokuDB::Backend::TypeMap::Default::JSON
+    KiokuDB::Backend::Serialize::JSPON::Converter
 );
 
 has expander => (
@@ -21,7 +22,8 @@ has expander => (
 
 sub _build_expander {
     my $self = shift;
-    KiokuDB::Backend::Serialize::JSPON::Expander->new();
+
+    KiokuDB::Backend::Serialize::JSPON::Expander->new($self->_jspon_params);
 }
 
 has collapser => (
@@ -33,7 +35,8 @@ has collapser => (
 
 sub _build_collapser {
     my $self = shift;
-    KiokuDB::Backend::Serialize::JSPON::Collapser->new();
+
+    KiokuDB::Backend::Serialize::JSPON::Collapser->new($self->_jspon_params);
 }
 
 __PACKAGE__

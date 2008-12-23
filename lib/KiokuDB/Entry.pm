@@ -11,6 +11,7 @@ has id => (
     isa => "Str",
     is  => "rw",
     clearer => "clear_id",
+    predicate => "has_id",
 );
 
 has root => (
