@@ -7,6 +7,7 @@ use Test::More 'no_plan';
 use Test::Moose;
 
 use ok 'KiokuDB::Backend::Serialize::JSPON';
+use ok 'KiokuDB::Backend::Serialize::JSON';
 use ok 'KiokuDB::Entry';
 use ok 'KiokuDB::Reference';
 
@@ -14,7 +15,7 @@ use ok 'KiokuDB::Reference';
     package Foo;
     use Moose;
 
-    with qw(KiokuDB::Backend::Serialize::JSPON);
+    with qw(KiokuDB::Backend::Serialize::JSON);
 }
 
 my $entry = KiokuDB::Entry->new(
@@ -43,6 +44,7 @@ my $tied = KiokuDB::Entry->new(
     my $x = Foo->new;
 
     does_ok( $x, "KiokuDB::Backend::TypeMap::Default" );
+    does_ok( $x, "KiokuDB::Backend::Serialize" );
 
     isa_ok( $x->default_typemap, "KiokuDB::TypeMap::Default::JSON" );
 
@@ -79,6 +81,14 @@ my $tied = KiokuDB::Entry->new(
 
     ok( !$obj->deleted, "not deleted" );
     ok( $obj->root, "root" );
+
+    my $json = $x->serialize($entry);
+
+    ok( !ref($json), "json is not a ref" );
+
+    ok( !utf8::is_utf8($json), "already encoded (not unicode)" );
+
+    is_deeply( $x->deserialize($json), $entry, "round tripping" );
 }
 
 {

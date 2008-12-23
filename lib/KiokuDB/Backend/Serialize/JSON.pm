@@ -6,6 +6,7 @@ use Moose::Role;
 use namespace::clean -except => 'meta';
 
 with qw(
+    KiokuDB::Backend::Serialize
     KiokuDB::Backend::Serialize::JSPON
 );
 
