@@ -74,23 +74,20 @@ sub bench {
 
     if ( my $uri = $ENV{KIOKU_COUCHDB_URI} ) {
         require KiokuDB::Backend::CouchDB;
-        require Net::CouchDB;
+        require AnyEvent::CouchDB;
 
-        my $couch = Net::CouchDB->new($uri);
+        my $couch = AnyEvent::CouchDB::couch($uri);
 
         my $name = $ENV{KIOKU_COUCHDB_NAME} || "kioku-$$";
 
-        eval { $couch->db($name)->delete };
+        my $db = $couch->db($name);
+        eval { $db->drop };
 
-        my $db = $couch->create_db($name);
+        $db->create;
 
-        $mxsd_couch = KiokuDB->new(
-            backend => KiokuDB::Backend::CouchDB->new(
-                db => $db,
-            ),
-        );
+        $mxsd_couch = KiokuDB->connect("couchdb:uri=$uri;db=$name");
 
-        $mxsd_couch->{__guard} = Scope::Guard->new(sub { $db->delete });
+        $mxsd_couch->{__guard} = Scope::Guard->new(sub { $db->drop });
     }
 
     warn "\nwriting...\n";
