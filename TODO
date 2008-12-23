@@ -1,11 +1,4 @@
 * Backends:
-    * Map ( for all UUID <-> serialized blob mappings )
-    * Backend::CAS (content addressible map based on serialize)
-    * Backend::Store
-        * BDB
-        * Dir
-            * Flat
-            * Trie
     * BDB/DBI
         * Set::Object/Hash sharding
     * RDF
