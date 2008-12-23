@@ -94,6 +94,18 @@ sub _expand_object {
     return $data;
 }
 
+sub queue_ref {
+    my ( $self, $ref, $into ) = @_;
+
+    my $b = $self->backend;
+
+    if ( $b->can("prefetch") ) {
+        $b->prefetch($ref->id);
+    }
+
+    push @{ $self->_queue }, [ $ref, $into ];
+}
+
 sub load_queue {
     my $self = shift;
 
@@ -137,7 +149,7 @@ sub inflate_data {
     unless ( ref $data ) {
         $$into = $data;
     } elsif ( ref $data eq 'KiokuDB::Reference' ) {
-        push @{ $self->_queue }, [ $data, $into ];
+        $self->queue_ref( $data, $into );
     } elsif ( ref $data eq 'KiokuDB::Entry' ) {
         if ( my $class = $data->class ) {
             my $expand_method = $self->expand_method($class);
