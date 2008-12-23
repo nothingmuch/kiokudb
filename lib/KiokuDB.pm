@@ -429,11 +429,17 @@ KiokuDB - Object Graph storage engine
 
     use KiokuDB;
 
+    # use a DSN
+    my $d = KiokuDB->connect( $dsn, %args );
+
+    # or manually instantiate a backend
     my $d = KiokuDB->new(
-        backend => KiokuDB::Backend::JSPON->new(
-            dir => "/tmp/foo",
+        backend => KiokuDB::Backend::Files->new(
+            dir        => "/tmp/foo",
+            serializer => "yaml",
         ),
     );
+
 
     # takes a snapshot of $some_object
     my $uuid = $d->store($some_object);
@@ -441,8 +447,18 @@ KiokuDB - Object Graph storage engine
     # or with a custom ID:
     $d->store( $id => $some_object ); # $id can be any string
 
+
     # retrieve by ID
     my $some_object = $d->lookup($uuid);
+
+
+
+    # some backends (like DBI) support simple searchs
+    $d->search({ name => "foo" });
+
+
+    # others use GIN queries (DBI supports both)
+    $d->search($gin_query);
 
 =head1 ALPHA WARNING
 
