@@ -32,6 +32,7 @@ my %monikers = (
     "bdb-gin" => "BDB::GIN",
     "dbi"     => "DBI",
     "jspon"   => "JSPON",
+    "files"   => "Files",
     "couchdb" => "CouchDB",
 );
 
