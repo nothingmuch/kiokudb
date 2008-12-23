@@ -9,13 +9,13 @@ with qw(
     KiokuDB::Backend::Serialize::JSPON
 );
 
-has [qw(utf8 pretty)] => (
+has pretty => (
     isa => "Bool",
     is  => "rw",
     default => 0,
 );
 
-has canonical => (
+has [qw(utf8 canonical)] => (
     isa => "Bool",
     is  => "rw",
     default => 1,
