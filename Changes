@@ -1,3 +1,10 @@
+0.11
+    - Fetching now queues items so that the backend's get() method is called
+      fewer times, with more IDs each time. This significantly increases the
+      performance of high latency backends, such as DBI or CouchDB.
+    - fill in SimpleSearch stub fixture
+    - Various fixes for Binary fixture
+
 0.10
     - Load classes in the typemap resolution code, so that objects whose
       classes aren't necessarily loaded at compile time can still be inflated.
