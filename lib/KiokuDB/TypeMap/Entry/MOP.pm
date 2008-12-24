@@ -107,8 +107,6 @@ sub compile_expander {
 
         my @values;
 
-        use Devel::PartialDump qw(warn);
-
         foreach my $name ( keys %$data ) {
             my $value = $data->{$name};
             my $attr = $attrs{$name};
