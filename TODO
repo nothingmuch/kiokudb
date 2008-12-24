@@ -1,6 +1,17 @@
+* configuration file
+    * need to be able to specify:
+        * regular options
+        * typemaps
+        * extra libs to load
+        * GIN extractors
+
 * Backends:
     * BDB/DBI
-        * Set::Object/Hash sharding
+        * Set::Object/Hash sharding (each key/member is an entry in the BDB
+          hash). This allows finer grained commits (e.g. insertion to a set
+          simultaneously will not cause a failed transaction). Will BDB even
+          allow transactions to do that? probably with MULTIVERSION, because
+          the read won't block
     * RDF
         * generate triples
             * predicates as FQ attr names names
@@ -8,13 +19,45 @@
             * predicates as UUIDs?
             * no collapsing by default
         * SPARQL matching with simple search
-    * Backend::Locking
-        * exclusive write lock TXNs using deferred writes
+    * Backend::Files
+        * transactions
+            * exclusive write lock TXNs using deferred writes
+            * each TXN gets its own write directory,
+            * committing a txn == moving (and overwriting) files into parent TXN dir
+            * aborting a txn == popping the TXN stack, and removing the directory
+            * how do we do atomic commits? a journal of file moves could be
+              maintained, log move, move aside original, move in new, log
+              transaction as successful in log, sync, then remove originals
+        * fine grained locking
+            * per object shared/exclusive locks could be taken on the root dir
+              as objects are being touched by transactions
+            * survey and benchmark various locking methods, NFSLock seems overkill
+
+* concurrency test fixture for backends
+    * forks
+    * threads
+
+* event based
+    * linker is almost ready to integrate event based linking
+    * if backend returns a cond var for get() then we can return a cond var for
+      the whole graph. start with an api for it, and slowly implement actual
+      async behavior using a backend role
+    * AnyEvent::BDB, Files and CouchDB backends could benefit
+    * skeptical about performance of DBI with forking
+    * does the live object scope still make sense? probably, but it's much
+      easier to leak it. the event oriented wrapper should keep live object
+      scopes for the user at least for the duration of a callback, in
+      additional to the user tracking to minimize confusion. $lookup->recv
+      could return the scope into which the objects were loaded, along with the
+      results
+
+* threading
+    * what happens with a shared KiokuDB directory? i don't think that's a good
+      idea... better that each thread has its own copy? how can we guarantee
+      recursive thread sharing of passthrough/callback objects?
 
 * typemap
-    * runtime role support
-        * hashref in new 'meta' field
-        * what about DB resident metaclass? like a smalltalk image
+    * DB resident metaclass? like a smalltalk image
 	* class version upgrade path as part of class field
 
 * tools
