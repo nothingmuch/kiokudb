@@ -5,12 +5,15 @@ use Moose;
 
 use Moose::Util::TypeConstraints;
 
+use MooseX::Types -declare => ['Tied'];
+
 use namespace::clean -except => 'meta';
 
 has id => (
     isa => "Str",
-    is  => "rw",
-    clearer => "clear_id",
+    is  => "ro",
+    writer    => "_id",
+    clearer   => "clear_id",
     predicate => "has_id",
 );
 
@@ -21,26 +24,35 @@ has root => (
 
 has deleted => (
     isa => "Bool",
-    is  => "rw",
+    is  => "ro",
+    writer => "_deleted",
 );
 
 has data => (
     isa => "Ref",
-    is  => "rw",
+    is  => "ro",
+    writer    => "_data",
     predicate => "has_data",
 );
 
 has class => (
     isa => "Str",
-    is  => "rw",
+    is  => "ro",
+    writer    => "_class",
     predicate => "has_class",
 );
 
-my @tied = ( qw(HASH SCALAR ARRAY GLOB) );
+my @tied = ( map { substr($_, 0, 1) } qw(HASH SCALAR ARRAY GLOB) );
+
+enum Tied, @tied;
+
+coerce Tied, from Str => via { substr($_, 0, 1) };
 
 has tied => (
-    isa => enum(\@tied),
-    is  => "rw",
+    isa => Tied,
+    is  => "ro",
+    coerce    => 1,
+    writer    => "_tied",
     predicate => "has_tied",
 );
 
@@ -142,24 +154,21 @@ sub referenced_ids {
 
 use constant _version => 1;
 
-use constant _root      => 0x01;
-use constant _deleted   => 0x02;
+use constant _root_b      => 0x01;
+use constant _deleted_b   => 0x02;
 
 use constant _tied_shift => 2;
 use constant _tied_mask => 0x03 << _tied_shift;
 
 my %tied; @tied{@tied} = ( 1 .. scalar(@tied) );
 
-my %tied_old; @tied_old{@tied} = qw(H S A G);
-my %tied_old_r = reverse %tied_old;
-
 sub _pack {
     my $self = shift;
 
     my $flags = 0;
 
-    $flags |= _root if $self->root;
-    $flags |= _deleted if $self->deleted;
+    $flags |= _root_b    if $self->root;
+    $flags |= _deleted_b if $self->deleted;
 
     if ( $self->has_tied ) {
         $flags |= $tied{$self->tied} << _tied_shift;
@@ -179,15 +188,15 @@ sub _unpack {
 
         return $self->_unpack_old($packed) if length($extra);
 
-        $self->id($id) if length($id);
+        $self->_id($id) if length($id);
 
-        $self->class($class) if length($class);
+        $self->_class($class) if length($class);
 
-        $self->root(1) if $flags & _root;
-        $self->deleted(1) if $flags & _deleted;
+        $self->root(1)    if $flags & _root_b;
+        $self->_deleted(1) if $flags & _deleted_b;
 
         if ( my $tied = ( $flags & _tied_mask ) >> _tied_shift ) {
-            $self->tied( $tied[$tied - 1] );
+            $self->_tied( $tied[$tied - 1] );
         }
     } else {
         $self->_unpack_old($packed);
@@ -203,7 +212,7 @@ sub _pack_old {
         $self->id,
         !!$self->root,
         $self->class,
-        $tied_old{$self->tied},
+        $self->tied,
         !!$self->deleted,
     );
 }
@@ -215,13 +224,12 @@ sub _unpack_old {
 
     die "bad entry format: $packed" if $root and $root ne '1';
     die "bad entry format: $packed" if $deleted and $deleted ne '1';
-    die "bad entry format: $packed" if $tied and not exists $tied_old_r{$tied};
 
-    $self->id($id) if $id;
+    $self->_id($id) if $id;
     $self->root(1) if $root;
-    $self->class($class) if $class;
-    $self->tied($tied_old_r{$tied}) if $tied;
-    $self->deleted(1) if $deleted;
+    $self->_class($class) if $class;
+    $self->_tied(substr($tied, 0, 1)) if $tied;
+    $self->_deleted(1) if $deleted;
 }
 
 sub STORABLE_freeze {
@@ -243,7 +251,7 @@ sub STORABLE_thaw {
 
     if ( $refs ) {
         my ( $data, $backend_data ) = @$refs;
-        $self->data($data) if ref $data;
+        $self->_data($data) if ref $data;
         $self->backend_data($backend_data) if ref $backend_data;
     }
 }

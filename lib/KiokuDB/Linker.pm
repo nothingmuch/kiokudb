@@ -162,17 +162,17 @@ sub inflate_data {
             $self->load_queue; # force vivification of $obj
 
             if ( my $tie = $data->tied ) {
-                if ( $tie eq 'HASH' ) {
+                if ( $tie eq 'H' ) {
                     tie my %h, "Tie::ToObject" => $obj;
                     $obj = \%h;
-                } elsif ( $tie eq 'ARRAY' ) {
+                } elsif ( $tie eq 'A' ) {
                     tie my @a, "Tie::ToObject" => $obj;
                     $obj = \@a;
-                } elsif ( $tie eq 'GLOB' ) {
+                } elsif ( $tie eq 'G' ) {
                     my $glob = gensym();
                     tie *$glob, "Tie::ToObject" => $obj,
                     $obj = $glob;
-                } elsif ( $tie eq 'SCALAR' ) {
+                } elsif ( $tie eq 'S' ) {
                     my $scalar;
                     tie $scalar, "Tie::ToObject" => $obj;
                     $obj = \$scalar;
