@@ -16,8 +16,8 @@ L<KiokuDB> is a frontend to several backends, much like L<DBI> uses DBDs to
 connect to actual databases.
 
 For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
-which is an in memory store, but for production L<KiokuDB::Backend::BDB> is
-the recommended backend.
+which is an in memory store, but for production L<KiokuDB::Backend::BDB> or
+L<KiokuDB::Backend::DBI> are the recommended backends.
 
 See below for instructions on getting L<KiokuDB::Backend::BDB> installed.
 
@@ -34,6 +34,14 @@ The simplest directory ready for use can be created like this:
 
 We will revisit other more interesting backend configuration later in this
 document, but for now this will do.
+
+You can also use DSN strings to connect to the various backends:
+
+    KiokuDB->connect("hash");
+
+    KiokuDB->connect("dbi:SQLite:dbname=foo", create => 1);
+
+    KiokuDB->connect("bdb:dir=foo", create => 1);
 
 =head1 INSERTING OBJECTS
 
@@ -406,6 +414,30 @@ Each backend comes with a default typemap, with some built in entries for
 common CPAN modules' objects. L<KiokuDB::TypeMap::Default> contains more
 details.
 
+=head1 SIMPLE SEARCHES
+
+Most backends support an inefficient but convenient simple search, which scans
+the entries and matches fields.
+
+If you want to make use of this API we suggest using L<KiokuDB::Backend::DBI>
+since simple searching is implemented using an SQL where clause, which is much
+more efficient (you do have to set up the column manually though).
+
+Calling the C<search> method with a hash reference as the only argument invokes
+the simple search functionality, returning a L<Data::Stream::Bulk> with the
+results:
+
+    my $stream = $dir->search({ name => "Homer Simpson" });
+
+    while ( my $block = $stream->next ) {
+        foreach my $object ( @$block ) {
+            # $object->name eq "Homer Simpson"
+       }
+    }
+
+This exact API is intentionally vague. In the future it will be compatible with
+L<DBIx::Class> 0.09's syntax.
+
 =head1 GETTING STARTED WITH BDB
 
 So far we've only made use of L<KiokuDB::Backend::Hash>, so while our objects
@@ -414,6 +446,11 @@ were serialized, they were not actually stored on disk.
 The most mature backend for L<KiokuDB> is L<KiokuDB::Backend::BDB>. It performs
 very well, and supports many features, like L<Search::GIN> integration to
 provide customized indexing of your objects and transactions.
+
+L<KiokuDB::Backend::DBI> is newer and not as test, but also supports
+transactions and L<Search::GIN> based queries. It performs well too, though not
+as fast as L<KiokuDB::Backend::BDB>, and is easier to install (all you need is
+your DBD).
 
 =head2 Installing L<KiokuDB::Backend::BDB>
 
@@ -537,4 +574,8 @@ that L<Search::GIN::Query::Class> would need to later find these objects in the
 lookup. This process can be heavily customized and supports far more
 functionality than simple queries like the above. See L<Search::GIN> for more
 details.
+
+The most commonly used L<Search::GIN> extractor and query pair is
+L<Search::GIN::Extract::Callback> and L<Search::GIN::Query::Manual>, which
+allow you to generate custom keys and query on these keys by hand.
 
