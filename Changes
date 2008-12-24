@@ -1,3 +1,6 @@
+0.12
+    - Remove a use Devel::PartialDump that accidentally got committed
+
 0.11
     - Fetching now queues items so that the backend's get() method is called
       fewer times, with more IDs each time. This significantly increases the
