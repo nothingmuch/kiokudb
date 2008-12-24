@@ -22,7 +22,7 @@ has reserved_key => (
 sub _build_reserved_key {
     my $self = shift;
 
-    my $reserved = '^(?:' . join("|", map { quotemeta($self->$_) } qw(id_field class_field root_field deleted_field tied_field ref_field)) . ')$';
+    my $reserved = '^(?:' . join("|", map { quotemeta($self->$_) } map { $_ . "_field" } $self->_jspon_fields) . ')$';
 
     qr/(?: $reserved | ^public:: )/x
 }
@@ -54,6 +54,7 @@ sub visit_object {
         my $id = $object->id;
         return {
             ( $object->has_class ? ( $self->class_field => $object->class ) : () ),
+            ( $object->has_class_meta ? ( $self->class_meta_field => $object->class_meta ) : () ),
             ( $id ? ( $self->id_field => $id ) : () ),
             ( $object->root ? ( $self->root_field => JSON::true() ) : () ),
             ( $object->deleted ? ( $self->deleted_field => JSON::true() ) : () ),

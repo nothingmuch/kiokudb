@@ -93,7 +93,7 @@ my $l = KiokuDB::Linker->new(
     is( reftype($entry->data), reftype($deep), "reftype" );
     is_deeply(
         $entry->data,
-        {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar} ) },
+        {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar ) },
         "is_deeply"
     );
 

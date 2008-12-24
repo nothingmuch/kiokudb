@@ -433,6 +433,7 @@ use Tie::RefHash;
                 bar => KiokuDB::Entry->new(
                     class => "Bar",
                     data  => { blah => "two" },
+                    object => $obj->bar,
                 ),
             },
             "intrinsic entry data",

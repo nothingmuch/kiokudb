@@ -27,6 +27,8 @@ sub expand_jspon {
         # check the class more thoroughly here ...
         my ($class, $version, $authority) = (split '-' => delete $copy{$class_field});
         push @attrs, class => $class;
+
+        push @attrs, class_meta => delete $copy{$self->class_meta_field} if exists $copy{$self->class_meta_field};
     }
 
     push @attrs, id      => delete $copy{$self->id_field} if exists $copy{$self->id_field};

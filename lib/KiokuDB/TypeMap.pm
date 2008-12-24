@@ -47,6 +47,30 @@ sub resolve {
     # if we're linking it might not be set
     Class::MOP::_try_load_one_class($class);
 
+    # if this is an anonymous class, redo the lookup using a single named
+    # ancestor
+    if ( my $meta = Class::MOP::get_metaclass_by_name($class) ) {
+        if ( $meta->is_anon_class ) {
+            my $ancestor = $meta;
+
+            search: {
+                my @super = $ancestor->superclasses;
+
+                if ( @super == 1 ) {
+                    $ancestor = Class::MOP::get_metaclass_by_name($super[0]);
+                    if ( $ancestor->is_anon_class ) {
+                        redo search;
+                    }
+                } else {
+                    croak "Cannot resolve anonymous class with multiple inheritence: $class";
+                }
+            }
+
+            return $self->resolve( $ancestor->name );
+        }
+    }
+
+
     if ( my $entry = $self->all_entries->{$class} || $self->all_isa_entries->{$class} ) {
         return $self->resolve_entry( $entry );
     } else {

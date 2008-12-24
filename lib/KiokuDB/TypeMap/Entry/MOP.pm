@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::MOP;
 use Moose;
 
+use Carp qw(croak);
+
 use KiokuDB::Thunk;
 
 no warnings 'recursion';
@@ -20,14 +22,14 @@ has intrinsic => (
 # apart from the visit call
 
 sub compile {
-    my ( $self, $class ) = @_;
+    my ( $self, $class, @args ) = @_;
 
     my $meta = Class::MOP::get_metaclass_by_name($class);
 
-    if ( $meta->is_immutable ) {
-        $self->compile_mappings_immutable($meta);
+    if ( $meta->is_immutable || $meta->is_anon_class ) {
+        $self->compile_mappings_immutable($meta, @args);
     } else {
-        $self->compile_mappings_mutable($meta);
+        $self->compile_mappings_mutable($meta, @args);
     }
 }
 
@@ -47,8 +49,39 @@ sub compile_collapser {
 
     my $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
 
+    my %attrs;
+
+    if ( $meta->is_anon_class ) {
+
+        # FIXME ancestral roles all the way up to first non anon ancestor,
+        # at least check for additional attributes or other metadata which we
+        # should probably error on if anything
+
+        my $ancestor = $meta;
+
+        search: {
+            my @super = $ancestor->superclasses;
+
+            if ( @super == 1 ) {
+                $ancestor = Class::MOP::get_metaclass_by_name($super[0]);
+                if ( $ancestor->is_anon_class ) {
+                    redo search;
+                }
+            } else {
+                croak "Cannot resolve anonymous class with multiple inheritence: " . $meta->name;
+            }
+        }
+
+        %attrs = (
+            class => $ancestor->name,
+            class_meta => {
+                roles => [ map { $_->name } @{ $meta->roles } ],
+            },
+        );
+    }
+
     return sub {
-        my $self = shift;
+        my ( $self, $obj, @args ) = @_;
 
         $self->$method(sub {
             my ( $self, %args ) = @_;
@@ -75,12 +108,12 @@ sub compile_collapser {
             }
 
             return \%collapsed;
-        }, @_);
+        }, $obj, %attrs, @args);
     }
 }
 
 sub compile_expander {
-    my ( $self, $meta ) = @_;
+    my ( $self, $meta, $resolver ) = @_;
 
     my ( %attrs, %lazy );
 
@@ -95,8 +128,33 @@ sub compile_expander {
 
     my $meta_instance = $meta->get_meta_instance;
 
+    my $typemap_entry = $self;
+
+    my $anon = $meta->is_anon_class;
+
     return sub {
-        my ( $self, $entry ) = @_;
+        my ( $self, $entry, @args ) = @_;
+
+        if ( $entry->has_class_meta and !$anon ) {
+            # the entry is for an anonymous subclass of this class, we need to
+            # compile that entry and short circuit to it. if $anon is true then
+            # we're already compiled, and the class_meta is already handled
+            my $anon_meta = $meta->create_anon_class(
+                cache => 1,
+                superclasses => [ $entry->class ],
+                %{ $entry->class_meta },
+            );
+
+            my $anon_class = $anon_meta->name;
+
+            unless ( $resolver->resolved($anon_class) ) {
+                $resolver->compile_entry($anon_class, $typemap_entry);
+            }
+
+            my $method = $resolver->expand_method($anon_class);
+            return $self->$method($entry, @args);
+        }
+
 
         my $instance = $meta_instance->create_instance();
 
@@ -151,30 +209,30 @@ sub compile_id {
 }
 
 sub compile_mappings_immutable {
-    my ( $self, $meta ) = @_;
+    my ( $self, @args ) = @_;
     return (
-        $self->compile_collapser($meta),
-        $self->compile_expander($meta),
-        $self->compile_id($meta),
+        $self->compile_collapser(@args),
+        $self->compile_expander(@args),
+        $self->compile_id(@args),
     );
 }
 
 sub compile_mappings_mutable {
-    my ( $self, $meta ) = @_;
+    my ( $self, @args ) = @_;
 
     #warn "Mutable: " . $meta->name;
 
     return (
         sub {
-            my $collapser = $self->compile_collapser($meta);
+            my $collapser = $self->compile_collapser(@args);
             shift->$collapser(@_);
         },
         sub {
-            my $expander = $self->compile_expander($meta);
+            my $expander = $self->compile_expander(@args);
             shift->$expander(@_);
         },
         sub {
-            my $id = $self->compile_id($meta);
+            my $id = $self->compile_id(@args);
             shift->$id(@_);
         },
     );

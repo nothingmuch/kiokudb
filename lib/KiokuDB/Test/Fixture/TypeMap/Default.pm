@@ -7,6 +7,7 @@ use Moose;
 
 use Encode;
 use Test::More;
+use Test::Moose;
 
 use KiokuDB::Test::Person;
 use KiokuDB::Test::Employee;
@@ -24,6 +25,13 @@ use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::Salted
 use constant HAVE_PATH_CLASS        => eval { require Path::Class };
 use constant HAVE_IXHASH            => eval { require Tie::IxHash };
 
+{
+    package Some::Role;
+    use Moose::Role;
+
+    has role_attr => ( is => "rw" );
+}
+
 with qw(KiokuDB::Test::Fixture);
 
 sub create {
@@ -34,6 +42,17 @@ sub create {
     my %ixhash;
     tie %ixhash, 'Tie::IxHash' if HAVE_IXHASH;
     %ixhash = ( first => 1, second => "yes", third => "maybe", fourth => "a charm" );
+
+    my $homer = KiokuDB::Test::Employee->new(
+        name    => "Homer Simpson",
+        company => KiokuDB::Test::Company->new(
+            name => "Springfield Power Plant",
+        ),
+    );
+
+    Some::Role->meta->apply($homer);
+
+    $homer->role_attr("foo");
 
     return (
         refhash => \%refhash,
@@ -57,6 +76,7 @@ sub create {
                 ),
             },
         ) : (),
+        homer => $homer,
     );
 }
 
@@ -64,6 +84,8 @@ sub verify {
     my $self = shift;
 
     {
+        my $s = $self->new_scope;
+
         my $rh = $self->lookup_ok("refhash");
 
         is( ref($rh), "HASH", "plain hash" );
@@ -73,7 +95,27 @@ sub verify {
 
     }
 
+    $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $homer = $self->lookup_ok("homer");
+
+        isa_ok( $homer, "KiokuDB::Test::Person" );
+        is( $homer->name, "Homer Simpson", "class attr" );
+        does_ok( $homer, "Some::Role", "does runtime role" );
+        is( $homer->role_attr, "foo", "role attr" );
+        ok( $homer->meta->is_anon_class, "anon class" );
+        isa_ok( $homer->company, "KiokuDB::Test::Company" );
+
+        undef $homer;
+    }
+
     if ( HAVE_IXHASH ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
         my $ix = $self->lookup_ok("ixhash");
 
         is( ref($ix), "HASH", "plain hash" );
@@ -83,12 +125,18 @@ sub verify {
     }
 
     if ( HAVE_DATETIME ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
         my $date = $self->lookup_ok("datetime")->{obj};
 
         isa_ok( $date, "DateTime" );
     }
 
     if ( HAVE_URI ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
         my $uri = $self->lookup_ok("uri")->{obj};
 
         isa_ok( $uri, "URI" );
@@ -96,6 +144,9 @@ sub verify {
     }
 
     if ( HAVE_URI_WITH_BASE ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
         my $uri = $self->lookup_ok("with_base")->{obj};
 
         isa_ok( $uri, "URI::WithBase" );
@@ -104,6 +155,9 @@ sub verify {
     }
 
     if ( HAVE_PATH_CLASS ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
         my $file = $self->lookup_ok("path_class")->{obj};
 
         isa_ok( $file, "Path::Class::Entity" );

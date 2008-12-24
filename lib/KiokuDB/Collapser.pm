@@ -432,8 +432,8 @@ sub collapse_intrinsic {
     );
 
     return $self->make_entry(
+        @args,
         data  => $self->$collapse(@args),
-        class => $class,
     );
 }
 

@@ -21,6 +21,9 @@ use ok 'KiokuDB::Reference';
 my $entry = KiokuDB::Entry->new(
     id => "foo",
     class => "Hello",
+    class_meta => {
+        roles => [qw(Greeting)],
+    },
     root => 1,
     data => {
         id => "id_attribute",
@@ -59,6 +62,7 @@ my $tied = KiokuDB::Entry->new(
         $jspon,
         {
             __CLASS__ => "Hello",
+            __META__  => { roles => [qw(Greeting)] },
             id        => "foo",
             data      => {
                 "public::id"            => "id_attribute",
@@ -104,6 +108,7 @@ my $tied = KiokuDB::Entry->new(
         $jspon,
         {
             class                   => "Hello",
+            __META__                => { roles => [qw(Greeting)] },
             _id                     => "foo",
             root                    => JSON::true,
             id                      => "id_attribute",

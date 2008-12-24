@@ -42,6 +42,13 @@ has class => (
     predicate => "has_class",
 );
 
+has class_meta => (
+    isa => "HashRef",
+    is  => "ro",
+    writer    => "_class_meta",
+    predicate => "has_class_meta",
+);
+
 my @tied = ( map { substr($_, 0, 1) } qw(HASH SCALAR ARRAY GLOB) );
 
 enum Tied, @tied;
@@ -240,6 +247,7 @@ sub STORABLE_freeze {
         [
             ( $self->has_data         ? $self->data         : undef ),
             ( $self->has_backend_data ? $self->backend_data : undef ),
+            ( $self->has_class_meta   ? $self->class_meta   : undef ),
         ],
     );
 }
@@ -250,9 +258,10 @@ sub STORABLE_thaw {
     $self->_unpack($attrs);
 
     if ( $refs ) {
-        my ( $data, $backend_data ) = @$refs;
+        my ( $data, $backend_data, $meta ) = @$refs;
         $self->_data($data) if ref $data;
         $self->backend_data($backend_data) if ref $backend_data;
+        $self->_class_meta($meta) if ref $meta;
     }
 }
 

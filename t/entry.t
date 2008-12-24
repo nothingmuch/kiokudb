@@ -29,6 +29,7 @@ my $l = KiokuDB::LiveObjects->new;
             class => "Foo",
             data => { oi => "vey" },
             object => $x,
+            class_meta => { roles => [qw(Bar)] },
         ),
         KiokuDB::Entry->new(
             id => "bar",

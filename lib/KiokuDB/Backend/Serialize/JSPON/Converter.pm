@@ -5,6 +5,17 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
+use constant _jspon_fields => qw(
+    id
+    class
+    class_meta
+    root
+    deleted
+    tied
+    ref
+    data
+);
+
 has id_field => (
     isa => "Str",
     is  => "ro",
@@ -15,6 +26,12 @@ has class_field => (
     isa => "Str",
     is  => "ro",
     default => "__CLASS__",
+);
+
+has class_meta_field => (
+    isa => "Str",
+    is  => "ro",
+    default => "__META__",
 );
 
 has root_field => (
@@ -67,7 +84,8 @@ sub _build__jspon_params {
         ( map {
             my $name = "${_}_field";
             $name => $self->$name
-        } qw(id class root deleted tied ref data) ),
+        } $self->_jspon_fields,
+        ),
         ( inline_data => $self->inline_data ? 1 : 0 ),
     };
 }

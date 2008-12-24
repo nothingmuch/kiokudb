@@ -61,7 +61,7 @@ sub id_method {
 sub compile_entry {
     my ( $self, $class, $entry ) = @_;
 
-    $self->register_compiled( $class, $entry->compile($class) );
+    $self->register_compiled( $class, $entry->compile($class, $self) );
 }
 
 sub register_compiled {

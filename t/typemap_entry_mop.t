@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More 'no_plan';
+use Test::Moose;
 
 use Scalar::Util qw(refaddr reftype blessed);
 
@@ -41,6 +42,11 @@ use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute:
     has id => ( is => "ro" );
 
     has blah => ( is => "rw" );
+
+    package Gorch;
+    use Moose::Role;
+
+    has optional => ( is => "rw" );
 }
 
 my $obj = Foo->new( foo => "HALLO" );
@@ -48,6 +54,14 @@ my $obj = Foo->new( foo => "HALLO" );
 $obj->trash if HAVE_MX_STORAGE;
 
 my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai", id => "the_bar" ) );
+
+my $with_anon = Bar->new( blah => "HALLO", id => "runtime_role" );
+
+Gorch->meta->apply($with_anon);
+
+$with_anon->optional("very much");
+
+my $anon_parent = Foo->new( bar => $with_anon );
 
 foreach my $intrinsic ( 1, 0 ) {
     my $foo_entry = KiokuDB::TypeMap::Entry::MOP->new();
@@ -127,7 +141,7 @@ foreach my $intrinsic ( 1, 0 ) {
         if ( $intrinsic ) {
             is_deeply(
                 $entry->data,
-                {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar} ) },
+                {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar ) },
                 "is_deeply"
             );
         } else {
@@ -143,12 +157,69 @@ foreach my $intrinsic ( 1, 0 ) {
         $l->live_objects->insert_entries( values %$entries );
 
         my $expanded = eval { $l->expand_object($entry) };
-        use Data::Dumper;
-        die Dumper($@) if $@;
 
         isa_ok( $expanded, "Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($deep), "refaddr doesn't equal" );
         isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
         is_deeply( $expanded, $deep, "is_deeply" );
+
+        is( $expanded->bar->id, "the_bar", "ID attr preserved even if not used" );
+    }
+
+    {
+        my $s = $v->live_objects->new_scope;
+
+        my ( $entries, $id ) = $v->collapse( objects => [ $anon_parent ] );
+
+        my $entry = $entries->{$id};
+
+        if ( $intrinsic ) {
+            is( scalar(keys %$entries), 1, "one entry" );
+        } else {
+            is( scalar(keys %$entries), 2, "two entries" );
+            ok( exists($entries->{runtime_role}), "custom ID exists" );
+            is( $entries->{runtime_role}->class, "Bar", "right object" );
+        }
+
+        isnt( refaddr($entry->data), refaddr($anon_parent), "refaddr doesn't equal" );
+        ok( !blessed($entry->data), "entry data is not blessed" );
+        is( reftype($entry->data), reftype($anon_parent), "reftype" );
+
+        if ( $intrinsic ) {
+            is_deeply(
+                $entry->data,
+                {
+                    bar => KiokuDB::Entry->new(
+                        class => "Bar",
+                        data => {%$with_anon},
+                        class_meta => {
+                            roles => [qw(Gorch)]
+                        },
+                        object => $with_anon
+                    ),
+                },
+                "is_deeply"
+            );
+        } else {
+            is_deeply(
+                $entry->data,
+                {bar => KiokuDB::Reference->new( id => "runtime_role" ) },
+                "is_deeply"
+            );
+        }
+
+        my $sl = $l->live_objects->new_scope;
+
+        $l->live_objects->insert_entries( values %$entries );
+
+        my $expanded = eval { $l->expand_object($entry) };
+
+        isa_ok( $expanded, "Foo", "expanded object" );
+        isa_ok( $expanded->bar, "Bar", "inner obeject" );
+
+        is( $expanded->bar->id, "runtime_role", "ID attr preserved even if not used" );
+
+        does_ok( $expanded->bar, "Gorch" );
+        ok( $expanded->bar->meta->is_anon_class, "anon class" );
     }
 }
