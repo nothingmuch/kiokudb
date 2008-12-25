@@ -25,6 +25,7 @@ sub verify {
 
     my $q_person = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Person" );
     my $q_employee = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Employee" );
+    my $q_both = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Person", blessed => "KiokuDB::Test::Employee" );
 
     {
         my $s = $self->new_scope;
@@ -64,6 +65,24 @@ sub verify {
         is( $oscar->name, "oscar", "loaded third object" );
 
         is( $joe->parents->[0], $mum, "interrelated objects loaded in one graph" );
+    }
+
+    $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $employees = $self->search($q_both);
+
+        does_ok($employees, "Data::Stream::Bulk");
+
+        my @employees = $employees->all;
+
+        is_deeply(
+            [ sort map { refaddr($_) } @employees ],
+            [ refaddr($self->lookup_ok($self->joe)) ],
+            "employees",
+        );
     }
 
     $self->no_live_objects;
