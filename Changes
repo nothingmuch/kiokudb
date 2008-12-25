@@ -1,3 +1,11 @@
+0.13
+    - t/serializer.t was causing bogus failures by not skipping if YAML::XS is
+      unavailable
+    - Cleanup of ( is => 'rw' ) bits in KiokuDB::Entry that should have really
+      had private writers instead
+    - Introduce partial handling of anonymous classes created due to runtime
+      application of roles ( My::Role->meta->apply($instance) )
+
 0.12
     - Remove a use Devel::PartialDump that accidentally got committed
 
