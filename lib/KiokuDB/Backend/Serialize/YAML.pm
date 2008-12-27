@@ -3,6 +3,8 @@
 package KiokuDB::Backend::Serialize::YAML;
 use Moose::Role;
 
+use IO::Handle;
+
 use YAML::XS qw(Load Dump);
 
 use namespace::clean -except => 'meta';

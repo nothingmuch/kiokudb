@@ -66,5 +66,7 @@ WriteMakefile(
 
         'JSON' => 2.12,
         'Storable' => 0,
+
+        'IO' => 1.2301,
     },
 );

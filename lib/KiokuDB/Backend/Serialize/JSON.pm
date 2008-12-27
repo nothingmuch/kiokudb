@@ -3,6 +3,8 @@
 package KiokuDB::Backend::Serialize::JSON;
 use Moose::Role;
 
+use IO::Handle;
+
 use namespace::clean -except => 'meta';
 
 with qw(
