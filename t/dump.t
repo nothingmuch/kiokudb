@@ -15,8 +15,9 @@ use ok 'KiokuDB';
 
 use ok 'KiokuDB::Test::Fixture::ObjectGraph';
 
-my @formats = qw(storable json);
+my @formats = qw(storable);
 
+push @formats, "json" if eval { require JSON::XS }; # PP json is too buggy for incr
 push @formats, "yaml" if eval { require YAML::XS };
 
 foreach my $format ( @formats ) {
