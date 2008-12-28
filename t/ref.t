@@ -30,7 +30,6 @@ foreach my $id (
 
         isa_ok( my $copy = thaw($f), "KiokuDB::Reference", "thaw" );
 
-        local $TODO = "broken storable hook" if $id =~ /,/;
         is( $copy->id, $id, "ID after thaw" );
 
         is_deeply( $copy, $ref, "eq deeply" );

@@ -18,12 +18,13 @@ sub STORABLE_freeze {
     my ( $self, $cloning ) = @_;
 
 
-    join(",", $self->id, !!$self->is_weak);
+    join(",", $self->id, !!$self->is_weak); # FIXME broken
 }
 
 sub STORABLE_thaw {
     my ( $self, $cloning, $serialized ) = @_;
-    my ( $id, $weak ) = split ',', $serialized;
+
+    my ( $id, $weak ) = ( $serialized =~ /^(.*?),(1?)$/ );
 
     $self->id($id);
     $self->is_weak(1) if $weak;
