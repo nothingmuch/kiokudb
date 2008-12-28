@@ -1,3 +1,11 @@
+0.16
+    - Lots of docs
+    - Fix KiokuDB::Reference's Storable hook limitation using a simple
+      workaround. Not a real fix yet.
+    - Remove unnecessary code from the UUID generation roles.
+    - In KiokuDB::Cmd::OutputHandle, don't clobber the file before the command
+      has actually run (remove EarlyBuild attr)
+
 0.15
     - Last version was accidentally released off a problematic branch,
       rereleasing without that change
