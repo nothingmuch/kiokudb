@@ -1,8 +1,0 @@
-#!/usr/bin/perl
-
-use strict;
-use warnings;
-
-warn "'kiokuload' has been deprecated in favor of 'kioku load'\n";
-
-exec(qw(kioku load), @ARGV);
