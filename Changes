@@ -1,3 +1,7 @@
+0.14
+    - skip incremental JSON parsing tests if JSON::XS is missing
+    - load IO::Handle to attempt to work around some weird test failures
+
 0.13
     - t/serializer.t was causing bogus failures by not skipping if YAML::XS is
       unavailable
