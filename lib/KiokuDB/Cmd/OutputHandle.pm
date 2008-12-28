@@ -41,7 +41,7 @@ has backup_ext => (
 );
 
 has output_handle => (
-    traits => [qw(NoGetopt EarlyBuild)],
+    traits => [qw(NoGetopt)],
     isa => "FileHandle",
     is  => "ro",
     lazy_build => 1,
