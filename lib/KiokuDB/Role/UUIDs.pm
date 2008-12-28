@@ -45,12 +45,6 @@ L<Data::UUID>) an implementation role is selected.
 
 Create a new UUID
 
-=item uuid_to_string
-
-=item string_to_uuid
-
-Conversion subroutines for completeness.
-
 =back
 
 =cut
