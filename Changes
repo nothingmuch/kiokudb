@@ -1,3 +1,7 @@
+0.15
+    - Last version was accidentally released off a problematic branch,
+      rereleasing without that change
+
 0.14
     - skip incremental JSON parsing tests if JSON::XS is missing
     - load IO::Handle to attempt to work around some weird test failures
