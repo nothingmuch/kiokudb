@@ -79,9 +79,38 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::JSPON::Collapser - Collapse entry data to
+KiokuDB::Backend::Serialize::JSPON::Collapser - Collapse entry data to
 JSPON compliant structures
 
-=cut
+=head1 SYNOPSIS
 
+    my $c = KiokuDB::Backend::Serialize::JSPON::Collapser->new(
+        id_field => "_id",
+    );
+
+    my $hashref = $c->collapse_jspon($entry);
+
+=head1 DESCRIPTION
+
+This object is used by L<KiokuDB::Backend::Serialize::JSPON> to convert
+L<KiokuDB::Entry> objects to JSPON compliant structures.
+
+=head1 ATTRIBUTES
+
+See L<KiokuDB::Backend::Serialize::JSPON::Converter> for attributes shared by
+L<KiokuDB::Backend::Serialize::JSPON::Collapser> and
+L<KiokuDB::Backend::Serialize::JSPON::Expander>.
+
+=head1 METHODS
+
+=over 4
+
+=item collapse_jspon $entry
+
+Collapses the entry recursively, returning a JSPON compliant data structure
+suitable for serialization as a JSON string.
+
+=back
+
+=cut
 

@@ -64,3 +64,26 @@ __PACKAGE__
 
 __END__
 
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::SpecifiedEntries - A role for command line tools which accept entry IDs as options
+
+=head1 SYNOPSIS
+
+    with qw(KiokuDB::Cmd::SpecifiedEntries)
+
+    augment run => sub {
+        ...
+
+        my $data_bulk_stream = $self->entries;
+    };
+
+=head1 DESCRIPTION
+
+This role provides L<KiokuDB::Entry> enumeration for command line tools.
+
+If the C<ids> option is specified (it can be given multiple times) then only
+those IDs will be loaded into the C<entries> attribute, otherwise
+C<all_entries> is called on the backend.

@@ -10,7 +10,6 @@ use KiokuDB::Serializer;
 use namespace::clean -except => 'meta';
 
 has format => (
-    isa => enum([qw(yaml json storable)]),
     is  => "ro",
     default => "yaml",
     cmd_aliases => "f",
@@ -34,3 +33,14 @@ sub _build_serializer {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::DumpFormatter - A role for command line tools that have a
+L<KiokuDB::Serializer> object specified using a C<--format> option.
+
+=head1 DESCRIPTION
+
+See L<KiokuDB::Cmd::Command::Dump> for an example.

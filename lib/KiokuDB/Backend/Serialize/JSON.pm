@@ -92,7 +92,7 @@ with L<KiokuDB::Backend::Serialize::JSPON> semantics
 
 =head1 SYNOPSIS
 
-	with qw(KiokuDB::Backend::Serialize::JSON);
+    with qw(KiokuDB::Backend::Serialize::JSON);
 
     sub foo {
         my ( $self, $entry ) = @_;
@@ -105,6 +105,8 @@ with L<KiokuDB::Backend::Serialize::JSPON> semantics
 This role provides additional convenience attributes and methods for backends
 that encode entries to JSON strings, on top of
 L<KiokuDB::Backend::Serialize::JSPON> which only restructures the data.
+
+L<KiokuDB::Backend::Serialize::Delegate> is preferred to using this directly.
 
 =head1 METHODS
 

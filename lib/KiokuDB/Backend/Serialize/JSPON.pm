@@ -51,12 +51,28 @@ KiokuDB::Backend::Serialize::JSPON - JSPON serialization helper
 
 =head1 SYNOPSIS
 
-	with qw(KiokuDB::Backend::Serialize::JSPON);
+    with qw(KiokuDB::Backend::Serialize::JSPON);
 
 =head1 DESCRIPTION
 
 This serialization role provides JSPON semantics for L<KiokuDB::Entry> and
 L<KiokuDB::Reference> objects.
+
+For serialization to JSON strings see L<KiokuDB::Backend::Serialize::JSON>.
+
+=head1 METHODS
+
+=over 4
+
+=item expand_jspon
+
+See L<KiokuDB::Backend::Serialize::JSPON::Expander/expand_jspon>
+
+=item collapse_jspon
+
+See L<KiokuDB::Backend::Serialize::JSPON::Collapser/collapse_jspon>
+
+=back
 
 =cut
 

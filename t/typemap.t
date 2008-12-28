@@ -126,7 +126,7 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
             'Foo' => $foo,
         }
     );
-    
+
     my $t2 = KiokuDB::TypeMap->new(
         entries => {
             'CA' => $ca,
@@ -186,7 +186,7 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
             'Foo' => $foo,
         }
     );
-    
+
     my $t2 = KiokuDB::TypeMap->new(
         isa_entries => {
             'CA' => $ca,

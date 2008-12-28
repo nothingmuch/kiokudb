@@ -69,6 +69,9 @@ KiokuDB::LiveObjects::TXNScope - Transaction scope.
 This is an auxillary class used by transaction scoping to roll back entrries
 updated during a transaction when it is aborted.
 
+This is used internally in L<KiokuDB/txn_do> and should not need to be used
+directly.
+
 =head1 ATTRIBUTES
 
 =over 4

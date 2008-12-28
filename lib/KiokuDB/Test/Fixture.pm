@@ -119,9 +119,9 @@ has directory => (
         lookup exists
         store
         insert update delete
-        
+
         clear_live_objects
-        
+
         backend
         linker
         collapser

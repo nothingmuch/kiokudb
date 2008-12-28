@@ -79,3 +79,15 @@ sub _build_authen_passphrase_typemap {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Default::Canonical - A L<KiokuDB::TypeMap::Default>
+implementation that canonicalizes the standard types to simplified versions.
+
+=head1 DESCRIPTION
+
+This typemap is suitable for serialization using L<JSON>. It stringifies or
+otherwise converts data structures into primitive representations.

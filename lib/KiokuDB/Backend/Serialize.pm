@@ -45,8 +45,9 @@ KiokuDB::Backend::Serialize - Serialization role for backends
 This role provides provides a consistent way to use serialization modules to
 handle backend serialization.
 
-See L<KiokuDB::Backend::Serialize::Storable> and
-L<KiokuDB::Backend::Serialize::JSPON> for examples.
+See L<KiokuDB::Backend::Serialize::Storable>,
+L<KiokuDB::Backend::Serialize::YAML> and L<KiokuDB::Backend::Serialize::JSON>
+for examples.
 
 =head1 REQUIRED METHODS
 

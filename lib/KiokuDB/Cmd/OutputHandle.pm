@@ -80,3 +80,41 @@ sub _build_output_handle {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::OutputHandle - A role for command line tools with a C<--file>
+option that will be used for write access.
+
+=head1 DESCRIPTION
+
+See L<KiokuDB::Cmd::Command::Dump> for an example.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item file
+
+The file to open. A L<MooseX::Getopt> enabled attribute.
+
+=item force
+
+Whether to allow overwriting of existing files. A L<MooseX::Getopt> enabled
+attribute. When C<backup> is enabled, allows overwriting of the backup file.
+
+=item backup
+
+Whether to backup before overwriting. A L<Moose::Getopt> enabled attribute.
+
+=item backup_ext
+
+Defaults to C<.bak>. A L<MooseX::Getopt> enabled attribute.
+
+=item fh
+
+This filehandle is created based on all the other attributes on demand.
+
+=back

@@ -44,3 +44,45 @@ sub deserialize_from_stream {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Backend::Serialize::Storable - L<Storable> based serialization of
+L<KiokuDB::Entry> objects.
+
+=head1 SYNOPSIS
+
+    package MyBackend;
+
+    with qw(KiokuDB::Backend::Serialize::Storable;
+
+=head1 DESCRIPTION
+
+This role provides L<Storable> based serialization of L<KiokuDB::Entry> objects
+for a backend, with streaming capabilities.
+
+L<KiokuDB::Backend::Serialize::Delegate> is preferred to using this directly.
+
+=head1 METHODS
+
+=over 4
+
+=item serialize $entry
+
+Uses L<Storable/nstore>
+
+=item deserialize $blob
+
+Uses L<Storable/thaw>
+
+=item serialize_to_stream $fh, $entry
+
+Uses L<Storable/nstore_fd>.
+
+=item deserialize_from_stream $fh
+
+Uses L<Storable/fd_retrieve>.
+
+=back

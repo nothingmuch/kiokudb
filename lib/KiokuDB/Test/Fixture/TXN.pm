@@ -97,7 +97,7 @@ sub verify {
             my $s = $self->new_scope;
 
             my $joe = $self->lookup_ok( $self->joe );
-            
+
             is( $joe->name, "HALLO", "name rolled back in DB" );
 
             undef $joe;

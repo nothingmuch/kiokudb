@@ -28,8 +28,6 @@ sub _build_backend {
     $b;
 }
 
-
-
 __PACKAGE__
 
 __END__

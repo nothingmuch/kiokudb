@@ -50,6 +50,19 @@ KiokuDB::Backend::Role::Query::Simple - Simple query api
 
 =head1 DESCRIPTION
 
+This role requires a C<simple_search> method to be implemented.
+
+The method accepts one argument, the hash of the proto to search for.
+
+This is still loosely defined, but the basic functionality is based on
+attribute matching:
+
+    $kiokudb->search({ name => "Mia" });
+
+will search for objects whose C<name> attribute contains the string C<Mia>.
+
+More complex operations will be defined in the future.
+
 =cut
 
 

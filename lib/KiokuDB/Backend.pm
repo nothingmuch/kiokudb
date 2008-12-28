@@ -224,12 +224,18 @@ Your backend may include more roles, based on its capabilities.
 
 =item L<KiokuDB::Backend::Serialize>
 
-=item L<KiokuDB::Backend::Serialize::Storable>
-
-=item L<KiokuDB::Backend::Serialize::JSPON>
+=item L<KiokuDB::Backend::Serialize::Delegate>
 
 For the actual serialization of entries, there are a number of serialization
 roles.
+
+=item L<KiokuDB::Backend::Role::Clear>
+
+API for clearing all entries.
+
+=item L<KiokuDB::Backend::Role::Scan>
+
+API for enumerating entries.
 
 =item L<KiokuDB::Backend::Role::BinarySafe>
 

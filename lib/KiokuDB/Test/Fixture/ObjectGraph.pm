@@ -175,7 +175,7 @@ sub verify {
             "Georgia got plastered",
         );
 
-        $self->live_objects_are( 
+        $self->live_objects_are(
             $junior,
             $junior->so,
             @{ $junior->friends },

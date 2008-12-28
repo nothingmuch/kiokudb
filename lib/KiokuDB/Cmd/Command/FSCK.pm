@@ -65,4 +65,17 @@ KiokuDB::Cmd::Command::FSCK - Check for broken references
 
 This commands uses L<KiokuDB::LinkChecker> to search for broken references.
 
+=head1 ATTRIBUTES
+
+=over 4
+
+=item print
+
+When true the IDs will be printed to STDOUT, allowing you to dump the broken
+entries:
+
+    kioku dump --dsn ... $( kioku fsck --dsn ... --print )
+
+=back
+
 =cut

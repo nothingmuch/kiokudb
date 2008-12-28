@@ -73,7 +73,7 @@ for my $i ( 0, 1 ) {
     is( scalar(@ids), 1, "one root set ID" );
 
     my $copy = dclone($entries);
-    
+
     $l->live_objects->insert_entries(values %$entries);
 
     my $loaded = $l->expand_object($copy->{$ids[0]});

@@ -28,3 +28,18 @@ sub v {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::Verbosity - A role for command line tools that have a C<--verbose> option.
+
+=head1 SYNOPSIS
+
+    $self->v("blah blah\n"); # only printed if --verbose is specified
+
+=head1 DESCRIPTION
+
+This role provides the C<verbose> attribute and command line option, and a C<v>
+method that you can use to emit verbose output to C<STDERR>.

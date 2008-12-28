@@ -68,3 +68,44 @@ sub deserialize_from_stream {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Backend::Serialize::YAML - L<YAML::XS> based serialization of
+L<KiokuDB::Entry> objects.
+
+=head1 SYNOPSIS
+
+    package MyBackend;
+    use Moose;
+
+    with qw(KiokuDB::Backend::Serialize::YAML);
+
+=head1 DESCRIPTION
+
+L<KiokuDB::Backend::Serialize::Delegate> is preferred to using this directly.
+
+=head1 METHODS
+
+=over 4
+
+=item serialize $entry
+
+Calls L<YAML::XS::Dump>
+
+=item deserialize $str
+
+Calls L<YAML::XS::Load>
+
+=item serialize_to_stream $fh, $entry
+
+Serializes the entry and prints to the file handle.
+
+=item deserialize_from_stream $fh
+
+Reads until a YAML document boundry is reached, and then deserializes the
+current buffer.
+
+=back

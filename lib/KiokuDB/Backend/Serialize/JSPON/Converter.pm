@@ -94,4 +94,56 @@ __PACKAGE__
 
 __END__
 
+=pod
 
+=head1 NAME
+
+KiokuDB::Backend::Serialize::JSPON::Converter - Common functionality for JSPON
+expansion/collapsing
+
+=head1 SYNOPSIS
+
+    # internal
+
+=head1 DESCRIPTION
+
+These attributes are shared by both
+L<KiokuDB::Backend::Serialize::JSPON::Converter> and
+L<KiokuDB::Backend::Serialize::JSPON::Expander>.
+
+These attributes are also available in L<KiokuDB::Backend::Serialize::JSPON>
+and passed to the constructors of the expander and the collapser.
+
+=head1 ATTRIBUTES
+
+=item id_field
+
+=item class_field
+
+=item class_meta_field
+
+=item root_field
+
+=item deleted_field
+
+=item tied_field
+
+=item data_field
+
+=item ref_field
+
+The various field name mappings for the L<KiokuDB::Entry> attributes.
+
+Everything defaults to the attribute name, except C<class> and C<class_meta>
+which default to C<__CLASS__> and C<__META__> for compatibility with
+L<MooseX::Storage> when C<inline_data> is set, and C<ref_field> which is set to
+C<$ref> according to the JSPON spec.
+
+=item inline_data
+
+Determines whether or not the entry data keys are escaped and the data is
+stored in the same top level mapping, or inside a the C<data_field> key.
+
+=back
+
+=cut

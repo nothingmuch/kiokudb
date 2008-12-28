@@ -97,13 +97,21 @@ __END__
 
 =head1 NAME
 
-KiokuDB::LinkChecker - 
+KiokuDB::LinkChecker - Reference consistency checker
 
 =head1 SYNOPSIS
 
-	use KiokuDB::LinkChecker;
+    use KiokuDB::LinkChecker;
+
+    my $l = KiokuDB::LinkChecker->new(
+        backend => $b,
+    );
+
+    my @idw = $l->missing->members; # referenced but not in the DB
 
 =head1 DESCRIPTION
+
+This is the low level link checker used by L<KiokuDB::Cmd::Command::FSCK>.
 
 =cut
 

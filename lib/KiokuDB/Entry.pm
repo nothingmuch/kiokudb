@@ -317,6 +317,11 @@ If the entry is blessed, this contains the class of that object.
 In the future this might be a complex structure for anonymous classes, e.g. the
 class and the runtime roles.
 
+=item class_meta
+
+Optional information such as runtime roles to be applied to the object is
+stored in this hashref.
+
 =item tied
 
 One of C<HASH>, C<ARRAY>, C<SCALAR> or C<GLOB>.
@@ -341,6 +346,13 @@ Backends can use this to store additional meta data as they see fit.
 For instance, this is used in the CouchDB backend to track entry revisions for
 the opportunistic locking, and in L<KiokuDB::Backend::BDB::GIN> to to store
 extracted keys.
+
+=item deleted
+
+Used for marking entries for deletion.
+
+Deletion entries can be generated using the C<deletion_entry> method, which
+creates a new derived entry with no data but retaining the ID.
 
 =back
 

@@ -10,3 +10,4 @@ requires qw(resolve);
 __PACKAGE__
 
 __END__
+

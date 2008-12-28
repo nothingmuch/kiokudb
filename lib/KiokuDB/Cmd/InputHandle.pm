@@ -38,3 +38,12 @@ sub _build_input_handle {
 __PACKAGE__
 
 __END__
+
+=head1 NAME
+
+KiokuDB::Cmd::InputHandle - A role for command line tools with a C<--file>
+option to be used for read acces.
+
+=head1 DESCRIPTION
+
+See L<KiokuDB::Cmd::Command::Load> for an example

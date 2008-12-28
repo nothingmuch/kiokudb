@@ -78,3 +78,15 @@ sub _build_authen_passphrase_typemap {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Default::Passthrough - A L<KiokuDB::TypeMap::Default>
+instance suitable for L<Storable>.
+
+=head1 DESCRIPTION
+
+This typemap lets most of the default data types be passed through untouched,
+so that their own L<Storable> hooks may be invoked.

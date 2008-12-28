@@ -55,7 +55,7 @@ sub run {
     my $tc = -times;
 
     inner();
-    
+
     $t += time();
     $tc += times;
 
@@ -71,3 +71,26 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::Base - Base class for writing L<KiokuDB> command line tools.
+
+=head1 SYNOPSIS
+
+    package KiokuDB::Cmd::Command::Blort;
+    use Moose;
+
+    extends qw(KiokuDB::Cmd::Base);
+
+    augment run => sub {
+        ...
+    };
+
+=head1 DESCRIPTION
+
+This class provides shared functionality for L<KiokuDB> command line tools.
+
+See L<KiokuDB::Cmd::Command::Dump> for a real example.

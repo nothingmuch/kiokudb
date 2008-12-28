@@ -35,3 +35,15 @@ sub try_txn_commit {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Cmd::TXN - A role for command line tools that should run inside a
+transaction
+
+=head1 DESCRIPTION
+
+This role provides two methods, C<try_txn_begin> and C<try_txn_commit> which
+are called on the backend if it supports transactions.

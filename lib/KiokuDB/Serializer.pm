@@ -35,3 +35,23 @@ coerce( __PACKAGE__,
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::Serializer - Standalone serializer object
+
+=head1 SYNOPSIS
+
+    Backend->new(
+        serializer => KiokuDB::Serializer::Storable->new( ... ),
+    );
+
+=head1 DESCRIPTION
+
+This role is for objects which perform the serialization roles (e.g.
+L<KiokuDB::Backend::Serialize::Storable>) but can be used independently.
+
+This is used by L<KiokuDB::Backend::Serialize::Delegate> and
+L<KiokuDB::Cmd::DumpFormatter>.

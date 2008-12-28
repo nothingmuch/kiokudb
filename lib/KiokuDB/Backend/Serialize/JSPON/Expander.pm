@@ -78,6 +78,31 @@ __END__
 KiokuDB::Backend::JSPON::Expander - Inflate JSPON to entry
 data.
 
-=cut
+=head1 SYNOPSIS
 
+    my $c = KiokuDB::Backend::Serialize::JSPON::Expander->new(
+        id_field => "_id",
+    );
 
+    my $entry = $c->collapse_jspon($hashref);
+
+=head1 DESCRIPTION
+
+This object is used by L<KiokuDB::Backend::Serialize::JSPON> to expand JSPON
+compliant hash references to L<KiokuDB::Entry> objects.
+
+=head1 ATTRIBUTES
+
+See L<KiokuDB::Backend::Serialize::JSPON::Converter> for attributes shared by
+L<KiokuDB::Backend::Serialize::JSPON::Collapser> and
+L<KiokuDB::Backend::Serialize::JSPON::Expander>.
+
+=head1 METHODS
+
+=over 4
+
+=item expand_jspon $hashref
+
+Recursively inlates the hash reference, returning a L<KiokuDB::Entry> object.
+
+=back

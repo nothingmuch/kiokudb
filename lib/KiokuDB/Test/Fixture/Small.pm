@@ -83,7 +83,7 @@ sub verify {
     ok( my $parents = $joe->parents, "parents" );
 
     is( ref($parents), "ARRAY", "array ref" );
-    
+
     is( scalar(@$parents), 1, "one parent" );
 
     isa_ok( $parents->[0], "KiokuDB::Test::Person" );
