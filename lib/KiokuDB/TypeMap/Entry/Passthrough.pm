@@ -49,3 +49,36 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Passthrough - A typemap entry of objects that will be
+serialized by the backend.
+
+=head1 SYNOPSIS
+
+    KiokuDB::TypeMap::Entry::Passthrough->new
+
+=head1 DESCRIPTION
+
+This typemap entry delegates the handling of certain objects to the backend.
+
+A prime example is L<DateTime> being handled by
+L<KiokuDB::Backend::Serialize::Storable>. L<DateTime> has efficient L<Storable>
+hooks, and does not refer to any domain objects, so it is safe to assume that
+it can just be passed through for serialization.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item intrinsic
+
+If true the object will be just left in place.
+
+If false, the object will get its own ID and entry, and the object will be in
+the C<data> field of that entry.
+
+=back

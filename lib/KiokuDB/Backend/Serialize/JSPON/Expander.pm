@@ -75,7 +75,7 @@ __END__
 
 =head1 NAME
 
-KiokuDB::Backend::JSPON::Expander - Inflate JSPON to entry
+KiokuDB::Backend::Serialize::JSPON::Expander - Inflate JSPON to entry
 data.
 
 =head1 SYNOPSIS

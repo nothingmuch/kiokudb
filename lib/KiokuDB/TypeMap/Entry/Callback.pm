@@ -68,3 +68,63 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Callback - Callback based inflation/deflation of objects
+
+=head1 SYNOPSIS
+
+    KiokuDB::TypeMap::Entry::Callback->new(
+        expand => "new", # can use method names
+        collapse => sub {
+            my $self = shift;
+            return %$self; # args to 'new' in this example
+        },
+        id => sub { "foo" }, # 'id' callback is optional
+    );
+
+=head1 DESCRIPTION
+
+This L<KiokuDB::TypeMap> entry provides callback based inflation/deflation.
+
+The major limitation of this method is that it cannot be used for self
+referential structures. This is because the object being inflated is only
+constructed after all of its arguments are.
+
+For the overwhelming majority of the use cases this is good enough though.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item collapse
+
+A method name or code reference invoked on the object during collapsing.
+
+This is evaluated in list context, and the list of values it returns will be
+collapsed by the L<KiokuDB::Collapser> and then store.
+
+=item expand
+
+A method name or code reference invoked on the class of the object during loading.
+
+The arguments are as returned by the C<collapse> callback.
+
+=item id
+
+An optional method name or code reference invoked to get an ID for the object.
+
+If one is not provided the default (UUID based) generation is used.
+
+=item intrinsic
+
+A boolean denoting whether or not the object should be collapsed with no ID,
+and serialized as part of its parent object.
+
+This is useful for value like objects, for whom the reference address makes no
+difference (such as L<URI> objects).
+
+=back

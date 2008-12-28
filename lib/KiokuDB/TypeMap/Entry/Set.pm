@@ -124,3 +124,17 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Set - A typemap entry for L<KiokuDB::Set>s
+
+=head1 DESCRIPTION
+
+This is an internal typemap entry that handles L<KiokuDB::Set> objects of
+various flavours.
+
+You shouldn't need to use it directly, as the default typemap will contain an
+entry for it.

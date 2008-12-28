@@ -16,3 +16,20 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Alias - An alias in the typemap to another entry
+
+=head1 SYNOPSIS
+
+    KiokuDB::TypeMap::Entry::Alias->new(
+        to => "Some::Other::Class",
+    ),
+
+=head1 DESCRIPTION
+
+This pseudo-entry directs the typemap resolution to re-resolve with the key in
+the C<to> field.

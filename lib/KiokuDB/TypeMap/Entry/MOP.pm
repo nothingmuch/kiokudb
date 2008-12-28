@@ -243,3 +243,33 @@ __PACKAGE__->meta->make_immutable;
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::MOP - A L<KiokuDB::TypeMap> entry for objects with a
+metaclass.
+
+=head1 SYNOPSIS
+
+    KiokuDB::TypeMap::Entry::MOP->new()
+
+=head1 DESCRIPTION
+
+This typemap entry handles collapsing and expanding of L<Moose> based objects.
+
+It supports anonymous classes with runtime roles, the L<KiokuDB::Role::ID> role.
+
+Code for immutable classes is cached and performs several orders of magnitude
+better, so make use of L<Moose::Meta::Class/make_immutable>.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item intrinsic
+
+If true the object will be collapsed as part of its parent, without an ID.
+
+=back
