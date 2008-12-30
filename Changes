@@ -2,6 +2,10 @@
     - More docs
     - remove KiokuDB::Backend::Null which was historically used for testing but
       is long since useless.
+    - remove deprecated command line tools
+    - provide a 'txn_do' method in Role::TXN for backends which only implement
+      txn_begin, txn_rollback and txn_commit
+    - correct plan for t/uuid.t when a module is missing
 
 0.16
     - Lots of docs
