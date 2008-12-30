@@ -18,12 +18,12 @@ sub check_role ($) {
 check_role 'KiokuDB::Role::UUIDs::SerialIDs';
 
 SKIP: {
-    skip $@ => 3 * 5, unless eval { require Data::UUID };
+    skip $@ => 3, unless eval { require Data::UUID };
     check_role 'KiokuDB::Role::UUIDs::DataUUID';
 }
 
 SKIP: {
-    skip $@ => 3 * 5, unless eval { require Data::UUID::LibUUID };
+    skip $@ => 3, unless eval { require Data::UUID::LibUUID };
     check_role 'KiokuDB::Role::UUIDs::LibUUID';
 }
 
