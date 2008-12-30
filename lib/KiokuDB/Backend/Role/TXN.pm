@@ -3,9 +3,64 @@
 package KiokuDB::Backend::Role::TXN;
 use Moose::Role;
 
+use Carp qw(croak);
+
 use namespace::clean -except => 'meta';
 
 requires qw(txn_begin txn_commit txn_rollback);
+
+sub txn_do {
+	my ( $self, $coderef, %args ) = @_;
+
+	my @args = @{ $args{args} || [] };
+
+	my ( $commit, $rollback ) = @args{qw(commit rollback)};
+
+	ref $coderef eq 'CODE' or croak '$coderef must be a CODE reference';
+
+	my @txn_args = $self->txn_begin;
+
+	my @result;
+
+	my $wantarray = wantarray; # gotta capture, eval { } has its own
+
+	my ( $success, $err ) = do {
+		local $@;
+
+		my $success = eval {
+			if ( $wantarray ) {
+				@result = $coderef->(@args);
+			} elsif( defined $wantarray ) {
+				$result[0] = $coderef->(@args);
+			} else {
+				$coderef->(@args);
+			}
+
+			$commit && $commit->();
+			$self->txn_commit(@txn_args);
+
+			1;
+		};
+
+		( $success, $@ );
+	};
+
+	if ( $success ) {
+		return wantarray ? @result : $result[0];
+	} else {
+		my $rollback_exception = do {
+			local $@;
+			eval { $self->txn_rollback(@txn_args); $rollback && $rollback->() };
+			$@;
+		};
+
+		if ($rollback_exception) {
+			croak "Transaction aborted: $err, rollback failed: $rollback_exception";
+		}
+
+		die $err;
+	}
+}
 
 __PACKAGE__
 
