@@ -38,7 +38,7 @@ sub new_from_dsn {
     if ( defined $params ) {
         $class->new_from_dsn_params($class->parse_dsn_params($params), @extra);
     } else {
-        return $class->new;
+        return $class->new(@extra);
     }
 }
 
