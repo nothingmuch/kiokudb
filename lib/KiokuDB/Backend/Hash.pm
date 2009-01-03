@@ -34,7 +34,11 @@ sub clear {
 sub get {
     my ( $self, @uids ) = @_;
 
-    my @objs = map { $self->deserialize($_) } @{ $self->storage }{@uids};
+    my $s = $self->storage;
+
+    return if grep { not exists $s->{$_} } @uids;
+
+    my @objs = map { $self->deserialize($_) } @{ $s }{@uids};
 
     if ( @objs == 1 ) {
         return $objs[0];
