@@ -1,3 +1,8 @@
+0.18
+    - Fix KiokUDB->connect("foo", @args) when the dsn string has no parameters
+      (@args were being ignored)
+    - Add a fixture to test that overwriting an entry is not allowed.
+
 0.17
     - More docs
     - remove KiokuDB::Backend::Null which was historically used for testing but
