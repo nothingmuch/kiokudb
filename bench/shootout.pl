@@ -28,7 +28,7 @@ sub bench {
 
     my $mxsd_hash = KiokuDB->connect("hash");
 
-    my $mxsd_files = KiokuDB->connect("files:dir=" . $dir->subdir("mxsd_files"), create => 1, lock => 0 );
+    my $mxsd_files = KiokuDB->connect("files:dir=" . $dir->subdir("mxsd_files"), create => 1, global_lock => 1 );
 
     my $mxsd_bdb_txn = KiokuDB->connect("bdb:dir=" . $dir->subdir("mxsd_bdb_txn"), create => 1 );
 
@@ -78,6 +78,8 @@ sub bench {
     warn "\nwriting...\n";
 
     $mxsd_bdb_txn->backend->txn_do(sub {
+    $mxsd_files->backend->txn_do(sub {
+        return;
 
         cmpthese(-3, {
             #null         => sub { my @objs = construct(); },
@@ -93,12 +95,13 @@ sub bench {
         });
 
     });
+    });
 
     warn "\nreading...\n";
 
     nstore([ construct() ], $storable);
     my @hash_ids  = do { my @objs = construct(); my $s = $mxsd_hash->new_scope; $mxsd_hash->store(grep { blessed($_) } @objs) };
-    my @files_ids = do { my @objs = construct(); my $s = $mxsd_files->new_scope; $mxsd_files->store(grep { blessed($_) } @objs) };
+    my @files_ids = $mxsd_files->txn_do(sub { my @objs = construct(); my $s = $mxsd_files->new_scope; $mxsd_files->store(grep { blessed($_) } @objs) });
     my @bdb_d_ids = do { my @objs = construct(); my $s = $mxsd_bdb_dumb->new_scope; $mxsd_bdb_dumb->store(grep { blessed($_) } @objs) };
     my @bdb_t_ids = do { my @objs = construct(); my $s = $mxsd_bdb_txn->new_scope; $mxsd_bdb_txn->backend->txn_do(sub { $mxsd_bdb_txn->store(grep { blessed($_) } @objs) }); };
     my @sqlite_t_ids = do { my @objs = construct(); my $s = $mxsd_sqlite->new_scope; $mxsd_sqlite->backend->txn_do(sub { $mxsd_sqlite->store(grep { blessed($_) } @objs) }); };
