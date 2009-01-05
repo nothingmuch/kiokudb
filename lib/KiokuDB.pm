@@ -14,6 +14,7 @@ use KiokuDB::LiveObjects;
 use KiokuDB::TypeMap;
 use KiokuDB::TypeMap::Shadow;
 use KiokuDB::TypeMap::Resolver;
+use KiokuDB::Stream::Objects;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
 use Carp qw(croak);
@@ -198,11 +199,12 @@ sub search {
 }
 
 sub _load_entry_stream {
-    my ( $self, $entries ) = @_;
+    my ( $self, $stream ) = @_;
 
-    my $linker = $self->linker;
-
-    return $entries->filter(sub {[ $linker->load_entries(@$_) ]});
+    KiokuDB::Stream::Objects->new(
+        directory => $self,
+        entry_stream => $stream,
+    );
 }
 
 sub simple_search {
@@ -232,21 +234,13 @@ sub backend_search {
 sub root_set {
     my ( $self ) = @_;
 
-    my $entries = $self->backend->root_entries;
-
-    my $linker = $self->linker;
-
-    $entries->filter(sub {[ $linker->load_entries(@$_) ]});
+    $self->_load_entry_stream( $self->backend->root_entries );
 }
 
 sub all_objects {
     my ( $self ) = @_;
 
-    my $entries = $self->backend->all_entries;
-
-    my $linker = $self->linker;
-
-    $entries->filter(sub {[ $linker->load_entries(@$_) ]});
+    $self->_load_entry_stream( $self->backend->all_entries );
 }
 
 sub grep {
