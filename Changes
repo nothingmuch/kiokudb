@@ -1,3 +1,8 @@
+0.19
+    - Introduce KiokuDB::Stream::Objects, a Data::Stream::Bulk for objects that
+      automatically creates a new scope for each block. This makes it much
+      harder to leak when iterating through C<all_objects>.
+
 0.18
     - Fix KiokUDB->connect("foo", @args) when the dsn string has no parameters
       (@args were being ignored)
