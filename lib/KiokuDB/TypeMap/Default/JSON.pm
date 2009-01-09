@@ -10,7 +10,7 @@ extends qw(KiokuDB::TypeMap);
 with qw(KiokuDB::TypeMap::Default::Canonical);
 
 has json_boolean_typemap => (
-    traits     => [qw(KiokuDB::TypeMap::Default)],
+    traits     => [qw(KiokuDB::TypeMap)],
     does       => "KiokuDB::Role::TypeMap",
     is         => "ro",
     lazy_build => 1,
