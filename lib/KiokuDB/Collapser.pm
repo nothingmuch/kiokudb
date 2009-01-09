@@ -152,6 +152,14 @@ sub collapse {
     return ( \%entries, @ids );
 }
 
+sub may_compact {
+    my ( $self, $ref_or_id ) = @_;
+
+    my $id = ref($ref_or_id) ? $ref_or_id->id : $ref_or_id;
+
+    not exists $self->_first_class->{$id};
+}
+
 sub compact_entries {
     my $self = shift;
 
