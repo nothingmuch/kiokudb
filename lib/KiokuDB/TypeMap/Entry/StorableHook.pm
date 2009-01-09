@@ -26,23 +26,37 @@ sub compile_mappings {
 
         my $object = $args{object};
 
+        my @type = _type($object);
+
         my ( $str, @refs ) = $object->STORABLE_freeze(0);
 
         if ( @refs ) {
             croak sprintf "Freeze cannot return references if %s class is using STORABLE_attach", $class if $attach;
-            @refs = $self->visit(@refs);
 
-            foreach my $ref ( @refs ) {
-                # they may be intrinsic in which case they aren't refs
-                $ref = $ref->id if ref($ref) eq 'KiokuDB::Reference';
+            if ( my @non_refs = grep { not ref } @refs ) {
+                croak blessed($object) . "::STORABLE_freeze returned non reference values: @non_refs";
             }
-        }
 
-        unless ( $attach ) {
-            return [ _type($object), $str, @refs ];
+            my @collapsed = $self->visit(@refs);
+
+            foreach my $ref ( @collapsed ) {
+                next unless ref($ref) eq 'KiokuDB::Reference';
+                next if $self->may_compact($ref);
+                $ref = $ref->id; # don't save a bunch of Reference objects when all we need is the ID
+            }
+
+            return [ @type, $str, @collapsed ];
         } else {
-            # return $str
-            return $str;
+            unless ( $attach ) {
+                if ( @type == 1 ) {
+                    return ( $type[0] . $str );
+                } else {
+                    return [ @type, $str ];
+                }
+            } else {
+                # return $str
+                return $str;
+            }
         }
     };
 
@@ -51,13 +65,15 @@ sub compile_mappings {
         return ( $freeze, sub {
             my ( $self, $entry ) = @_;
 
-            my ( $reftype, @args ) = @{ $entry->data };
+            my $data = $entry->data;
+
+            my ( $reftype, @args ) = ref $data ? @$data : ( substr($data, 0, 1), substr($data, 1) );
 
             my $instance;
 
             if ( ref $args[0] ) {
                 my $tied;
-                $self->inflate_data(shift(@args), \$tied);
+                $self->queue_ref(shift(@args), \$tied);
                 $instance = _new( $reftype, $tied );
             } else {
                 $instance = _new( $reftype );
@@ -68,19 +84,22 @@ sub compile_mappings {
             # note, this is registered *before* any other value expansion, to allow circular refs
             $self->register_object( $entry => $instance );
 
-
             my ( $str, @refs ) = @args;
 
             my @inflated;
 
             foreach my $ref ( @refs ) {
                 push @inflated, undef;
-                $ref = KiokuDB::Reference->new( id => $ref ) unless ref $ref;
-                $self->inflate_data($ref, \$inflated[-1]);
+
+                if ( ref $ref ) {
+                    $self->inflate_data($ref, \$inflated[-1]);
+                } else {
+                    $self->queue_ref($ref, \$inflated[-1]);
+                }
             }
 
             $self->queue_finalizer(sub {
-                $instance->STORABLE_thaw( 0, $str, @inflated);
+                $instance->STORABLE_thaw( 0, $str, @inflated );
             });
 
             return $instance;
@@ -102,35 +121,39 @@ sub _type ($) {
 
     if ( $type eq 'SCALAR' or $type eq 'REF' ) {
         if ( my $tied = tied $$obj ) {
-            return ( $type => $tied );
+            return ( S => $tied );
+        } else {
+            return 'S';
         }
     } elsif ( $type eq 'HASH' ) {
         if ( my $tied = tied %$obj ) {
-            return ( $type => $tied );
+            return ( H => $tied );
+        } else {
+            return 'H';
         }
     } elsif ( $type eq 'ARRAY' ) {
         if ( my $tied = tied @$obj ) {
-            return ( $type => $tied );
+            return ( A => $tied );
+        } else {
+            return 'A';
         }
     } else {
-		croak sprintf "Unexpected object type (%s)", $type;
+		croak sprintf "Unexpected object type (%s)", reftype($obj);
     }
-
-    return $type;
 }
 
 sub _new ($;$) {
     my ( $type, $tied ) = @_;
 
-    if ( $type eq 'SCALAR' ) {
+    if ( $type eq 'S' ) {
         my $ref = \( my $x );
         tie $x, "To::Object", $tied if ref $tied;
         return $ref;
-    } elsif ( $type eq 'HASH' ) {
+    } elsif ( $type eq 'H' ) {
         my $ref = {};
         tie %$ref, "To::Object", $tied if ref $tied;
         return $ref;
-    } elsif ( $type eq 'ARRAY' ) {
+    } elsif ( $type eq 'A' ) {
         my $ref = [];
         tie @$ref, "To::Object", $tied if ref $tied;
         return $ref;
