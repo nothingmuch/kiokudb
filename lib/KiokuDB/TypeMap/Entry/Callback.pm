@@ -29,25 +29,41 @@ sub compile_mappings {
 
         my @data = $args{object}->$collapse_object;
 
-        # FIXME KiokuDB::Entry->data cannot be nonref yet
-        #if ( @data == 1 and not ref $data[0] ) {
-        #    return $data[0];
-        #} else {
+        if ( @data == 1 and not ref $data[0] ) {
+            return $data[0];
+        } else {
             return [ map { $self->visit($_) } @data ];
-        #}
+        }
     };
 
     my $expand_object = $self->expand;
     my $expand = sub {
         my ( $self, $entry ) = @_;
 
-        $self->inflate_data($entry->data, \( my $args ));
+        my @args;
 
-        $self->load_queue; # force $args to vivify
+        my $data = $entry->data;
+
+        if ( ref $data ) {
+            my $refs = 0;
+
+            foreach my $value ( @$data ) {
+                if ( ref $value ) {
+                    push @args, undef;
+                    $self->inflate_data($value, \$args[-1]);
+                    $refs++;
+                } else {
+                    push @args, $value;
+                }
+            }
+
+            $self->load_queue if $refs; # force @args to be fully vivified
+        } else {
+            @args = ( $data );
+        }
 
         # does *NOT* support circular refs
-        # document it as such
-        my $object = $entry->class->$expand_object(ref $args ? @$args : $args);
+        my $object = $entry->class->$expand_object(@args);
 
         $self->register_object( $entry => $object );
 

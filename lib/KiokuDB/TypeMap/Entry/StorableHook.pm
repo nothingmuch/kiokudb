@@ -42,7 +42,7 @@ sub compile_mappings {
             return [ _type($object), $str, @refs ];
         } else {
             # return $str
-            return [ $str ];
+            return $str;
         }
     };
 
@@ -90,7 +90,7 @@ sub compile_mappings {
         return ( $freeze, sub {
             my ( $self, $entry ) = @_;
 
-            $entry->class->STORABLE_attach( 0, $entry->data->[0] ); # FIXME support non ref
+            $entry->class->STORABLE_attach( 0, $entry->data ); # FIXME support non ref
         });
     }
 }

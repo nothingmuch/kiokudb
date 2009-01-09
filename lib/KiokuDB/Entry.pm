@@ -29,7 +29,6 @@ has deleted => (
 );
 
 has data => (
-    isa => "Ref",
     is  => "ro",
     writer    => "_data",
     predicate => "has_data",
@@ -259,7 +258,7 @@ sub STORABLE_thaw {
 
     if ( $refs ) {
         my ( $data, $backend_data, $meta ) = @$refs;
-        $self->_data($data) if ref $data;
+        $self->_data($data) if defined $data;
         $self->backend_data($backend_data) if ref $backend_data;
         $self->_class_meta($meta) if ref $meta;
     }
