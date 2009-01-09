@@ -36,6 +36,12 @@ has typemap_resolver => (
     required => 1,
 );
 
+has queue => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
 has _queue => (
     isa => "ArrayRef",
     is  => "ro",
@@ -97,22 +103,38 @@ sub _expand_object {
 sub queue_ref {
     my ( $self, $ref, $into ) = @_;
 
-    my $b = $self->backend;
+    if ( $self->queue ) {
 
-    #if ( $b->can("prefetch") ) {
-    #    $b->prefetch($ref->id);
-    #}
+        #my $b = $self->backend;
 
-    push @{ $self->_queue }, [ $ref, $into ];
+        #if ( $b->can("prefetch") ) {
+        #    $b->prefetch($ref->id);
+        #}
+
+        push @{ $self->_queue }, [ $ref, $into ];
+    } else {
+        my $obj = $self->get_or_load_object($ref->id);
+        $$into = $obj;
+        weaken($$into) if $ref->is_weak;
+    }
 }
 
 sub queue_finalizer {
-    my ( $self, @def ) = @_;
-    push @{ $self->_deferred }, @def;
+    my ( $self, @hooks ) = @_;
+
+    if ( $self->queue ) {
+        push @{ $self->_deferred }, @hooks;
+    } else {
+        foreach my $hook ( @hooks ) {
+            $self->$hook();
+        }
+    }
 }
 
 sub load_queue {
     my $self = shift;
+
+    return unless $self->queue;
 
     my $queue = $self->_queue;
     my $deferred = $self->_deferred;
