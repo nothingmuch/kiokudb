@@ -50,77 +50,80 @@ use ok "KiokuDB";
     }
 }
 
-my $t = KiokuDB::TypeMap->new(
-    isa_entries => {
-        'Set::Object' => KiokuDB::TypeMap::Entry::Callback->new(
-            intrinsic => 1,
-            collapse => "members",
-            expand   => "new",
-        ),
-        'Path::Class::File' => KiokuDB::TypeMap::Entry::Callback->new(
-            intrinsic => 1,
-            collapse => "stringify",
-            expand   => "new",
-        ),
-        'Path::Class::Dir' => KiokuDB::TypeMap::Entry::Callback->new(
-            intrinsic => 1,
-            collapse => "stringify",
-            expand   => "new",
-        ),
-        'URI' => KiokuDB::TypeMap::Entry::Callback->new(
-            intrinsic => 1,
-            collapse => "as_string",
-            expand   => "new",
-        ),
-        'DateTime' => KiokuDB::TypeMap::Entry::Passthrough->new(
-            intrinsic => 1,
-        ),
-    },
-);
 
-my $k = KiokuDB->new(
-    backend => KiokuDB::Backend::Hash->new,
-    typemap => $t,
-);
-
-my $id;
-
-{
-    my $foo = Foo->new(
-        foo => Set::Object->new(
-            Foo->new,
-        ),
+foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" } ) {
+    my $t = KiokuDB::TypeMap->new(
+        isa_entries => {
+            'Set::Object' => KiokuDB::TypeMap::Entry::Callback->new(
+                intrinsic => 1,
+                collapse => "members",
+                expand   => "new",
+            ),
+            'Path::Class::File' => KiokuDB::TypeMap::Entry::Callback->new(
+                intrinsic => 1,
+                collapse => "stringify",
+                expand   => "new",
+            ),
+            'Path::Class::Dir' => KiokuDB::TypeMap::Entry::Callback->new(
+                intrinsic => 1,
+                collapse => "stringify",
+                expand   => "new",
+            ),
+            'URI' => KiokuDB::TypeMap::Entry::Callback->new(
+                intrinsic => 1,
+                collapse => "as_string",
+                expand   => "new",
+            ),
+            'DateTime' => ( $format eq 'json' )
+                ? KiokuDB::TypeMap::Entry::Callback->new( intrinsic => 1, collapse => "epoch", expand => sub { shift->from_epoch( epoch => $_[0] ) } )
+                : KiokuDB::TypeMap::Entry::Passthrough->new( intrinsic => 1 ),
+        },
     );
 
-    my $s = $k->new_scope;
+    my $k = KiokuDB->new(
+        backend => KiokuDB::Backend::Hash->new( serializer => $format ),
+        typemap => $t,
+    );
 
-    $id = $k->store($foo);
+    my $id;
 
-    ok( $id, "got id" );
-}
+    {
+        my $foo = Foo->new(
+            foo => Set::Object->new(
+                Foo->new,
+            ),
+        );
 
-{
-    my $s = $k->new_scope;
+        my $s = $k->new_scope;
 
-    my $foo = $k->lookup($id);
+        $id = $k->store($foo);
 
-    isa_ok( $foo, "Foo" );
-
-    if ( HAVE_DATETIME ) {
-        isa_ok( $foo->date, "DateTime" );
+        ok( $id, "got id" );
     }
 
-    if ( HAVE_URI ) {
-        isa_ok( $foo->uri, "URI" );
+    {
+        my $s = $k->new_scope;
+
+        my $foo = $k->lookup($id);
+
+        isa_ok( $foo, "Foo" );
+
+        if ( HAVE_DATETIME ) {
+            isa_ok( $foo->date, "DateTime" );
+        }
+
+        if ( HAVE_URI ) {
+            isa_ok( $foo->uri, "URI" );
+        }
+
+        if ( HAVE_PATH_CLASS ) {
+            isa_ok( $foo->stuff, "Path::Class::File" );
+
+            is( $foo->stuff->basename, 'foo.jpg', "value" );
+        }
+
+        isa_ok( $foo->foo, "Set::Object" );
+
+        isa_ok( ( $foo->foo->members )[0], "Foo", 'set enumeration' );
     }
-
-    if ( HAVE_PATH_CLASS ) {
-        isa_ok( $foo->stuff, "Path::Class::File" );
-
-        is( $foo->stuff->basename, 'foo.jpg', "value" );
-    }
-
-    isa_ok( $foo->foo, "Set::Object" );
-
-    isa_ok( ( $foo->foo->members )[0], "Foo", 'set enumeration' );
 }
