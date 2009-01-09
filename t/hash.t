@@ -8,6 +8,8 @@ use ok 'KiokuDB::Backend::Hash';
 use KiokuDB::Test;
 
 foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" } ) {
-    run_all_fixtures( KiokuDB->connect("hash", serializer => $format) );
+    foreach my $queue ( 1, 0 ) {
+        run_all_fixtures( KiokuDB->connect( "hash", serializer => $format, linker_queue => $queue ) );
+    }
 }
 

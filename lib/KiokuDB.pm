@@ -144,6 +144,12 @@ has backend => (
     handles  => [qw(exists)],
 );
 
+has linker_queue => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
 has linker => (
     isa => "KiokuDB::Linker",
     is  => "ro",
@@ -157,6 +163,7 @@ sub _build_linker {
         backend => $self->backend,
         live_objects => $self->live_objects,
         typemap_resolver => $self->typemap_resolver,
+        queue => $self->linker_queue,
     );
 }
 
