@@ -113,9 +113,12 @@ sub queue_ref {
 
         push @{ $self->_queue }, [ $ref, $into ];
     } else {
-        my $obj = $self->get_or_load_object($ref->id);
-        $$into = $obj;
-        weaken($$into) if $ref->is_weak;
+        if ( ref $ref ) {
+            $$into = $self->get_or_load_object($ref->id);
+            weaken($$into) if $ref->is_weak;
+        } else {
+            $$into = $self->get_or_load_object($ref);
+        }
     }
 }
 
@@ -146,7 +149,13 @@ sub load_queue {
     @$deferred = ();
 
     if ( @queue ) {
-        my @ids = map { $_->[0]->id } @queue;
+        my @ids;
+
+        foreach my $entry ( @queue ) {
+            my $ref = $entry->[0];
+            push @ids, ref($ref) ? $ref->id : $ref;
+        }
+
         my @objects = $self->get_or_load_objects(@ids);
 
         foreach my $item ( @queue ) {
@@ -155,7 +164,7 @@ sub load_queue {
 
             $$into = $obj;
 
-            weaken $$into if $data->is_weak;
+            weaken $$into if ref $data and $data->is_weak;
         }
     }
 
