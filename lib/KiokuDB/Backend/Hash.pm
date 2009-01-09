@@ -9,11 +9,8 @@ use Carp qw(croak);
 
 use namespace::clean -except => 'meta';
 
-#KiokuDB::Backend::Serialize::Memory
-#KiokuDB::Backend::Serialize::Storable
-#KiokuDB::Backend::Serialize::Null
 with qw(
-    KiokuDB::Backend::Serialize::Memory
+    KiokuDB::Backend::Serialize::Delegate
     KiokuDB::Backend
     KiokuDB::Backend::Role::Query::Simple::Linear
     KiokuDB::Backend::Role::Scan

@@ -7,8 +7,10 @@ use KiokuDB::Serializer;
 
 use namespace::clean -except => 'meta';
 
+#with qw(KiokuDB::Backend::Serialize);
+
 has serializer => (
-    isa     => "KiokuDB::Serializer",
+    does    => "KiokuDB::Backend::Serialize",
     is      => "ro",
     coerce  => 1,
     default => "storable",

@@ -7,5 +7,7 @@ use ok 'KiokuDB::Backend::Hash';
 
 use KiokuDB::Test;
 
-run_all_fixtures( KiokuDB->connect("hash") );
+foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" } ) {
+    run_all_fixtures( KiokuDB->connect("hash", serializer => $format) );
+}
 

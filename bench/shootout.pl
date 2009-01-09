@@ -26,7 +26,7 @@ sub bench {
 
     my $storable = $dir->file("foo.storable")->stringify;
 
-    my $mxsd_hash = KiokuDB->connect("hash");
+    my $mxsd_hash = KiokuDB->connect("hash", serializer => "storable" );
 
     my $mxsd_files = KiokuDB->connect("files:dir=" . $dir->subdir("mxsd_files"), create => 1, global_lock => 1 );
 
