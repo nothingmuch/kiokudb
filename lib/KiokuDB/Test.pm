@@ -32,6 +32,7 @@ sub run_all_fixtures {
     for ( 1 .. ( $ENV{KIOKUDB_REPEAT_FIXTURES} || 1 ) ) {
         require List::Util and @fixtures = List::Util::shuffle(@fixtures) if $ENV{KIOKUDB_SHUFFLE_FIXTURES};
         foreach my $fixture ( @fixtures ) {
+            next if $ENV{KIOKUDB_FIXTURE} and $fixture->name ne $ENV{KIOKUDB_FIXTURE};
             $fixture->new( directory => $fixture->$get_dir )->run;
         }
     }
