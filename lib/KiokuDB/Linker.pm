@@ -99,11 +99,16 @@ sub queue_ref {
 
     my $b = $self->backend;
 
-    if ( $b->can("prefetch") ) {
-        $b->prefetch($ref->id);
-    }
+    #if ( $b->can("prefetch") ) {
+    #    $b->prefetch($ref->id);
+    #}
 
     push @{ $self->_queue }, [ $ref, $into ];
+}
+
+sub queue_finalizer {
+    my ( $self, @def ) = @_;
+    push @{ $self->_deferred }, @def;
 }
 
 sub load_queue {

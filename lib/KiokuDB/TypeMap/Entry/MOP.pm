@@ -184,12 +184,12 @@ sub compile_expander {
             }
         }
 
-        push @{ $self->_deferred }, sub {
+        $self->queue_finalizer(sub {
             foreach my $pair ( @values ) {
                 my ( $attr, $value ) = @$pair;
                 $attr->set_value($instance, $value);
             }
-        };
+        });
 
         return $instance;
     }
