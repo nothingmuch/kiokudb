@@ -53,15 +53,8 @@ sub _build_tie_typemap {
     $self->_create_typemap(
         isa_entries => {
             'Tie::RefHash' => {
-                type      => 'KiokuDB::TypeMap::Entry::Callback',
+                type      => 'KiokuDB::TypeMap::Entry::StorableHook',
                 intrinsic => 1,
-                collapse  => "STORABLE_freeze",
-                expand    => sub {
-                    my ( $class, @args ) = @_;
-                    my $self = ( bless [], $class );
-                    $self->STORABLE_thaw( 0, @args );
-                    return $self;
-                },
             },
         },
         entries => {

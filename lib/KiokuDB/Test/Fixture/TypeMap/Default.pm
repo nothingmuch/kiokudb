@@ -39,6 +39,8 @@ sub create {
 
     $refhash{["foo"]} = "bar";
 
+    $refhash{"blah"} = "oink";
+
     my %ixhash;
     tie %ixhash, 'Tie::IxHash' if HAVE_IXHASH;
     %ixhash = ( first => 1, second => "yes", third => "maybe", fourth => "a charm" );
@@ -91,7 +93,7 @@ sub verify {
         is( ref($rh), "HASH", "plain hash" );
         isa_ok( tied(%$rh), "Tie::RefHash", "tied" );
 
-        is_deeply( [ keys %$rh ], [ ["foo"] ], "keys" );
+        is_deeply( [ sort { ref($a) ? -1 : ( ref($b) ? 1 : ( $a cmp $b ) ) } keys %$rh ], [ ["foo"], "blah" ], "keys" );
 
     }
 
