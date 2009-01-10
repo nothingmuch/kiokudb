@@ -19,19 +19,6 @@
             * predicates as UUIDs?
             * no collapsing by default
         * SPARQL matching with simple search
-    * Backend::Files
-        * transactions
-            * exclusive write lock TXNs using deferred writes
-            * each TXN gets its own write directory,
-            * committing a txn == moving (and overwriting) files into parent TXN dir
-            * aborting a txn == popping the TXN stack, and removing the directory
-            * how do we do atomic commits? a journal of file moves could be
-              maintained, log move, move aside original, move in new, log
-              transaction as successful in log, sync, then remove originals
-        * fine grained locking
-            * per object shared/exclusive locks could be taken on the root dir
-              as objects are being touched by transactions
-            * survey and benchmark various locking methods, NFSLock seems overkill
 
 * concurrency test fixture for backends
     * forks
