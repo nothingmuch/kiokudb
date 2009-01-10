@@ -115,7 +115,7 @@ has live_objects => (
         clear_live_objects => "clear",
         new_scope          => "new_scope",
         object_to_id       => "object_to_id",
-        "objects_to_ids"   => "objects_to_ids"
+        objects_to_ids     => "objects_to_ids"
     },
 );
 
