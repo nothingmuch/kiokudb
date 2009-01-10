@@ -347,6 +347,25 @@ sub update {
     $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
 
+sub _imply_root {
+    my ( $self, @entries ) = @_;
+
+    foreach my $entry ( @entries ) {
+        next if $entry->has_root; # set by typemap
+        $entry->root(1);
+    }
+}
+
+sub set_root {
+    my ( $self, @objects ) = @_;
+    $_->root(1) for $self->live_objects->objects_to_entries(@objects);
+}
+
+sub unset_root {
+    my ( $self, @objects ) = @_;
+    $_->root(0) for $self->live_objects->objects_to_entries(@objects);
+}
+
 sub store_objects {
     my ( $self, %args ) = @_;
 
@@ -355,7 +374,7 @@ sub store_objects {
     my ( $entries, @ids ) = $self->collapser->collapse(%args);
 
     if ( $args{root_set} ) {
-        $_->root(1) for grep { defined } @{$entries}{@ids};
+        $self->_imply_root(@{$entries}{@ids});
     }
 
     $self->backend->insert(values %$entries);
@@ -541,6 +560,25 @@ stored or loaded.
 
 This process is explained in detail in L<KiokuDB::Linker>.
 
+=head1 ROOT SET MEMBERSHIP
+
+Any object that is passed to C<store> or C<insert> directly is implicitly
+considered a member of the root set.
+
+This flag implies that the object is an identified resource and should not be
+garbage collected with any of the proposed garbage collection schemes.
+
+The root flag may be modified explicitly:
+
+    $kiokudb->set_root(@objects); # or unset_root
+
+    $kiokudb->update(@objects);
+
+Lastly, root set membership may also be specified explicitly by the typemap.
+
+A root set member must be explicitly using C<delete> or removed from the root
+set before it will be purged with any garbage collection scheme.
+
 =head1 ATTRIBUTES
 
 L<KiokuDB> uses a number of delegates which do the actual work.
@@ -653,6 +691,14 @@ Deletes the specified objects from the store.
 
 Note that this can cause lookup errors if the object you are deleting is
 referred to by another object, because that link will be broken.
+
+=item set_root @objects
+
+=item unset_root @objects
+
+Modify the C<root> flag on the associated entries.
+
+C<update> must be called for the change to take effect.
 
 =item txn_do $code, %args
 
