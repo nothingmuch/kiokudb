@@ -347,6 +347,19 @@ sub update {
     $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
 
+sub deep_update {
+    my ( $self, @args ) = @_;
+
+    my @objects = $self->_register(@args);
+
+    my $l = $self->live_objects;
+
+    croak "Object not in storage"
+        if grep { not defined } $l->objects_to_entries(@objects);
+
+    $self->store_objects( only_known => 1, objects => \@objects );
+}
+
 sub _imply_root {
     my ( $self, @entries ) = @_;
 
@@ -671,16 +684,20 @@ snapshotting everything.
 
 =item update @objects
 
-Performs a shallow update of @objects.
+Performs a shallow update of @objects (referants are not updated).
 
 It is an error to update an object not in the database.
+
+=item deep_update @objects
+
+Update @objects and all of the objects they reference.
 
 =item insert @objects
 
 Inserts objects to the database.
 
 It is an error to insert objects that are already in the database, all elements
-of C<@objects> must be new.
+of C<@objects> must be new, but their referants don't have to be.
 
 C<@objects> will be collapsed recursively, but the collapsing stops at known
 objects, which will not be updated.
