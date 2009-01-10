@@ -1,0 +1,31 @@
+# DESCRIPTION
+
+[KiokuDB](http://www.iinteractive.com/kiokudb) is a [Moose](http://moose.perl.org) based frontend to various data
+stores:
+
+* [Berkeley DB](http://github.com/nothingmuch/kiokudb-backend-bdb)
+* [SQL databases](http://github.com/nothingmuch/kiokudb-backend-dbi)
+* [plain files](http://github.com/nothingmuch/kiokudb-backend-files)
+* [CouchDB](http://github.com/nothingmuch/kiokudb-backend-couchdb)
+* [Amazon SimpleDB](http://github.com/omega/kiokudb-backend-aws-sdb)
+
+Its purpose is to provide persistence for "regular" Perl objects with as little
+effort as possible, without sacrificing control over how persistence is
+actually done, especially for harder to serialize objects.
+
+KiokuDB is also non-invasive: it does not use ties, `AUTOLOAD`, overloading, proxy objects or any other type of trickery.
+
+KiokuDB is meant to solve two related persistence problems:
+
+## Transparent persistence
+
+Store arbitrary objects without changing their class definitions or worrying
+about schema details, and without needing to conform to the limitations of a
+relational model.
+
+## Interoperability
+
+Persisting arbitrary objects in a way that is compatible with existing
+data/code (for example interoprating with another app using
+[CouchDB](http://couchdb.apache.org/) with [JSPON](http://jspon.org) semantics).
+

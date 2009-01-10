@@ -500,16 +500,15 @@ nevertheless backwards compatibility is not yet guaranteed.
 
 =head1 DESCRIPTION
 
-Kioku is a Moose based frontend to various databases, somewhere in between
-L<Tangram> and L<Pixie>. It builds on L<Class::MOP>'s solid foundation.
+L<KiokuDB> is a Moose based frontend to various data stores, somewhere in
+between L<Tangram> and L<Pixie>.
 
 Its purpose is to provide persistence for "regular" objects with as little
 effort as possible, without sacrificing control over how persistence is
-actually done.
+actually done, especially for harder to serialize objects.
 
-Kioku is also non-invasive: it does not use ties, AUTOLOAD, proxy objects,
-C<sv_magic> or any other type of trickery to get its job done, to avoid
-unwanted surprises.
+L<KiokuDB> is also non-invasive: it does not use ties, `AUTOLOAD`, proxy objects,
+C<sv_magic> or any other type of trickery.
 
 Many features important for proper Perl space semantics are supported,
 including shared data, circular structures, weak references, tied structures,
