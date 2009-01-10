@@ -15,6 +15,9 @@ use if HAVE_YAML, ok => 'KiokuDB::Serializer::YAML';
 
 use ok 'KiokuDB::Entry';
 
+sub KiokuDB::Entry::BUILD { shift->root }; # force building of root for is_deeply
+$_->make_mutable, $_->make_immutable for KiokuDB::Entry->meta; # recreate new
+
 
 {
     foreach my $serializer ( qw(JSON Storable), HAVE_YAML ? "YAML" : () ) {

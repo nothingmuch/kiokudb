@@ -20,7 +20,18 @@ has id => (
 has root => (
     isa => "Bool",
     is  => "rw",
+    lazy_build => 1,
 );
+
+sub _build_root {
+    my $self = shift;
+
+    if ( $self->has_id and my $prev = $self->prev ) {
+        return $prev->root;
+    } else {
+        return 0;
+    }
+}
 
 has deleted => (
     isa => "Bool",
@@ -198,7 +209,7 @@ sub _unpack {
 
         $self->_class($class) if length($class);
 
-        $self->root(1)    if $flags & _root_b;
+        $self->root($flags & _root_b);
         $self->_deleted(1) if $flags & _deleted_b;
 
         if ( my $tied = ( $flags & _tied_mask ) >> _tied_shift ) {

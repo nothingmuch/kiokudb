@@ -8,12 +8,17 @@ use Test::More 'no_plan';
 use Scalar::Util qw(weaken isweak);
 use Storable qw(dclone);
 
+use ok 'KiokuDB::Entry';
 use ok 'KiokuDB::Collapser';
 use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::TypeMap::Entry::MOP';
 use ok 'KiokuDB::TypeMap::Entry::Callback';
+
+sub KiokuDB::Entry::BUILD { shift->root }; # force building of root for is_deeply
+$_->make_mutable, $_->make_immutable for KiokuDB::Entry->meta; # recreate new
+
 
 use Tie::RefHash;
 
