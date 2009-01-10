@@ -5,6 +5,10 @@
         * extra libs to load
         * GIN extractors
 
+* Immutable role (content addressible objects)
+    * overwrite on insert is OK
+    * object is never updated
+
 * Backends:
     * BDB/DBI
         * Set::Object/Hash sharding (each key/member is an entry in the BDB
@@ -52,3 +56,25 @@
 
 * query
     * http://www.ietf.org/rfc/rfc1960.txt
+
+* GC schemes
+    * Online schemes
+        * entries can already enumerate what they refer to
+        * refcounting is one option
+        * rel index table is another
+            * all references are cross referenced in a table that can be also
+              used to list backrefs. In SQL this table can have delete triggers
+              i guess (ask mugwump), in BDB this would be manual.
+        * incremental scheme
+            * parrot's tricolor garbage collection alrogithm is interesting
+                * the data could be partly maintained during store/delete
+                  operations, with a partial sweep performed every time some
+                  statistic is tipped
+            * generational GC could make sense here, due to the persistence of the data
+    * Offline schemes
+        * mark & sweep
+            * LinkChecker
+            * tri-color using some auxillary table
+    * collection of clusters of data: http://www-sor.inria.fr/publi/GC-PERS-DSM_POS94.html
+    * http://pauillac.inria.fr/~lefessan/dgc/
+    * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.663
