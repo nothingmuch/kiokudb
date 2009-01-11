@@ -191,7 +191,7 @@ sub exists_ok {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    is( scalar(grep { defined } $self->exists(@ids)), scalar(@ids), "@ids exist in DB" );
+    is( scalar(grep { $_ } $self->exists(@ids)), scalar(@ids), "[@ids] exist in DB" );
 }
 
 sub deleted_ok {
