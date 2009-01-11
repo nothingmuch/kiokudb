@@ -130,6 +130,10 @@ has directory => (
         simple_search
         backend_search
 
+        is_root
+        set_root
+        unset_root
+
         root_set
         scan
         grep
@@ -192,6 +196,22 @@ sub exists_ok {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is( scalar(grep { $_ } $self->exists(@ids)), scalar(@ids), "[@ids] exist in DB" );
+}
+
+sub root_ok {
+    my ( $self, @objects ) = @_;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    is( scalar(grep { $_ } $self->is_root(@objects)), scalar(@objects), "[@{[ $self->objects_to_ids(@objects) ]}] are in the root set" );
+}
+
+sub not_root_ok {
+    my ( $self, @objects ) = @_;
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    is( scalar(grep { not $_ } $self->is_root(@objects)), scalar(@objects), "[@{[ $self->objects_to_ids(@objects) ]}] aren't in the root set" );
 }
 
 sub deleted_ok {
