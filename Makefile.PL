@@ -64,7 +64,8 @@ WriteMakefile(
 
         'Search::GIN' => 0.03,
 
-        'JSON' => 2.12,
+        'JSON::XS' => 2.231,
+        'YAML::XS' => 0.30,
         'Storable' => 0,
 
         'IO' => 1.2301,
