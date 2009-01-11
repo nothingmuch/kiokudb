@@ -219,7 +219,12 @@ sub no_live_objects {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    unless ( is( scalar(()=$self->live_objects), 0, "no live objects" ) ){
+    my $fail;
+
+    $fail++ unless is( scalar(()=$self->live_objects), 0, "no live objects" );
+    $fail++ unless is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
+
+    if ( $fail ) {
         my @l = $self->live_objects;
         diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } @l;
         require Data::Dumper;
