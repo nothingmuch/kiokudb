@@ -233,7 +233,7 @@ sub no_live_objects {
         #use Scalar::Util qw(weaken);
         #weaken($_) for @l;
 
-        #$self->directory->live_objects->clear;
+        $self->directory->live_objects->clear;
 
         #use Devel::FindRef;
         #my $track = Devel::FindRef::track(@l);
