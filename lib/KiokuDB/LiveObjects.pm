@@ -78,7 +78,7 @@ sub loaded_ids {
 }
 
 sub live_entries {
-    values %{ shift->_enty_ids };
+    values %{ shift->_entry_ids };
 }
 
 has current_scope => (
