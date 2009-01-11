@@ -379,6 +379,14 @@ sub unset_root {
     $_->root(0) for $self->live_objects->objects_to_entries(@objects);
 }
 
+sub is_root {
+    my ( $self, @objects ) = @_;
+
+    my @is_root = map { $_->root } $self->live_objects->objects_to_entries(@objects);
+
+    return @objects == 1 ? $is_root[0] : @is_root;
+}
+
 sub store_objects {
     my ( $self, %args ) = @_;
 
