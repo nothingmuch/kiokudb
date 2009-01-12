@@ -39,20 +39,21 @@ sub create {
 sub verify {
     my $self = shift;
 
-    my ( $enc, $bin ) = $self->lookup_ok( @{ $self->populate_ids } );
+    $self->txn_lives(sub {
+        my ( $enc, $bin ) = $self->lookup_ok( @{ $self->populate_ids } );
 
-    isa_ok( $enc, "KiokuDB::Test::Person" );
-    isa_ok( $bin, "KiokuDB::Test::Person" );
+        isa_ok( $enc, "KiokuDB::Test::Person" );
+        isa_ok( $bin, "KiokuDB::Test::Person" );
 
-    ok( !Encode::is_utf8($enc->binary), "preserved utf8 bytes" );
-    my $enc_decoded = Encode::decode( utf8 => $enc->binary );
-    ok( Encode::is_utf8($enc_decoded), "decoded cleanly" );
-    is( $enc_decoded, "חיים", "decoded to correct value" );
+        ok( !Encode::is_utf8($enc->binary), "preserved utf8 bytes" );
+        my $enc_decoded = Encode::decode( utf8 => $enc->binary );
+        ok( Encode::is_utf8($enc_decoded), "decoded cleanly" );
+        is( $enc_decoded, "חיים", "decoded to correct value" );
 
-    ok( !Encode::is_utf8($bin->binary), "preserved arbitrary bytes" );
-    is( length($bin->binary), length($bytes), "bytes not truncated" );
-    is( unpack("H*", $bin->binary), unpack("H*", $bytes), "bytes equal" );
-
+        ok( !Encode::is_utf8($bin->binary), "preserved arbitrary bytes" );
+        is( length($bin->binary), length($bytes), "bytes not truncated" );
+        is( unpack("H*", $bin->binary), unpack("H*", $bytes), "bytes equal" );
+    });
 }
 
 __PACKAGE__

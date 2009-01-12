@@ -32,12 +32,14 @@ sub create {
 sub verify {
     my $self = shift;
 
-    my $dec = $self->lookup_ok( @{ $self->populate_ids } );
+    $self->txn_lives(sub {
+        my $dec = $self->lookup_ok( @{ $self->populate_ids } );
 
-    isa_ok( $dec, "KiokuDB::Test::Person" );
+        isa_ok( $dec, "KiokuDB::Test::Person" );
 
-    ok( Encode::is_utf8($dec->name), "preserved is_utf8" );
-    is( $dec->name, $unicode, "correct value" );
+        ok( Encode::is_utf8($dec->name), "preserved is_utf8" );
+        is( $dec->name, $unicode, "correct value" );
+    });
 }
 __PACKAGE__
 

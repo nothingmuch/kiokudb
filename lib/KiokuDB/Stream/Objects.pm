@@ -36,6 +36,11 @@ has _scope => (
     clearer => "_clear_scope",
 );
 
+has _no_scope => (
+    isa => "Bool",
+    is  => "rw",
+);
+
 with qw(Data::Stream::Bulk);
 
 sub next {
@@ -46,13 +51,15 @@ sub next {
     my $entries = $self->entry_stream->next || return;;
 
     if ( @$entries ) {
-        $self->_scope( $self->directory->new_scope );
+        $self->_scope( $self->directory->new_scope )
+            unless $self->_no_scope;;
         return [ $self->linker->load_entries(@$entries) ];
     } else {
         return;
     }
 }
 
+before all => sub { shift->_no_scope(1) };
 
 __PACKAGE__->meta->make_immutable;
 

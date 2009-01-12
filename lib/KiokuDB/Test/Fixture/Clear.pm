@@ -29,11 +29,11 @@ sub verify {
     my $self = shift;
 
 
-    $self->lookup_ok(@{ $self->populate_ids } );
+    $self->txn_lives(sub { $self->lookup_ok(@{ $self->populate_ids } ) });
 
-    $self->backend->clear;
+    $self->txn_lives(sub { $self->backend->clear });
 
-    $self->deleted_ok(@{ $self->populate_ids });
+    $self->txn_lives(sub { $self->deleted_ok(@{ $self->populate_ids }) });
 }
 
 __PACKAGE__->meta->make_immutable;

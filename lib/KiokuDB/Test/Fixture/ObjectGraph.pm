@@ -113,13 +113,9 @@ sub populate {
 sub verify {
     my $self = shift;
 
-    my $s = $self->new_scope;
-
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
         is( $junior->so->name, "Laura Bush", "ref to other object" );
@@ -160,13 +156,11 @@ sub verify {
         pop @{ $junior->friends };
 
         $self->update_ok($junior);
-    }
+    });
 
     $self->no_live_objects();
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $junior = $self->lookup_obj_ok( $self->dubya, "KiokuDB::Test::Person" );
 
         is_deeply(
@@ -196,13 +190,11 @@ sub verify {
         $junior->so->job("Prima Donna, Author, Teacher, Librarian");
 
         $self->update_live_objects;
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
         {
@@ -216,21 +208,21 @@ sub verify {
         $homer->job("Safety Inspector, Sector 7-G");
 
         $self->update_ok($homer);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
+    $self->txn_lives(sub {
         my $s = $self->new_scope;
 
         my $homer = $self->lookup_obj_ok( $self->homer, "KiokuDB::Test::Person" );
 
         is( $homer->name, "Homer J. Simpson", "name" );
-    }
+    });
 
     $self->no_live_objects;
 
-    {
+    $self->txn_lives(sub {
         my $s = $self->new_scope;
 
         my $putin = $self->lookup_obj_ok($self->putin);
@@ -241,19 +233,17 @@ sub verify {
             $putin->job($job);
             $self->update_ok($putin);
         }
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $putin = $self->lookup_obj_ok($self->putin);
 
         is( $putin->job, "DFL", "updated in storage" );
 
         $self->delete_ok($putin);
-    }
+    });
 
     $self->no_live_objects;
 

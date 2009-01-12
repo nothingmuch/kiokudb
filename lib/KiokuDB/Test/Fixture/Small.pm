@@ -71,30 +71,32 @@ sub populate {
 sub verify {
     my $self = shift;
 
-    my ( $joe, $oscar ) = my @objs = $self->lookup_ok( $self->joe, $self->oscar );
+    $self->txn_lives(sub {
+        my ( $joe, $oscar ) = my @objs = $self->lookup_ok( $self->joe, $self->oscar );
 
-    isa_ok( $joe, "KiokuDB::Test::Person" );
-    isa_ok( $joe, "KiokuDB::Test::Employee" );
+        isa_ok( $joe, "KiokuDB::Test::Person" );
+        isa_ok( $joe, "KiokuDB::Test::Employee" );
 
-    isa_ok( $oscar, "KiokuDB::Test::Person" );
+        isa_ok( $oscar, "KiokuDB::Test::Person" );
 
-    is( $joe->name, "joe", "name" );
+        is( $joe->name, "joe", "name" );
 
-    ok( my $parents = $joe->parents, "parents" );
+        ok( my $parents = $joe->parents, "parents" );
 
-    is( ref($parents), "ARRAY", "array ref" );
+        is( ref($parents), "ARRAY", "array ref" );
 
-    is( scalar(@$parents), 1, "one parent" );
+        is( scalar(@$parents), 1, "one parent" );
 
-    isa_ok( $parents->[0], "KiokuDB::Test::Person" );
+        isa_ok( $parents->[0], "KiokuDB::Test::Person" );
 
-    is( $parents->[0]->name, "mum", "parent name" );
+        is( $parents->[0]->name, "mum", "parent name" );
 
-    ok( my $company = $joe->company, "company" );
+        ok( my $company = $joe->company, "company" );
 
-    isa_ok( $company, "KiokuDB::Test::Company" );
+        isa_ok( $company, "KiokuDB::Test::Company" );
 
-    is( $oscar->name, "oscar", "name" );
+        is( $oscar->name, "oscar", "name" );
+    });
 }
 __PACKAGE__
 

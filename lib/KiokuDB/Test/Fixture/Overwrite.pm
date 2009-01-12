@@ -115,12 +115,16 @@ sub verify {
 
     dies_ok {
         my $s = $self->new_scope;
-        $self->directory->store( person => KiokuDB::Test::Person->new( name => "duplicate" ) );
+        $self->txn_do(sub {
+            $self->directory->store( person => KiokuDB::Test::Person->new( name => "duplicate" ) );
+        });
     } "can't insert duplicate";
 
     lives_ok {
         my $s = $self->new_scope;
-        my $id = $self->directory->store( KiokuDB::Test::BLOB->new( data => "lalala" ) );
+        $self->txn_do(sub {
+            my $id = $self->directory->store( KiokuDB::Test::BLOB->new( data => "lalala" ) );
+        });
     } "not an error to insert a duplicate of a content addressed object";
 }
 

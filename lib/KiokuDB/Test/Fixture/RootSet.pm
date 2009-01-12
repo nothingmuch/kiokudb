@@ -27,22 +27,18 @@ sub create {
 sub verify {
     my $self = shift;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         isa_ok( $p, "KiokuDB::Test::Person" );
 
         $self->root_ok($p);
         $self->not_root_ok($p->kids->[0]);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         $self->root_ok($p);
@@ -54,13 +50,11 @@ sub verify {
 
         $self->root_ok($p);
         $self->not_root_ok($p->kids->[0]);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         $self->root_ok($p);
@@ -73,13 +67,11 @@ sub verify {
         $self->update_ok($p);
 
         $self->not_root_ok($p, $p->kids->[0]);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         $self->not_root_ok($p, $p->kids->[0]);
@@ -88,13 +80,11 @@ sub verify {
 
         $self->root_ok($p);
         $self->not_root_ok($p->kids->[0]);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         $self->not_root_ok($p, $p->kids->[0]);
@@ -105,18 +95,16 @@ sub verify {
         $self->not_root_ok($p->kids->[0]);
 
         $self->update_ok($p);
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my $p = $self->lookup_ok("root_person");
 
         $self->root_ok($p);
         $self->not_root_ok($p->kids->[0]);
-    }
+    });
 }
 
 __PACKAGE__->meta->make_immutable;

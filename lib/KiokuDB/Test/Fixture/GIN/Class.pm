@@ -26,9 +26,7 @@ sub verify {
     my $q_person = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Person" );
     my $q_employee = Search::GIN::Query::Class->new( class => "KiokuDB::Test::Employee" );
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my @objs = $self->root_set->all;
 
         my $people = $self->search($q_person);
@@ -50,13 +48,11 @@ sub verify {
             [ sort map { refaddr($_) } @objs, @{ $self->lookup_ok($self->joe)->parents } ],
             "set of all people",
         );
-    }
+    });
 
     $self->no_live_objects;
 
-    {
-        my $s = $self->new_scope;
-
+    $self->txn_lives(sub {
         my ( $joe, $mum, $oscar ) = sort { $a->name cmp $b->name } $self->search($q_person)->all;
 
         is( $joe->name, "joe", "loaded first object" );
@@ -64,7 +60,7 @@ sub verify {
         is( $oscar->name, "oscar", "loaded third object" );
 
         is( $joe->parents->[0], $mum, "interrelated objects loaded in one graph" );
-    }
+    });
 
     $self->no_live_objects;
 }

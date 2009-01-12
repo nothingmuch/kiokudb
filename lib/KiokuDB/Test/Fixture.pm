@@ -88,9 +88,6 @@ sub run {
     SKIP: {
         local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-        # disable txn wrapping for TXN related fixtures
-        my $txn = ref($self) =~ /TXN/ ? sub { shift->() } : sub { $self->directory->txn_do(@_) };
-
         $self->precheck;
 
         $self->clear_live_objects;
@@ -98,12 +95,12 @@ sub run {
         is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name . " fixture" );
 
         lives_ok {
-            $txn->(sub {
+            local $Test::Builder::Level = $Test::Builder::Level - 1;
+            $self->txn_do(sub {
                 my $s = $self->new_scope;
-                local $Test::Builder::Level = $Test::Builder::Level - 1;
-                $txn->(sub { $self->populate });
-                $txn->(sub { $self->verify });
+                $self->populate;
             });
+            $self->verify;
         } "no error in fixture";
 
         is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name . " fixture" );
@@ -242,7 +239,7 @@ sub no_live_objects {
     my $fail;
 
     $fail++ unless is( scalar(()=$self->live_objects), 0, "no live objects" );
-    $fail++ unless is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
+    #$fail++ unless is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
 
     if ( $fail ) {
         my @l = $self->live_objects;
@@ -269,6 +266,17 @@ sub live_objects_are {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is_deeply( [ sort $self->live_objects ], [ sort @objects ], "correct live objects" );
+}
+
+sub txn_lives {
+    my ( $self, $code, @args ) = @_;
+
+    lives_ok {
+        $self->txn_do(sub {
+            my $s = $self->new_scope;
+            $code->(@_);
+        }, @args);
+    } "transaction finished without errors";
 }
 
 __PACKAGE__
