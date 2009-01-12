@@ -9,8 +9,6 @@ use JSON;
 
 use namespace::clean -except => 'meta';
 
-extends qw(Data::Visitor);
-
 with qw(KiokuDB::Backend::Serialize::JSPON::Converter);
 
 has reserved_key => (
@@ -28,45 +26,51 @@ sub _build_reserved_key {
 }
 
 sub collapse_jspon {
-    my ( $self, @args ) = @_;
-    $self->visit(@args);
-}
+    my ( $self, $data ) = @_;
 
-sub visit_hash_key {
-    my ( $self, $key ) = @_;
+    if ( my $ref = ref $data ) {
+        if ( $ref eq 'KiokuDB::Reference' ) {
+            return {
+                $self->ref_field => $data->id . ( $self->inline_data ? "" : "." . $self->data_field ),
+                ( $data->is_weak ? ( weak => 1 ) : () ),
+            };
+        } elsif ( $ref eq 'KiokuDB::Entry' ) {
+            my $id = $data->id;
 
-    if ( $key =~ $self->reserved_key ) {
-        return "public::$key";
-    } else {
-        return $key;
+            return {
+                ( $data->has_class ? ( $self->class_field => $data->class ) : () ),
+                ( $data->has_class_meta ? ( $self->class_meta_field => $data->class_meta ) : () ),
+                ( $id ? ( $self->id_field => $id ) : () ),
+                ( $data->root ? ( $self->root_field => JSON::true() ) : () ),
+                ( $data->deleted ? ( $self->deleted_field => JSON::true() ) : () ),
+                ( $data->has_tied ? ( $self->tied_field => $data->tied ) : () ),
+                ( $self->inline_data
+                    ? %{ $self->collapse_jspon($data->data) }
+                    : ( $self->data_field => $self->collapse_jspon($data->data) )
+                ),
+            };
+        } elsif ( $ref eq 'HASH' ) {
+            my %hash;
+            my $res = $self->reserved_key;
+
+            foreach my $key ( keys %$data ) {
+                my $value = $data->{$key};
+                my $collapsed = ref($value) ? $self->collapse_jspon($value) : $value;
+
+                if ( $key =~ $res ) {
+                    $hash{"public::$key"} = $collapsed;
+                } else {
+                    $hash{$key} = $collapsed;
+                }
+            }
+
+            return \%hash;
+        } elsif ( $ref eq 'ARRAY' ) {
+            return [ map { ref($_) ? $self->collapse_jspon($_) : $_ } @$data ];
+        }
     }
-}
 
-sub visit_object {
-    my ( $self, $object ) = @_;
-
-    if ( ref($object) eq 'KiokuDB::Reference' ) {
-        return {
-            $self->ref_field => $object->id . ( $self->inline_data ? "" : "." . $self->data_field ),
-            ( $object->is_weak ? ( weak => 1 ) : () ),
-        };
-    } elsif ( ref($object) eq 'KiokuDB::Entry' ) {
-        my $id = $object->id;
-        return {
-            ( $object->has_class ? ( $self->class_field => $object->class ) : () ),
-            ( $object->has_class_meta ? ( $self->class_meta_field => $object->class_meta ) : () ),
-            ( $id ? ( $self->id_field => $id ) : () ),
-            ( $object->root ? ( $self->root_field => JSON::true() ) : () ),
-            ( $object->deleted ? ( $self->deleted_field => JSON::true() ) : () ),
-            ( $object->has_tied ? ( $self->tied_field => $object->tied ) : () ),
-            ( $self->inline_data
-                ? %{ $self->visit($object->data) }
-                : ( $self->data_field => $self->visit($object->data) )
-            ),
-        };
-    } else {
-        return $object; # we let JSON complain about objects
-    }
+    return $data;
 }
 
 __PACKAGE__->meta->make_immutable;

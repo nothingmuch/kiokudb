@@ -46,7 +46,14 @@ sub _build_json {
 
 sub serialize {
     my ( $self, @args ) = @_;
-    $self->encode( $self->collapse_jspon(@args) );
+    my $json = eval { $self->encode( $self->collapse_jspon(@args) ) };
+    if ( $@ ) {
+        use Data::Dumper;
+        warn Dumper($self->collapse_jspon(@args), @args);
+        die $@;
+    }
+
+    return $json;
 }
 
 sub deserialize {

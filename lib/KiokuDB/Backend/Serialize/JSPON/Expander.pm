@@ -4,65 +4,143 @@ package KiokuDB::Backend::Serialize::JSPON::Expander;
 use Moose;
 
 use Carp qw(croak);
+use Scalar::Util qw(weaken);
 
 use KiokuDB::Entry;
 use KiokuDB::Reference;
 
 use namespace::clean -except => 'meta';
 
-extends qw(Data::Visitor);
-
 with qw(KiokuDB::Backend::Serialize::JSPON::Converter);
 
-# Note: this method is destructive
-# maybe it's a good idea to copy $hash before deleting items out of it?
 sub expand_jspon {
     my ( $self, $data, @attrs ) = @_;
 
-    my %copy = %$data;
-
-    my $class_field = $self->class_field;
-
-    if ( exists $copy{$class_field} ) {
-        # check the class more thoroughly here ...
-        my ($class, $version, $authority) = (split '-' => delete $copy{$class_field});
-        push @attrs, class => $class;
-
-        push @attrs, class_meta => delete $copy{$self->class_meta_field} if exists $copy{$self->class_meta_field};
-    }
-
-    push @attrs, id      => delete $copy{$self->id_field} if exists $copy{$self->id_field};
-    push @attrs, tied    => delete $copy{$self->tied_field} if exists $copy{$self->tied_field};
-    push @attrs, root    => delete $copy{$self->root_field} ? 1 : 0 if exists $copy{$self->root_field};
-    push @attrs, deleted => delete $copy{$self->deleted_field} ? 1 : 0 if exists $copy{$self->deleted_field};
-
-    push @attrs, data => $self->visit( $self->inline_data ? \%copy : $copy{$self->data_field} );
-
-    return KiokuDB::Entry->new( @attrs );
+    return $self->_expander->($data, @attrs);
 }
 
-sub visit_hash_key {
-    my ( $self, $key ) = @_;
-    $key =~ s/^public:://x;
-    return $key;
-}
+has _expander => (
+    isa => "CodeRef",
+    is  => "ro",
+    lazy_build => 1,
+);
 
-sub visit_hash {
-    my ( $self, $hash ) = @_;
+sub _build__expander {
+    my $self = shift;
 
-    if ( my $id = $hash->{$self->ref_field} ) {
-        $id =~ s/\.data$// unless $self->inline_data;
-        return KiokuDB::Reference->new( id => $id, ( $hash->{weak} ? ( is_weak => 1 ) : () ) );
+    my $expander;
+
+    my ( $ref_field, $id_field, $data_field, $class_field, $tied_field, $root_field, $deleted_field, $class_meta_field ) =
+        map { my $m = $_ . "_field"; $self->$m() } qw(ref id data class tied root deleted class_meta);
+
+    unless ( $self->inline_data ) {
+        my $data_field_re = qr/\. \Q$data_field\E $/x;
+
+        $expander = sub {
+            my ( $data, @attrs ) = @_;
+
+            if ( my $ref = ref($data) ) {
+                if ( $ref eq 'HASH' ) {
+                    if ( my $id = $data->{$ref_field} ) {
+                        $id =~ s/$data_field_re//;
+                        return KiokuDB::Reference->new( id => $id, ( $data->{weak} ? ( is_weak => 1 ) : () ) );
+                    } elsif ( exists $data->{$class_field}
+                        or exists $data->{$id_field}
+                        or exists $data->{$tied_field}
+                    ) {
+                        if ( exists $data->{$class_field} ) {
+                            # check the class more thoroughly here ...
+                            my ($class, $version, $authority) = (split '-' => $data->{$class_field});
+                            push @attrs, class => $class;
+
+                            push @attrs, class_meta => $data->{$class_meta_field} if exists $data->{$class_meta_field};
+                        }
+
+                        push @attrs, id      => $data->{$id_field}              if exists $data->{$id_field};
+                        push @attrs, tied    => $data->{$tied_field}            if exists $data->{$tied_field};
+                        push @attrs, root    => $data->{$root_field}    ? 1 : 0 if exists $data->{$root_field};
+                        push @attrs, deleted => $data->{$deleted_field} ? 1 : 0 if exists $data->{$deleted_field};
+
+                        push @attrs, data => $expander->( $data->{$data_field} );
+
+                        return KiokuDB::Entry->new( @attrs );
+                    } else {
+                        my %hash;
+
+                        foreach my $key ( keys %$data ) {
+                            my $unescaped = $key;
+                            $unescaped =~ s/^public:://;
+
+                            my $value = $data->{$key};
+                            $hash{$unescaped} = ref($value) ? $expander->($value) : $value;
+                        }
+
+                        return \%hash;
+                    }
+                } elsif ( ref $data eq 'ARRAY' ) {
+                    return [ map { ref($_) ? $expander->($_) : $_ } @$data ];
+                }
+            }
+
+            return $data;
+        }
     } else {
-        if ( exists $hash->{$self->class_field}
-          or exists $hash->{$self->id_field}
-          or exists $hash->{$self->tied_field}
-        ) {
-            return $self->expand_jspon($hash);
-        } else {
-            return $self->SUPER::visit_hash($hash);
+        $expander = sub {
+            my ( $data, @attrs ) = @_;
+
+            if ( my $ref = ref($data) ) {
+                if ( $ref eq 'HASH' ) {
+
+                    if ( my $id = $data->{$ref_field} ) {
+                        return KiokuDB::Reference->new( id => $id, ( $data->{weak} ? ( is_weak => 1 ) : () ) );
+                    } elsif ( exists $data->{$class_field}
+                        or exists $data->{$id_field}
+                        or exists $data->{$tied_field}
+                    ) {
+                        my %copy = %$data;
+
+                        if ( exists $copy{$class_field} ) {
+                            # check the class more thoroughly here ...
+                            my ($class, $version, $authority) = (split '-' => delete $copy{$class_field});
+                            push @attrs, class => $class;
+
+                            push @attrs, class_meta => delete $copy{$class_meta_field} if exists $copy{$class_meta_field};
+                        }
+
+                        push @attrs, id      => delete $copy{$id_field}              if exists $copy{$id_field};
+                        push @attrs, tied    => delete $copy{$tied_field}            if exists $copy{$tied_field};
+                        push @attrs, root    => delete $copy{$root_field}    ? 1 : 0 if exists $copy{$root_field};
+                        push @attrs, deleted => delete $copy{$deleted_field} ? 1 : 0 if exists $copy{$deleted_field};
+
+                        push @attrs, data => $expander->( \%copy );
+
+                        return KiokuDB::Entry->new( @attrs );
+                    } else {
+                        my %hash;
+
+                        foreach my $key ( keys %$data ) {
+                            my $unescaped = $key;
+                            $unescaped =~ s/^public:://;
+
+                            my $value = $data->{$key};
+                            $hash{$unescaped} = ref($value) ? $expander->($value) : $value;
+                        }
+
+                        return \%hash;
+                    }
+                } elsif ( ref $data eq 'ARRAY' ) {
+                    return [ map { ref($_) ? $expander->($_) : $_ } @$data ];
+                }
+            }
+
+            return $data;
         }
     }
+
+    my $copy = $expander;
+    weaken($expander);
+
+    return $copy;
 }
 
 __PACKAGE__->meta->make_immutable;
