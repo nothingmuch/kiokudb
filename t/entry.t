@@ -47,14 +47,14 @@ my $l = KiokuDB::LiveObjects->new;
                 data => {},
             ),
         ),
-        KiokuDB::Entry->new(
-            id   => "bondage",
-            tied => "HASH",
-            data => KiokuDB::Entry->new(
-                class => "Foo",
-                data => {},
-            ),
-        ),
+        #KiokuDB::Entry->new(
+        #    id   => "bondage",
+        #    tied => "HASH",
+        #    data => KiokuDB::Entry->new(
+        #        class => "Foo",
+        #        data => {},
+        #    ),
+        #),
         KiokuDB::Entry->new(
             id => "bar",
             data => [ 1 .. 3 ],

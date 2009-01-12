@@ -379,7 +379,7 @@ sub visit_tied {
             id     => $id,
             object => $ref,
             data   => $tie,
-            tied   => reftype($ref),
+            tied   => substr(reftype($ref), 0, 1),
         );
 
         return $self->make_ref( $id => $_[2] );
@@ -387,7 +387,7 @@ sub visit_tied {
         return $self->make_entry(
             object => $ref,
             data   => $tie,
-            tied   => reftype($ref),
+            tied   => substr(reftype($ref), 0, 1),
         );
     }
 }

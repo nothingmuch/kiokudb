@@ -5,8 +5,6 @@ use Moose;
 
 use Moose::Util::TypeConstraints;
 
-use MooseX::Types -declare => ['Tied'];
-
 use namespace::clean -except => 'meta';
 
 has id => (
@@ -61,21 +59,14 @@ has class_meta => (
 
 my @tied = ( map { substr($_, 0, 1) } qw(HASH SCALAR ARRAY GLOB) );
 
-enum Tied, @tied;
-
-coerce Tied, from Str => via { substr($_, 0, 1) };
-
 has tied => (
-    isa => Tied,
-    is  => "ro",
-    coerce    => 1,
+    is => "ro",
     writer    => "_tied",
     predicate => "has_tied",
 );
 
 has backend_data => (
-    isa => "Ref",
-    is  => "rw",
+    is => "rw",
     predicate => "has_backend_data",
     clearer   => "clear_backend_data",
 );
@@ -87,8 +78,7 @@ has prev => (
 );
 
 has object => (
-    isa => "Any",
-    is  => "rw",
+    is => "rw",
     weak_ref => 1,
     predicate => "has_object",
 );

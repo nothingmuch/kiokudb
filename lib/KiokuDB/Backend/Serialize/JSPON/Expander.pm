@@ -56,10 +56,10 @@ sub _build__expander {
                             push @attrs, class_meta => $data->{$class_meta_field} if exists $data->{$class_meta_field};
                         }
 
-                        push @attrs, id      => $data->{$id_field}              if exists $data->{$id_field};
-                        push @attrs, tied    => $data->{$tied_field}            if exists $data->{$tied_field};
-                        push @attrs, root    => $data->{$root_field}    ? 1 : 0 if exists $data->{$root_field};
-                        push @attrs, deleted => $data->{$deleted_field} ? 1 : 0 if exists $data->{$deleted_field};
+                        push @attrs, id      => $data->{$id_field}                 if exists $data->{$id_field};
+                        push @attrs, tied    => substr($data->{$tied_field}, 0, 1) if exists $data->{$tied_field};
+                        push @attrs, root    => $data->{$root_field}    ? 1 : 0    if exists $data->{$root_field};
+                        push @attrs, deleted => $data->{$deleted_field} ? 1 : 0    if exists $data->{$deleted_field};
 
                         push @attrs, data => $expander->( $data->{$data_field} );
 
