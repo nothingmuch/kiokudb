@@ -3,6 +3,11 @@
 package KiokuDB::Backend::Role::Scan;
 use Moose::Role;
 
+sub entries_to_ids {
+    my $stream = shift;
+    $stream->filter(sub {[ map { $_->id } @$_ ]});
+}
+
 use namespace::clean -except => 'meta';
 
 requires "all_entries";
@@ -15,6 +20,21 @@ sub root_entries {
 sub child_entries {
     my $self = shift;
     return $self->all_entries->filter(sub {[ grep { not $_->root } @$_ ]});
+}
+
+sub all_entry_ids {
+    my $self = shift;
+    entries_to_ids($self->all_entries);
+}
+
+sub root_entry_ids {
+    my $self = shift;
+    entries_to_ids($self->root_entries);
+}
+
+sub child_entry_ids {
+    my $self = shift;
+    entries_to_ids($self->child_entries);
 }
 
 __PACKAGE__

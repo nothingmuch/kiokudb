@@ -37,10 +37,19 @@ sub verify {
 
         does_ok( $root, "Data::Stream::Bulk" );
 
+        my @objs = $root->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
         is_deeply(
-            [ sort map { $_->name } $root->all ],
+            [ sort map { $_->name } @objs ],
             [ sort qw(foo bar gorch) ],
             "root set",
+        );
+
+        is_deeply(
+            [ sort $self->backend->root_entry_ids->all ],
+            [ sort @ids ],
         );
     });
 
@@ -50,10 +59,19 @@ sub verify {
         does_ok( $child_entries, "Data::Stream::Bulk" );
         my $children = $child_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
 
+        my @objs = $children->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
         is_deeply(
-            [ sort map { $_->name } $children->all ],
+            [ sort map { $_->name } @objs ],
             [ sort qw(quxx) ],
             "child entries",
+        );
+
+        is_deeply(
+            [ sort $self->backend->child_entry_ids->all ],
+            [ sort @ids ],
         );
     });
 
@@ -64,10 +82,19 @@ sub verify {
 
         my $all = $all_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
 
+        my @objs = $all->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
         is_deeply(
-            [ sort map { $_->name } $all->all ],
+            [ sort map { $_->name } @objs ],
             [ sort qw(foo bar gorch quxx) ],
             "all entries",
+        );
+
+        is_deeply(
+            [ sort $self->backend->all_entry_ids->all ],
+            [ sort @ids ],
         );
     });
 }
