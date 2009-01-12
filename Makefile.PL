@@ -70,5 +70,8 @@ WriteMakefile(
         'Storable' => 0,
 
         'IO' => 1.2301,
+
+        # used in command line tools
+        'Proc::InvokeEditor' => 1,
     },
 );
