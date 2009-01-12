@@ -1,3 +1,20 @@
+0.20
+    - Refactored KiokuDB::TypeMap::Composite out of KiokuDB::TypeMap::Default
+    - Added KiokuDB::TypeMap::Entry::StorableHook, which allows reusing of
+      existing STORABLE_freeze hooks
+    - Fixed handling of 'root' flag (was not being properly preserved)
+    - Added 'is_root', 'set_root', 'unset_root'
+    - Added a 'deep_update' method
+    - Now depends on YAML::XS and JSON::XS (not optional deps anymore)
+    - Various improvements to command line roles
+    - Added a new GC command and a naive mark & sweep collector
+    - Added a new Edit command using Proc::InvokeEditor to do a dump and a load
+      in a single transaction
+    - Added KiokuDB::Role::Intrinsic for objects which want to be collapsed
+      intrinsically
+    - Added KiokuDB::Role::Immutable for objects which never change after being inserted
+    - Added KiokUDB::Role::ID::Content for content addressible objects
+
 0.19
     - Introduce KiokuDB::Stream::Objects, a Data::Stream::Bulk for objects that
       automatically creates a new scope for each block. This makes it much
