@@ -115,7 +115,10 @@ sub compile_collapser {
                 }
             }
 
-            return \%collapsed;
+            return $self->make_entry(
+                %args,
+                data => \%collapsed,
+            );
         }, $obj, %attrs, @args);
     }
 }

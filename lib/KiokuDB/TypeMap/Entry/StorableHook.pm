@@ -30,6 +30,8 @@ sub compile_mappings {
 
         my ( $str, @refs ) = $object->STORABLE_freeze(0);
 
+        my $data;
+
         if ( @refs ) {
             croak sprintf "Freeze cannot return references if %s class is using STORABLE_attach", $class if $attach;
 
@@ -45,19 +47,23 @@ sub compile_mappings {
                 $ref = $ref->id; # don't save a bunch of Reference objects when all we need is the ID
             }
 
-            return [ @type, $str, @collapsed ];
+            $data = [ @type, $str, @collapsed ],
         } else {
             unless ( $attach ) {
                 if ( @type == 1 ) {
-                    return ( $type[0] . $str );
+                    $data = ( $type[0] . $str );
                 } else {
-                    return [ @type, $str ];
+                    $data = [ @type, $str ];
                 }
             } else {
-                # return $str
-                return $str;
+                $data = $str;
             }
         }
+
+        return $self->make_entry(
+            %args,
+            data => $data,
+        );
     };
 
     unless ( $attach ) {

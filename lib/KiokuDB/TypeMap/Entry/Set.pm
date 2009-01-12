@@ -62,7 +62,11 @@ sub _compile_collapse {
         # if it's deferred we just return the IDs
         return sub {
             my ( $collapser, %args ) = @_;
-            return [ $args{object}->_objects->members ];
+
+            return $collapser->make_entry(
+                %args,
+                data => [ $args{object}->_objects->members ],
+            );
         };
     } else {
         # otherwise we collapse the objects recursively
@@ -77,7 +81,10 @@ sub _compile_collapse {
                 $collapser->_first_class->{$item} = undef; # mark it first class so it doesn't get compacted
             }
 
-            return \@inner;
+            return $collapser->make_entry(
+                %args,
+                data => \@inner,
+            );
         };
     }
 }

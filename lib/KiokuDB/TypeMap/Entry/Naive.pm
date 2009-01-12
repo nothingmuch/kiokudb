@@ -18,7 +18,10 @@ sub compile_mappings {
 
             my $object = $args{object};
 
-            return $self->visit_ref_data($object);
+            return $self->make_entry(
+                %args,
+                data => $self->visit_ref_data($object),
+            );
         },
         sub {
             my ( $self, $entry ) = @_;

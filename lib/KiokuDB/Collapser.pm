@@ -415,12 +415,7 @@ sub collapse_first_class {
         @entry_args,
     );
 
-    my $data = $self->$collapse(@args);
-
-    $self->make_entry(
-        @args,
-        data => $data,
-    );
+    $self->$collapse(@args);
 
     # we pass $_[1], an alias, so that isweak works
     return $self->make_ref( $id => $_[1] );
@@ -439,10 +434,7 @@ sub collapse_intrinsic {
         @entry_args,
     );
 
-    return $self->make_entry(
-        @args,
-        data  => $self->$collapse(@args),
-    );
+    $self->$collapse(@args),
 }
 
 sub _object_id {

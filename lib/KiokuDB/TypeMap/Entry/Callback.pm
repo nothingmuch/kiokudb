@@ -29,11 +29,18 @@ sub compile_mappings {
 
         my @data = $args{object}->$collapse_object;
 
+        my $data;
+
         if ( @data == 1 and not ref $data[0] ) {
-            return $data[0];
+            $data = $data[0];
         } else {
-            return [ map { $self->visit($_) } @data ];
+            $data = [ map { $self->visit($_) } @data ];
         }
+
+        return $self->make_entry(
+            %args,
+            data => $data,
+        );
     };
 
     my $expand_object = $self->expand;

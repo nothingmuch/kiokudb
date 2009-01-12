@@ -30,7 +30,10 @@ sub compile {
                 $collapser->collapse_first_class(
                     sub {
                         my ( $collapser, %args ) = @_;
-                        return $args{object};
+                        return $collapser->make_entry(
+                            %args,
+                            data => $args{object},
+                        );
                     },
                     @args,
                 );
