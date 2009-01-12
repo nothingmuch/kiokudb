@@ -22,6 +22,8 @@ with 'KiokuDB::Role::Scan' => { result_class => "KiokuDB::GC::Naive::Sweep::Resu
     __PACKAGE__->meta->make_immutable;
 }
 
+has '+scan_ids' => ( default => 1 );
+
 has mark_results => (
     isa => "KiokuDB::GC::Naive::Mark::Results",
     is  => "ro",
@@ -32,13 +34,11 @@ has mark_results => (
 sub process_block {
     my ( $self, %args ) = @_;
 
-    my ( $block, $res ) = @args{qw(block results)};
+    my ( $ids, $res ) = @args{qw(block results)};
 
     my $seen = $self->seen;
 
-    my @ids = map { $_->id } @$block;
-
-    my @garbage = grep { not $seen->includes($_) } @ids;
+    my @garbage = grep { not $seen->includes($_) } @$ids;
 
     $res->garbage->insert(@garbage);
 }
