@@ -120,12 +120,22 @@ sub _build__references {
     } else {
         my @refs;
 
-        # overkill
-        use Data::Visitor::Callback;
-        Data::Visitor::Callback->new(
-            'KiokuDB::Reference' => sub { push @refs, $_ },
-            'KiokuDB::Entry'     => sub { push @refs, $_->references },
-        )->visit($self->data);
+        my @queue = $self->data;
+
+        while ( @queue ) {
+            my $next = pop @queue;
+
+            my $ref = ref $next;
+            if ( $ref eq 'HASH' ) {
+                push @queue, grep { ref } values %$next;
+            } elsif ( $ref eq 'ARRAY' ) {
+                push @queue, grep { ref } @$next;
+            } elsif ( $ref eq 'KiokuDB::Entry' ) {
+                push @refs, $next->references;
+            } elsif ( $ref eq 'KiokuDB::Reference' ) {
+                push @refs, $next;
+            }
+        }
 
         return \@refs;
     }
@@ -150,16 +160,7 @@ sub _build__referenced_ids {
     if ( $self->class eq 'KiokuDB::Set::Stored' ) { # FIXME should the typemap somehow handle this?
         return $self->data;
     } else {
-        my @refs;
-
-        # overkill
-        use Data::Visitor::Callback;
-        Data::Visitor::Callback->new(
-            'KiokuDB::Reference' => sub { push @refs, $_->id },
-            'KiokuDB::Entry'     => sub { push @refs, $_->referenced_ids },
-        )->visit($self->data);
-
-        return \@refs;
+        return [ map { $_->id } $self->references ];
     }
 }
 
