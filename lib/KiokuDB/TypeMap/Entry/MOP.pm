@@ -88,15 +88,21 @@ sub compile_collapser {
         );
     }
 
+    my $immutable = $meta->does_role("KiokuDB::Role::Immutable");
+
     return sub {
         my ( $self, $obj, @args ) = @_;
 
         $self->$method(sub {
             my ( $self, %args ) = @_;
 
-            my %collapsed;
-
             my $object = $args{object};
+
+            if ( $immutable and my $prev = $self->live_objects->object_to_entry($object) ){
+                return $self->make_skip_entry( %args, prev => $prev );
+            }
+
+            my %collapsed;
 
             attr: foreach my $attr ( @attrs ) {
                 my $name = $attr->name;

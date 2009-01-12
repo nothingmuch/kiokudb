@@ -398,9 +398,11 @@ sub store_objects {
         $self->_imply_root(@{$entries}{@ids});
     }
 
-    $self->backend->insert(values %$entries);
+    my @insert = grep { ref($_) ne 'KiokuDB::Entry::Skip' } values %$entries;
 
-    $self->live_objects->update_entries(values %$entries);
+    $self->backend->insert(@insert);
+
+    $self->live_objects->update_entries(@insert);
 
     if ( @$objects == 1 ) {
         return $ids[0];

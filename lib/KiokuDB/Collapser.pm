@@ -10,6 +10,7 @@ use Carp qw(croak);
 use Scalar::Util qw(isweak refaddr reftype);
 
 use KiokuDB::Entry;
+use KiokuDB::Entry::Skip;
 use KiokuDB::Reference;
 
 use Data::Visitor 0.18;
@@ -236,6 +237,21 @@ sub make_entry {
         # intrinsic
         return KiokuDB::Entry->new(%args);
     }
+}
+
+sub make_skip_entry {
+    my ( $self, %args ) = @_;
+
+    my $object = $args{object};
+
+    my $prev = $args{prev} || $self->live_objects->object_to_entry($object) or croak "previous entry is required for skipped entries";
+
+    my $id = $prev->id or croak "skip entries must have an ID";
+
+    $self->_entries->{$id} = KiokuDB::Entry::Skip->new(
+        prev   => $prev,
+        object => $object,
+    );
 }
 
 sub make_ref {

@@ -54,6 +54,13 @@ use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute:
     with qw(KiokuDB::Role::Intrinsic);
 
     has name => ( is => "rw" );
+
+    package Once;
+    use Moose;
+
+    with qw(KiokuDB::Role::Immutable);
+
+    has name => ( is => "rw" );
 }
 
 my $obj = Foo->new( foo => "HALLO" );
@@ -71,6 +78,8 @@ $with_anon->optional("very much");
 my $anon_parent = Foo->new( bar => $with_anon );
 
 my $obj_with_value = Foo->new( foo => Value->new( name => "fairly" ) );
+
+my $once = Once->new( name => "blah" );
 
 foreach my $intrinsic ( 1, 0 ) {
     my $foo_entry = KiokuDB::TypeMap::Entry::MOP->new();
@@ -265,5 +274,37 @@ foreach my $intrinsic ( 1, 0 ) {
 
         isa_ok( $expanded, "Foo", "expanded object" );
         isa_ok( $expanded->foo, "Value", "inner obeject" );
+    }
+
+    {
+        my $s = $v->live_objects->new_scope;
+
+        my ( $entries, $id ) = $v->collapse( objects => [ $once ] );
+
+        is( scalar(keys %$entries), 1, "one entry" );
+
+        my $entry = $entries->{$id};
+
+        is( ref($entry), "KiokuDB::Entry", "normal entry" );
+
+        isnt( refaddr($entry->data), refaddr($once), "refaddr doesn't equal" );
+        ok( !blessed($entry->data), "entry data is not blessed" );
+        is( reftype($entry->data), reftype($once), "reftype" );
+
+        is_deeply(
+            $entry->data,
+            { %$once },
+            "is_deeply"
+        );
+
+        $v->live_objects->update_entries( values %$entries );
+
+        my ( $new_entries, $new_id ) = $v->collapse( objects => [ $once ] );
+
+        is( $new_id, $id, "ID is the same" );
+
+        my $skip = $new_entries->{$id};
+
+        is( ref($skip), "KiokuDB::Entry::Skip", "skip entry on second insert" );
     }
 }
