@@ -33,13 +33,17 @@ augment run => sub {
     );
 
     if ( $l->missing->size == 0 ) {
-        $self->v("No missing entries, everything is OK\n");
+        $self->v("no missing entries, everything is OK\n");
 
-        #my $purge = $l->unreferenced->difference($l->root);
+        if ( $l->root->size ) {
+            my $purge = $l->unreferenced->difference($l->root);
 
-        #if ( my $count = $purge->size ) {
-        #    $self->v( "$count unreferenced non root objects\n" );
-        #}
+            if ( my $count = $purge->size ) {
+                $self->v( "found $count unreferenced, non root objects\n" );
+            }
+        } else {
+            $self->v("WARNING: no root entries found\n");
+        }
     } else {
         if ( $self->print ) {
             local $, = local $\ = "\n";
