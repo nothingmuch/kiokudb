@@ -7,84 +7,43 @@ use KiokuDB::LinkChecker::Results;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Cmd::Verbosity);
+with 'KiokuDB::Role::Scan' => { result_class => "KiokuDB::LinkChecker::Results" };
 
-has backend => (
-    does => "KiokuDB::Backend",
-    is   => "ro",
-    required => 1,
-);
+sub process_block {
+    my ( $self, %args ) = @_;
 
-has entries => (
-    does => "Data::Stream::Bulk",
-    is   => "ro",
-    lazy_build => 1,
-);
-
-sub _build_entries {
-    shift->backend->all_entries;
-}
-
-has [qw(block_callback entry_callback)] => (
-    isa => "CodeRef|Str",
-    is  => "ro",
-);
-
-has results => (
-    isa => "KiokuDB::LinkChecker::Results",
-    handles => qr/.*/,
-    lazy_build => 1,
-);
-
-sub _build_results {
-    my $self = shift;
-
-    my $res = KiokuDB::LinkChecker::Results->new;
+    my ( $block, $res ) = @args{qw(block results)};
 
     my ( $seen, $root, $referenced, $unreferenced, $missing, $broken ) = map { $res->$_ } qw(seen root referenced unreferenced missing broken);
 
-    my $i = my $j = 0;
+    my $backend = $self->backend;
 
-    while ( my $next = $self->entries->next ) {
-        $i += @$next;
-        $j += @$next;
+    foreach my $entry ( @$block ) {
+        my $id = $entry->id;
 
-        if ( $j > 13 ) { # luv primes
-            $j = 0;
-            $self->v("\rchecking... $i");
+        $seen->insert($id);
+        $root->insert($id) if $entry->root;
+
+        unless ( $referenced->includes($id) ) {
+            $unreferenced->insert($id);
         }
 
-        foreach my $entry ( @$next ) {
-            my $id = $entry->id;
+        my @ids = $entry->referenced_ids;
 
-            $seen->insert($id);
-            $root->insert($id) if $entry->root;
+        my @new = grep { !$referenced->includes($_) && !$seen->includes($_) } @ids;
 
-            unless ( $referenced->includes($id) ) {
-                $unreferenced->insert($id);
-            }
+        my %exists;
+        @exists{@new} = $backend->exists(@new);
 
-            my @ids = $entry->referenced_ids;
-
-            my @new = grep { !$referenced->includes($_) && !$seen->includes($_) } @ids;
-
-            my %exists;
-            @exists{@new} = $self->backend->exists(@new);
-
-            if ( my @missing = grep { not $exists{$_} } @new ) {
-                $self->v("\rfound broken entry: " . $entry->id . " (references nonexisting IDs @missing)\n");
-                $missing->insert(@missing);
-                $broken->insert($entry->id);
-            }
-
-            $referenced->insert(@ids);
-            $unreferenced->remove(@ids);
+        if ( my @missing = grep { not $exists{$_} } @new ) {
+            $self->v("\rfound broken entry: " . $entry->id . " (references nonexisting IDs @missing)\n");
+            $missing->insert(@missing);
+            $broken->insert($entry->id);
         }
+
+        $referenced->insert(@ids);
+        $unreferenced->remove(@ids);
     }
-
-    $self->v("\rchecked $i entries      \n");
-
-    return $res;
 }
 
 __PACKAGE__->meta->make_immutable;
