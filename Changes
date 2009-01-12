@@ -14,6 +14,7 @@
       intrinsically
     - Added KiokuDB::Role::Immutable for objects which never change after being inserted
     - Added KiokUDB::Role::ID::Content for content addressible objects
+    - Test suite cleanups
 
 0.19
     - Introduce KiokuDB::Stream::Objects, a Data::Stream::Bulk for objects that
