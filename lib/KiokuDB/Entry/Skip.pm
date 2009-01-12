@@ -8,13 +8,13 @@ use namespace::clean -except => 'meta';
 has prev => (
     isa => "KiokuDB::Entry",
     is  => "ro",
-    required => 1,
     handles => [qw(id)],
 );
 
 has root => (
     isa => "Bool",
     is  => "rw",
+    predicate => "has_root",
 );
 
 has object => (

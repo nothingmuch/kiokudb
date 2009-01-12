@@ -250,12 +250,17 @@ sub make_skip_entry {
 
     my $object = $args{object};
 
-    my $prev = $args{prev} || $self->live_objects->object_to_entry($object) or croak "previous entry is required for skipped entries";
+    my $prev = $args{prev} || $self->live_objects->object_to_entry($object);
 
-    my $id = $prev->id or croak "skip entries must have an ID";
+    my $id = $args{id};
+
+    unless ( $id ) {
+        croak "skip entries must have an ID" unless $prev;
+        $id = $prev->id;
+    }
 
     $self->_entries->{$id} = KiokuDB::Entry::Skip->new(
-        prev   => $prev,
+        ( $prev ? ( prev   => $prev ) : () ),
         object => $object,
     );
 }

@@ -89,6 +89,7 @@ sub compile_collapser {
     }
 
     my $immutable = $meta->does_role("KiokuDB::Role::Immutable");
+    my $content_id = $meta->does_role("KiokuDB::Role::ID::Content");
 
     return sub {
         my ( $self, $obj, @args ) = @_;
@@ -98,8 +99,14 @@ sub compile_collapser {
 
             my $object = $args{object};
 
-            if ( $immutable and my $prev = $self->live_objects->object_to_entry($object) ){
-                return $self->make_skip_entry( %args, prev => $prev );
+            if ( $immutable ) {
+                if ( my $prev = $self->live_objects->object_to_entry($object) ){
+                    return $self->make_skip_entry( %args, prev => $prev );
+                } elsif ( $content_id ) {
+                    if ( ($self->backend->exists($args{id}))[0] ) { # exists works in list context
+                        return $self->make_skip_entry(%args);
+                    }
+                }
             }
 
             my %collapsed;
