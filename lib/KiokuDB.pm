@@ -131,6 +131,7 @@ sub _build_collapser {
     my $self = shift;
 
     KiokuDB::Collapser->new(
+        backend => $self->backend,
         live_objects => $self->live_objects,
         typemap_resolver => $self->typemap_resolver,
     );

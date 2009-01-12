@@ -50,10 +50,12 @@ SKIP: {
 
     require KiokuDB::Collapser;
     require KiokuDB::LiveObjects;
+    require KiokuDB::Backend::Hash;
 
     my $l = KiokuDB::LiveObjects->new;
 
     my $c = KiokuDB::Collapser->new(
+        backend => KiokuDB::Backend::Hash->new,
         live_objects => $l,
         typemap_resolver => $tr,
     );

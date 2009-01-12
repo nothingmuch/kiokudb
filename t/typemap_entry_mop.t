@@ -95,6 +95,7 @@ foreach my $intrinsic ( 1, 0 ) {
     );
 
     my $v = KiokuDB::Collapser->new(
+        backend => KiokuDB::Backend::Hash->new,
         live_objects => KiokuDB::LiveObjects->new,
         typemap_resolver => $tr,
     );

@@ -31,6 +31,12 @@ has live_objects => (
     required => 1,
 );
 
+has backend => (
+    does => "KiokuDB::Backend",
+    is  => "ro",
+    required => 1,
+);
+
 has typemap_resolver => (
     isa => "KiokuDB::TypeMap::Resolver",
     is  => "ro",
