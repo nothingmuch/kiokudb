@@ -10,6 +10,8 @@ with qw(
     KiokuDB::Backend::Serialize::JSON
 );
 
+sub file_extension { "json" }
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

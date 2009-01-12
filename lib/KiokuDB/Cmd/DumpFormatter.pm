@@ -10,10 +10,12 @@ use KiokuDB::Serializer;
 use namespace::clean -except => 'meta';
 
 has format => (
+    traits => [qw(Getopt)],
+    isa => "Str",
     is  => "ro",
     default => "yaml",
     cmd_aliases => "f",
-    documentation => "dump format ('yaml', 'storable', etc)"
+    documentation => "dump format ('yaml', 'json', 'storable', etc)"
 );
 
 has serializer => (
@@ -24,10 +26,9 @@ has serializer => (
     lazy_build => 1,
 );
 
-
 sub _build_serializer {
     my $self = shift;
-    $self->format;
+    { format => $self->format, pretty => 1 };
 }
 
 __PACKAGE__

@@ -3,6 +3,8 @@
 package KiokuDB::Serializer;
 use Moose::Role;
 
+use Carp qw(croak);
+
 use Moose::Util::TypeConstraints;
 
 use namespace::clean -except => 'meta';
@@ -20,13 +22,13 @@ my %types = (
 
 coerce( __PACKAGE__,
     from Str => via {
-        my $class = $types{lc($_)};
+        my $class = $types{lc($_)} or croak "unknown format: $_";;
         Class::MOP::load_class($class);
         $class->new;
     },
     from HashRef => via {
         my %args = %$_;
-        my $class = $types{lc(delete $args{format})};
+        my $class = $types{lc(delete $args{format})} or croak "unknown format: $args{format}";
         Class::MOP::load_class($class);
         $class->new(%args);
     },

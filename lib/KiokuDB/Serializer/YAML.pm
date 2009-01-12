@@ -10,6 +10,7 @@ with qw(
     KiokuDB::Backend::Serialize::YAML
 );
 
+sub file_extension { "yml" }
 
 __PACKAGE__->meta->make_immutable;
 
