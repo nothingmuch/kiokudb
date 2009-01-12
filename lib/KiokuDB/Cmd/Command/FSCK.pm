@@ -3,8 +3,6 @@
 package KiokuDB::Cmd::Command::FSCK;
 use Moose;
 
-use KiokuDB::LinkChecker;
-
 use namespace::clean -except => 'meta';
 
 extends qw(KiokuDB::Cmd::Base);
@@ -27,6 +25,8 @@ has print => (
 
 augment run => sub {
     my $self = shift;
+
+    require KiokuDB::LinkChecker;
 
     my $l = KiokuDB::LinkChecker->new(
         backend => $self->backend,
