@@ -77,6 +77,11 @@ sub all_entries {
     return bulk(map { $self->deserialize($_) } values %{ $self->storage });
 }
 
+sub all_entry_ids {
+    my $self = shift;
+    return bulk(keys %{ $self->storage });
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
