@@ -6,6 +6,7 @@ use Moose::Role;
 use namespace::clean -except => 'meta';
 
 has dsn => (
+    traits => [qw(Getopt)],
     isa => "Str",
     is  => "ro",
     cmd_aliases => "D",

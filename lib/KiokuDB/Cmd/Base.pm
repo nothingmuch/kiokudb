@@ -23,6 +23,7 @@ has '+usage' => ( required => 0 );
 has '+app'   => ( required => 0 );
 
 has args => (
+    traits => [qw(NoGetopt)],
     isa => "ArrayRef",
     is  => "ro",
     writer => "_args",

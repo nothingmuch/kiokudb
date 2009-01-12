@@ -10,6 +10,7 @@ use namespace::clean -except => 'meta';
 excludes qw(KiokuDB::Cmd::OutputHandle);
 
 has file => (
+    traits => [qw(Getopt)],
     isa => File,
     is  => "ro",
     coerce => 1,

@@ -11,10 +11,12 @@ use namespace::clean -except => 'meta';
 #requires 'backend';
 
 has ids => (
+    traits => [qw(Getopt)],
     does => "ArrayRef[Str]",
     is   => "ro",
     predicate => "has_ids",
-    documentation => "dump only these entries (can be specified multiple times)",
+    cmd_aliases => "i",
+    documentation => "specify entries (can be used multiple times)",
 );
 
 has entries => (

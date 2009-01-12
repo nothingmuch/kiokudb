@@ -3,9 +3,12 @@
 package KiokuDB::Cmd::Verbosity;
 use Moose::Role;
 
+use MooseX::Getopt;
+
 use namespace::clean -except => 'meta';
 
 has verbose => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     cmd_aliases => "v",

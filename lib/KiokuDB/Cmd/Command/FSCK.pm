@@ -17,9 +17,11 @@ with qw(
 has '+verbose' => ( default => 1 );
 
 has print => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     default => 1,
+    cmd_aliases => "p",
     documentation => "print broken entries to STDOUT at end",
 );
 

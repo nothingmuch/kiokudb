@@ -11,6 +11,7 @@ use namespace::clean -except => 'meta';
 excludes qw(KiokuDB::Cmd::InputHandle);
 
 has file => (
+    traits => [qw(Getopt)],
     isa => File,
     is  => "ro",
     coerce => 1,
@@ -19,6 +20,7 @@ has file => (
 );
 
 has force => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     cmd_aliases => "F",
@@ -26,6 +28,7 @@ has force => (
 );
 
 has backup => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     cmd_aliases => "b",
@@ -33,6 +36,7 @@ has backup => (
 );
 
 has backup_ext => (
+    traits => [qw(Getopt)],
     isa => "Str",
     is  => "ro",
     default => ".bak",
@@ -107,7 +111,7 @@ attribute. When C<backup> is enabled, allows overwriting of the backup file.
 
 =item backup
 
-Whether to backup before overwriting. A L<Moose::Getopt> enabled attribute.
+Whether to backup before overwriting. A L<MooseX::Getopt> enabled attribute.
 
 =item backup_ext
 
