@@ -14,6 +14,15 @@ with qw(
 
 requires "v";
 
+has dry_run => (
+    traits => [qw(Getopt)],
+    isa => "Bool",
+    is  => "ro",
+    cmd_flag => "dry-run",
+    cmd_aliases => "n",
+    documentation => "don't modify the database",
+);
+
 sub _build_backend {
     my $self = shift;
 
@@ -22,11 +31,12 @@ sub _build_backend {
     $self->v("Connecting to DSN $dsn...");
 
     require KiokuDB::Util;
-    my $b = KiokuDB::Util::dsn_to_backend( $dsn );
+
+    my $b = KiokuDB::Util::dsn_to_backend( $dsn, $self->dry_run ? ( readonly => 1 ) : () );
 
     $self->v(" $b\n");
 
-    $self->try_txn_begin($b);
+    $self->try_txn_begin($b) unless $self->dry_run;
 
     $b;
 }
