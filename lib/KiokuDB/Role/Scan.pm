@@ -30,6 +30,11 @@ role {
         default => 1,
     );
 
+    has scan_ids => (
+        isa => "Bool",
+        is  => "ro",
+    );
+
     has entries => (
         does => "Data::Stream::Bulk",
         is   => "ro",
@@ -41,7 +46,12 @@ role {
 
         my $backend = $self->backend;
 
-        return $self->scan_all ? $backend->all_entries : $backend->root_entries;
+        my $set = $self->scan_all ? "all" : "root";
+        my $type = $self->scan_ids ? "entry_ids" : "entries";
+
+        my $method = join("_", $set, $type);
+
+        $backend->$method;
     }
 
     has [qw(block_callback entry_callback)] => (
