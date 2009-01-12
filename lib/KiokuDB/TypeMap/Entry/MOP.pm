@@ -15,7 +15,7 @@ use namespace::clean -except => 'meta';
 has intrinsic => (
     isa => "Bool",
     is  => "ro",
-    default => 0,
+    predicate => "has_intrinsic",
 );
 
 # FIXME collapser and expaner should both be methods in Class::MOP::Class,
@@ -47,7 +47,15 @@ sub compile_collapser {
 
     my $meta_instance = $meta->get_meta_instance;
 
-    my $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
+    my $method;
+
+    if ( $self->has_intrinsic ) {
+        $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
+    } elsif ( $meta->does_role("KiokuDB::Role::Intrinsic") ) {
+        $method = "collapse_intrinsic";
+    } else {
+        $method = "collapse_first_class";
+    }
 
     my %attrs;
 
