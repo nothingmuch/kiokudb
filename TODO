@@ -5,10 +5,6 @@
         * extra libs to load
         * GIN extractors
 
-* Immutable role (content addressible objects)
-    * overwrite on insert is OK
-    * object is never updated
-
 * Backends:
     * BDB/DBI
         * Set::Object/Hash sharding (each key/member is an entry in the BDB
@@ -50,9 +46,6 @@
 * typemap
     * DB resident metaclass? like a smalltalk image
 	* class version upgrade path as part of class field
-
-* tools
-    * generic garbage collector? 'root' isn't really that accurate.. think of a better way
 
 * query
     * http://www.ietf.org/rfc/rfc1960.txt
