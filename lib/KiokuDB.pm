@@ -50,12 +50,17 @@ sub configure {
 has typemap => (
     does => "KiokuDB::Role::TypeMap",
     is   => "ro",
-    lazy_build => 1,
 );
 
-sub _build_typemap {
-    KiokuDB::TypeMap->new;
-}
+has allow_class_builders => (
+    isa => "Bool|HashRef",
+    is  => "ro",
+);
+
+has [qw(allow_classes allow_bases)] => (
+    isa => "ArrayRef[Str]",
+    is  => "ro",
+);
 
 has merged_typemap => (
     does => "KiokuDB::Role::TypeMap",
@@ -70,7 +75,7 @@ sub _find_default_typemap {
 
     if ( $b->can("default_typemap") ) {
         return $b->default_typemap;
-    } elsif( $b->can("serializer") and $b->serializer->can("default_typemap") ) {
+    } elsif ( $b->can("serializer") and $b->serializer->can("default_typemap") ) {
         return $b->serializer->default_typemap;
     }
 
@@ -80,15 +85,43 @@ sub _find_default_typemap {
 sub _build_merged_typemap {
     my $self = shift;
 
-    if ( my $default_typemap = $self->_find_default_typemap ) {
-        return KiokuDB::TypeMap::Shadow->new(
-            typemaps => [
-                $self->typemap,
-                $default_typemap,
-            ],
+    my @typemaps;
+
+    if ( my $typemap = $self->typemap ) {
+        push @typemaps, $typemap;
+    }
+
+    if ( my $classes = $self->allow_classes ) {
+        require KiokuDB::TypeMap::Entry::Naive;
+
+        push @typemaps, KiokuDB::TypeMap->new(
+            entries => { map { $_ => KiokuDB::TypeMap::Entry::Naive->new } @$classes },
         );
+    }
+
+    if ( my $classes = $self->allow_bases ) {
+        require KiokuDB::TypeMap::Entry::Naive;
+
+        push @typemaps, KiokuDB::TypeMap->new(
+            isa_entries => { map { $_ => KiokuDB::TypeMap::Entry::Naive->new } @$classes },
+        );
+    }
+
+    if ( my $opts = $self->allow_class_builders ) {
+        require KiokuDB::TypeMap::ClassBuilders;
+        push @typemaps, KiokuDB::TypeMap::ClassBuilders->new( ref $opts ? %$opts : () );
+    }
+
+    if ( my $default_typemap = $self->_find_default_typemap ) {
+        push @typemaps, $default_typemap;
+    }
+
+    if ( not @typemaps ) {
+        return KiokuDB::TypeMap->new;
+    } elsif ( @typemaps == 1 ) {
+        return $typemaps[0];
     } else {
-        return $self->typemap;
+        return KiokuDB::TypeMap::Shadow->new( typemaps => \@typemaps );
     }
 }
 
@@ -634,6 +667,27 @@ This is an instance L<KiokuDB::TypeMap>.
 
 The typemap contains entries which control how L<KiokuDB::Collapser> and
 L<KiokuDB::Linker> handle different types of objects.
+
+=item allow_classes
+
+An array references of extra classes to allow.
+
+Objects blessed into these classes will be collapsed using
+L<KiokuDB::TypeMap::Entry:Naive>.
+
+=item allow_bases
+
+An array references of extra base classes to allow.
+
+Objects derived from these classes will be collapsed using
+L<KiokuDB::TypeMap::Entry:Naive>.
+
+=item allow_class_builders
+
+If true adds L<KiokuDB::TypeMap::ClassBuilders> to the merged typemap.
+
+It's possible to provide a hash reference of options to give to
+L<KiokuDB::TypeMap::ClassBuilders/new>.
 
 =back
 
