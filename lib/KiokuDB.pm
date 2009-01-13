@@ -142,7 +142,6 @@ has backend => (
     is   => "ro",
     required => 1,
     coerce   => 1,
-    handles  => [qw(exists)],
 );
 
 has linker_queue => (
@@ -166,6 +165,14 @@ sub _build_linker {
         typemap_resolver => $self->typemap_resolver,
         queue => $self->linker_queue,
     );
+}
+
+sub exists {
+    my ( $self, @ids ) = @_;
+
+    my @res = $self->backend->exists(@ids);
+
+    return @ids == 1 ? $res[0] : @res;
 }
 
 sub lookup {
