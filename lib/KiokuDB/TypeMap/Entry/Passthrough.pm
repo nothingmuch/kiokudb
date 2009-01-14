@@ -62,7 +62,11 @@ serialized by the backend.
 
 =head1 SYNOPSIS
 
-    KiokuDB::TypeMap::Entry::Passthrough->new
+    KiokuDB::TypeMap->new(
+        entires => {
+            'Value::Object' => KiokuDB::TypeMap::Entry::Naive->new,
+        },
+    );
 
 =head1 DESCRIPTION
 

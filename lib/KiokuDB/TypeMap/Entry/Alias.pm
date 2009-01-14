@@ -25,9 +25,14 @@ KiokuDB::TypeMap::Entry::Alias - An alias in the typemap to another entry
 
 =head1 SYNOPSIS
 
-    KiokuDB::TypeMap::Entry::Alias->new(
-        to => "Some::Other::Class",
-    ),
+    my $typemap = KiokuDB::TypeMap->new(
+        entries => {
+            'Some::Class' => KiokuDB::TypeMap::Entry::Alias->new(
+                to => "Some::Other::Class",
+            ),
+            'Some::Other::Class' => ...,
+        },
+    );
 
 =head1 DESCRIPTION
 

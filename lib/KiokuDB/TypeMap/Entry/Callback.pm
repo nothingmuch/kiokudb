@@ -100,13 +100,17 @@ KiokuDB::TypeMap::Entry::Callback - Callback based inflation/deflation of object
 
 =head1 SYNOPSIS
 
-    KiokuDB::TypeMap::Entry::Callback->new(
-        expand => "new", # can use method names
-        collapse => sub {
-            my $self = shift;
-            return %$self; # args to 'new' in this example
+    KiokuDB::TypeMap->new(
+        entries => {
+            'My::Class' => KiokuDB::TypeMap::Entry::Callback->new(
+                expand => "new", # My::Class->new(%$self)
+                collapse => sub {
+                    my $self = shift;
+                    return %$self; # provide args to 'new' in this example
+                },
+                id => sub { "foo" }, # 'id' callback is optional
+            ),
         },
-        id => sub { "foo" }, # 'id' callback is optional
     );
 
 =head1 DESCRIPTION

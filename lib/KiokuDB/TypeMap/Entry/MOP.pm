@@ -277,7 +277,13 @@ metaclass.
 
 =head1 SYNOPSIS
 
-    KiokuDB::TypeMap::Entry::MOP->new()
+    KiokuDB::TypeMap->new(
+        entries => {
+            'My::Class' => KiokuDB::TypeMap::Entry::MOP->new(
+                intrinsic => 1,
+            ),
+        },
+    );
 
 =head1 DESCRIPTION
 

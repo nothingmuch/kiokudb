@@ -47,7 +47,11 @@ KiokuDB::TypeMap::Entry::Naive - A typemap entry for "simple" objects
 
 =head1 SYNOPSIS
 
-    KiokuDB::TypeMap::Entry::Naive->new
+    KiokuDB::TypeMap->new(
+        entires => {
+            'My::Class' => KiokuDB::TypeMap::Entry::Naive->new,
+        },
+    );
 
 =head1 DESCRIPTION
 
