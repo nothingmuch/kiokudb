@@ -67,6 +67,14 @@ __END__
 
 KiokuDB::Cmd::Command::FSCK - Check for broken references
 
+=head1 SYNOPSIS
+
+    % kioku fsck -D bdb-gin:dir=data/
+
+    # to fix any problems:
+
+    % kioku edit -D $dsn $( kioku fsck -D $dsn --print )
+
 =head1 DESCRIPTION
 
 This commands uses L<KiokuDB::LinkChecker> to search for broken references.

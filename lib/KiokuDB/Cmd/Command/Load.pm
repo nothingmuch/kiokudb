@@ -62,7 +62,7 @@ KiokuDB::Cmd::Command::Load - Load database dumps
     # command line API
     # dump whole database to foo.yml sequentially
 
-    % kiokuload --verbose --file foo.yml --format yaml --clear --dsn bdb-gin:dir=data/
+    % kioku load --verbose --file foo.yml --format yaml --clear --dsn bdb-gin:dir=data/
 
 
     # programmatic API

@@ -59,7 +59,7 @@ KiokuDB::Cmd::Command::Dump - Dump database entries for backup or munging purpos
     # command line API
     # dump whole database to foo.yml sequentially
 
-    % kiokudump --verbose --file foo.yml --format yaml --backup --dsn bdb-gin:dir=data/
+    % kioku dump --verbose --file foo.yml --format yaml --backup --dsn bdb-gin:dir=data/
 
 
 

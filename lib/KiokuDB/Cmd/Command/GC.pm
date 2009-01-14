@@ -105,6 +105,10 @@ __END__
 
 KiokuDB::Cmd::Command::GC - Collect unreachable entries
 
+=head1 SYNOPSIS
+
+    % kioku gc --dry-run -D bdb-gin:dir=data/
+
 =head1 DESCRIPTION
 
 Runs garbage collection on a specified database.
