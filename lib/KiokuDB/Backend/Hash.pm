@@ -15,6 +15,7 @@ with qw(
     KiokuDB::Backend::Role::Query::Simple::Linear
     KiokuDB::Backend::Role::Scan
     KiokuDB::Backend::Role::Clear
+    KiokuDB::Backend::Role::TXN::Memory
 );
 
 has storage => (
@@ -44,26 +45,23 @@ sub get {
     }
 }
 
-sub insert {
+sub commit_entries {
     my ( $self, @entries ) = @_;
 
     my $s = $self->storage;
 
     foreach my $entry ( @entries ) {
-        next if $entry->has_prev;
         my $id = $entry->id;
-        croak "Entry $id already exists in the database" if exists $s->{$id};
+
+        if ( $entry->deleted ) {
+            delete $s->{$id};
+        } else {
+            if ( exists $s->{$id} and not $entry->has_prev ) {
+                croak "Entry $id already exists in the database";
+            }
+            $s->{$id} = $self->serialize($entry);
+        }
     }
-
-    @{ $s }{ map { $_->id } @entries } = map { $self->serialize($_) } @entries;
-}
-
-sub delete {
-    my ( $self, @ids_or_entries ) = @_;
-
-    my @uids = map { ref($_) ? $_->id : $_ } @ids_or_entries;
-
-    delete @{ $self->storage }{@uids};
 }
 
 sub exists {
