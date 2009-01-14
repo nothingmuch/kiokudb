@@ -32,6 +32,10 @@ p {
     text-align: justify;
 }
 
+.center {
+    text-align: center;
+}
+
 #main {
     margin: auto;
     width: 40em;
