@@ -237,15 +237,15 @@ sub lookup_obj_ok {
     return $obj;
 }
 
-sub no_live_objects {
-    my $self = shift;
+sub _no_live_objects {
+    my ( $self, $entries ) = @_;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     my $fail;
 
     $fail++ unless is( scalar(()=$self->live_objects), 0, "no live objects" );
-    #$fail++ unless is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
+    $fail++ if $entries && not is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
 
     if ( $fail ) {
         my @l = $self->live_objects;
@@ -264,6 +264,16 @@ sub no_live_objects {
         #my ( @ids ) = map { hex } ( $track =~ /by \w+\(0x([a-z0-9]+)\)/ );
         #warn Data::Dumper::Dumper(map { Devel::FindRef::ptr2ref($_) } @ids);
     }
+}
+
+sub no_live_objects {
+    my $self = shift;
+    $self->_no_live_objects(0);
+}
+
+sub no_live_entries {
+    my $self = shift;
+    $self->_no_live_objects(1);
 }
 
 sub live_objects_are {
