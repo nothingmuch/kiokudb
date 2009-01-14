@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Resolver;
 use Moose;
 
+use Carp qw(croak);
+
 use KiokuDB::TypeMap;
 use KiokuDB::TypeMap::Entry::MOP;
 
@@ -103,7 +105,7 @@ sub resolve_fallback_with_meta {
 sub resolve_fallback_without_meta {
     my ( $self, $class ) = @_;
 
-    die "todo ($class has no fallback, no meta)";
+    croak "$class has no metaclass, please provide a typemap entry or add to the allowed classes";
 }
 
 __PACKAGE__->meta->make_immutable;
