@@ -67,6 +67,12 @@ sub precheck {
 
     my $backend = $self->backend;
 
+    if ( $backend->does("KiokuDB::Backend::Role::Broken") ) {
+        foreach my $fixture ( $backend->skip_fixtures ) {
+            $self->skip_fixture("broken backend") if $fixture eq ref($self) or $fixture eq $self->name;
+        }
+    }
+
     my @missing;
 
     role: foreach my $role ( $self->required_backend_roles ) {
