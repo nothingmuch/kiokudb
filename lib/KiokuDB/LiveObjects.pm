@@ -35,6 +35,11 @@ has _ids => (
     #},
 );
 
+sub id_to_object {
+    my ( $self, $id ) = @_;
+    $self->_ids->{$id};
+}
+
 sub ids_to_objects {
     my ( $self, @ids ) = @_;
     @{ $self->_ids }{@ids};
@@ -67,6 +72,11 @@ has _entry_ids => (
     #    values => "live_entries",
     #},
 );
+
+sub id_to_entry {
+    my ( $self, $id ) = @_;
+    $self->_entry_ids->{$id};
+}
 
 sub ids_to_entries {
     my ( $self, @ids ) = @_;
@@ -125,11 +135,6 @@ sub new_txn {
     $self->_set_txn_scope($child);
 
     return $child;
-}
-
-sub id_to_object {
-    my ( $self, $id ) = @_;
-    scalar $self->ids_to_objects($id);
 }
 
 sub objects_to_ids {

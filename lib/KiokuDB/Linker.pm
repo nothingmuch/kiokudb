@@ -309,11 +309,11 @@ sub get_or_load_object {
 sub load_object {
     my ( $self, $id ) = @_;
 
-    my ( $entry ) = $self->live_objects->ids_to_entries($id);
+    my $entry = $self->live_objects->id_to_entry($id);
 
     unless ( $entry ) {
         $entry = ( $self->backend->get($id) )[0] || die { missing => [ $id ] };
-        $self->live_objects->insert_entries($entry );
+        $self->live_objects->insert_entries($entry);
     }
 
     $self->expand_object($entry);
