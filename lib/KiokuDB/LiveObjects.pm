@@ -195,18 +195,15 @@ sub update_entries {
     foreach my $entry ( @entries ) {
         my $id = $entry->id;
 
-        my $obj = $i->{$id};
-
-        croak "The object doesn't exist"
-            unless defined $obj;
+        push @ret, $ei->{$id} if defined wantarray;
 
         weaken($ei->{$id} = $entry);
         $eo->{$entry} ||= Scope::Guard->new(sub { delete $ei->{$id} });
 
-        my $ent = $o->{$obj};
-
-        push @ret, $ent->{entry} if defined wantarray;
-        $ent->{entry} = $entry;
+        if ( defined(my $obj = $i->{$id}) ) {
+            my $ent = $o->{$obj};
+            $ent->{entry} = $entry;
+        }
     }
 
     if ( my $s = $self->txn_scope ) {

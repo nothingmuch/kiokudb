@@ -175,10 +175,12 @@ sub verify {
                 $self->update_ok($joe);
             }
 
-            $self->no_live_entries;
+            $self->no_live_entries
+                unless $self->backend->does("KiokuDB::Backend::Role::TXN::Memory");
         });
 
-        $self->no_live_entries;
+        $self->no_live_entries
+            unless $self->backend->does("KiokuDB::Backend::Role::TXN::Memory");
     }
 
     {
