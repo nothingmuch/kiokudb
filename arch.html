@@ -140,7 +140,24 @@
 
             <hr/>
 
-            <h2>Backends</h2>
+            <h2><a name="backends" href="#top">&uarr;</a>Backends</h2>
+
+            <p>Almost any keyed data store can be used as a backend for
+            KiokuDB. BLOB or document oriented databases are especially
+            suitable.</p>
+
+            <p>Since backends are isolated from the complexity of the object
+            graph and all of Perl's quirks by the processing layer, the driver
+            code can remain clean and simple.</p>
+
+            <p>Implementing a backend is easy. The design lets you add features
+            incrementally instead of all at once, by using interface roles. The
+            core API contains just 4 methods.</p>
+
+            <p>Secondly, there are numerous
+            concrete roles to help backend authors reuse code, and a <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Test">reusable
+                test suite</a> to check your code.</p>
 
             <h3><a name="bdb" href="#top">&uarr;</a>Berkeley DB</h3>
 
