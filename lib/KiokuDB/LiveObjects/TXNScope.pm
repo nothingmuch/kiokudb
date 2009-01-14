@@ -3,6 +3,8 @@
 package KiokuDB::LiveObjects::TXNScope;
 use Moose;
 
+use Scalar::Util qw(weaken);
+
 use namespace::clean -except => 'meta';
 
 has entries => (
@@ -24,12 +26,18 @@ has parent => (
 
 sub update_entries {
     my ( $self, @entries ) = @_;
-    push @{ $self->entries }, @entries;
+
+    my $e = $self->entries;
+
+    foreach my $entry ( @entries ) {
+        push @$e, $entry;
+        weaken($e->[-1]);
+    }
 }
 
 sub rollback {
     my $self = shift;
-    $self->live_objects->rollback_entries(splice @{ $self->entries });
+    $self->live_objects->rollback_entries(grep { defined } splice @{ $self->entries });
 }
 
 sub DEMOLISH {

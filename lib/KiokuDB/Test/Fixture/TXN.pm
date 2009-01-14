@@ -160,6 +160,24 @@ sub verify {
 
         $self->no_live_objects;
     }
+
+    {
+        $self->txn_do(sub {
+            my $s = $self->new_scope;
+            {
+                my $s = $self->new_scope;
+
+                my $joe = $self->lookup_ok( $self->joe );
+
+                $joe->name("YASE");
+                $self->update_ok($joe);
+            }
+
+            $self->no_live_entries;
+        });
+
+        $self->no_live_entries;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

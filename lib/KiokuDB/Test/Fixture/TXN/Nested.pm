@@ -17,8 +17,6 @@ sub sort { 151 } # after TXN
 sub verify {
     my $self = shift;
 
-    $self->SUPER::verify;
-
     my $l = $self->directory->live_objects;
 
     {
@@ -27,7 +25,7 @@ sub verify {
 
             my $joe = $self->lookup_ok( $self->joe );
 
-            is( $joe->name, "HALLO", "name attr" );
+            is( $joe->name, "joe", "name attr" );
 
             my $entry = $l->objects_to_entries($joe);
 
@@ -81,7 +79,7 @@ sub verify {
 
             my $joe = $self->lookup_ok( $self->joe );
 
-            is( $joe->name, "HALLO", "name rolled back in DB" );
+            is( $joe->name, "joe", "name rolled back in DB" );
 
             undef $joe;
         }
