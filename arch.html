@@ -55,7 +55,9 @@
 
             <h3><a name="linker" href="#top">&uarr;</a>The Linker</h3>
 
-            <p>The linker manages the task of expanding <a
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Linker">linker</a>
+            manages the task of expanding <a
                 href="http://search.cpan.org/perldoc?KiokuDB::Entry">entries</a>
             into objects and connecting them into the in memory graph of
             objects.</p>
@@ -72,7 +74,9 @@
 
             <h3><a name="collapser" href="#top">&uarr;</a>The Collapser</h3>
 
-            <p>The collapser is the storage-time counterpart of the <a
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Collapser">collapser</a>
+            is the storage-time counterpart of the <a
                 href="#linker">linker</a>. It walks the objects in memory and
             <a href="#typemap">locates</a> the appropriate collapsing routine
             for each class as it prepares a set of <a
@@ -85,12 +89,16 @@
 
             <h3><a name="typemap" href="#top">&uarr;</a>The Type Map</h3>
 
-            <p>The type map is responsible for finding appropriate callbacks
-            for each class stored in the database. These callbacks assign IDs,
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::TypeMap">type
+                map</a> is responsible for finding appropriate callbacks for
+            each class stored in the database. These callbacks assign IDs,
             break down the object for the <a href="#collapser">collapser</a>,
             and reassmble it during <a href="#linker">loading</a>.</p>
 
-            <p>The default typemap will handle all <a
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::TypeMap::Default">default
+                typemap</a> will handle all <a
                 href="http://moose.perl.org">Moose</a> based objects, with rich
             support for metaclass based customization. This allows you to lazy
             load certain attributes, skip cache attributes during
@@ -118,9 +126,11 @@
             stored. The live object manager maps Perl reference addresses to
             IDs and live entries allowing the <a href="#linker">linker</a> and
             the <a href="#collapser">collapser</a> to maintain the integrity of
-            the object graph.</a>
+            the object graph.</a></p>
 
-            <p>The live object manager additionally handles the various scoping
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::LiveObjects">live
+                object manager</a> additionally handles the various scoping
             related tasks, such as keeping alive objects only pointed to by
             weak references, and handling entry state during transactions.</p>
 
