@@ -17,6 +17,11 @@ h3 {
     font-size: 18pt;
 }
 
+h2 a {
+    font-size: 14pt;
+    margin: 0.5em;
+}
+
 h3 a {
     font-size: 10pt;
     margin: 0.5em;
