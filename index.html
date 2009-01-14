@@ -8,76 +8,7 @@
 
         <title>KiokuDB</title>
 
-        <style type="text/css">
-            body {
-                font-size: 12pt;
-                padding: 1em;
-                font-family: "Baskerville", "Didot", "Cochin", "Georgia", serif;
-                line-height: 150%;
-            }
-
-            h1, h2 {
-                font-weight: normal;
-                text-align: center;
-                font-size: 22pt;
-                margin: 2em;
-            }
-
-            h3 {
-                font-weight: normal;
-                font-size: 18pt;
-            }
-
-            p {
-                margin: 0.5em 2em 2em 0.5em;
-                text-align: justify;
-            }
-
-            #main {
-                margin: auto;
-                width: 40em;
-            }
-
-            #footer {
-                margin-top: 3em;
-                text-align: center;
-                font-size: 8pt;
-                color: #999;
-            }
-
-            a {
-                color: #33e;
-                text-decoration: none;
-            }
-
-            a:visited {
-                color: #77f;
-            }
-
-            ul {
-                list-style-type: square;
-                padding: 0.5em;
-                padding-left: 1em;
-            }
-
-            li {
-                margin: 0.5em;
-                padding-left: 0.5em;
-            }
-
-            hr {
-                width: 33%;
-                border: none;
-                margin-top: 4em;
-                margin-bottom: 2em;
-            }
-
-            tt {
-                margin-left: 2em;
-                font-size: 10pt;
-            }
-        </style>
-
+        <link rel="stylesheet" type="text/css" href="css/main.css" />
     </head>
     <body>
         <h1>
@@ -101,7 +32,10 @@
             <a href="http://search.cpan.org/perldoc?Search::GIN">Search::GIN</a>'s
             indexing, and preexisting database technologies such
             as <a href="http://www.oracle.com/database/berkeley-db/index.html">Berkeley
-            DB</a> for high performance and robust transactional storage.</p>
+                DB</a> for high performance and robust transactional storage.</p>
+
+            <p>An <a href="arch.html">architectural overview</a> is available
+            on this site.</p>
 
             <hr/>
 
@@ -109,7 +43,7 @@
             <p>KiokuDB is installed like any Perl module, using the
             <a href="http://www.cpan.org/">CPAN</a> command line utility:</p>
 
-            <p><tt>% cpan KiokuDB</tt></p>
+            <code>% cpan KiokuDB</code>
 
             <p>Perl <a href="http://dev.perl.org/perl5/">5.10</a> is
             recommended for performance and stability, while the minimum
@@ -120,7 +54,7 @@
             that installs the Kioku core as well as optional components (e.g.
             the Berkeley DB backend) depending on library availability:</p>
 
-            <p><tt>% cpan Task::KiokuDB</tt></p>
+            <code>% cpan Task::KiokuDB</code>
 
             <hr/>
 

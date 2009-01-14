@@ -1,0 +1,75 @@
+body {
+    font-size: 12pt;
+    padding: 1em;
+    font-family: "Baskerville", "Didot", "Cochin", "Georgia", serif;
+    line-height: 150%;
+}
+
+h1, h2 {
+    font-weight: normal;
+    text-align: center;
+    font-size: 22pt;
+    margin: 2em;
+}
+
+h3 {
+    font-weight: normal;
+    font-size: 18pt;
+}
+
+h3 a {
+    font-size: 10pt;
+    margin: 0.5em;
+}
+
+p {
+    margin: 0.5em 2em 2em 0.5em;
+    text-align: justify;
+}
+
+#main {
+    margin: auto;
+    width: 40em;
+}
+
+#footer {
+    margin-top: 3em;
+    text-align: center;
+    font-size: 8pt;
+    color: #999;
+}
+
+a {
+    color: #33e;
+    text-decoration: none;
+}
+
+a:visited {
+    color: #77f;
+}
+
+ul {
+    list-style-type: square;
+    padding: 0.5em;
+    padding-left: 1em;
+}
+
+li {
+    margin: 0.5em;
+    padding-left: 0.5em;
+}
+
+hr {
+    width: 33%;
+    border: none;
+    margin-top: 4em;
+    margin-bottom: 2em;
+}
+
+code, tt {
+    font-size: 10pt;
+}
+
+code {
+    margin: 2em;
+}

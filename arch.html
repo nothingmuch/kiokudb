@@ -1,0 +1,204 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+        <title>KiokuDB Architecture</title>
+
+        <link rel="stylesheet" type="text/css" href="css/main.css" />
+    </head>
+    <body>
+        <div id="main">
+
+            <a name="top"></a>
+
+            <map name="GraffleExport">
+                <area shape=rect coords="470,194,542,251" href="#indexing">
+                <area shape=rect coords="370,194,442,251" href="#typemap">
+                <area shape=rect coords="257,194,341,251" href="#live_objects">
+                <area shape=rect coords="157,194,229,251" href="#collapser">
+                <area shape=rect coords="57,194,129,251" href="#linker">
+                <area shape=rect coords="221,298,375,372" href="#backends">
+                <area shape=rect coords="477,420,561,471" href="#simpledb">
+                <area shape=rect coords="151,420,223,472" href="#dbi">
+                <area shape=rect coords="246,420,352,472" href="#files">
+                <area shape=rect coords="375,420,454,472" href="#couchdb">
+                <area shape=rect coords="49,420,129,471" href="#bdb">
+            </map>
+            <img border=0 src="kiokudb_arch.png" usemap="#GraffleExport">
+
+            <hr/>
+
+
+            <h2>High Level API</h2>
+
+            <p>The main API is provided by <tt><a
+                    href="http://search.cpan.org/perldoc?KiokuDB">KiokuDB.pm</a></tt>.
+            This is the entry point into KiokuDB and is the API for users. It
+            brings together all of the other components.</p>
+
+            <hr/>
+
+            <h2>Processing Layer</h2>
+
+            <p>The processing layer contains a number of components that
+            integrate storage backed objects seamlessly into memory space.</p>
+
+            <p>The processing layer deals with objects in Perl's memory space
+            and is backend independent.</p>
+
+            <h3><a name="linker" href="#top">&uarr;</a>The Linker</h3>
+
+            <p>The linker manages the task of expanding <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Entry">entries</a>
+            into objects and connecting them into the in memory graph of
+            objects.</p>
+
+            <p>Object expansion uses the <a href="#typemap">type map</a> to
+            locate the per-class expansion callbacks, and calls them while
+            maintaining all the links between objects consistent.</p>
+
+            <p>Inter object links are handled by recursively fetching the
+            necessary entries from the <a href="#backends">backend</a>, except
+            when <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Meta::Attribute::Lazy">explicitly
+                deferred.</a>.</p>
+
+            <h3><a name="collapser" href="#top">&uarr;</a>The Collapser</h3>
+
+            <p>The collapser is the storage-time counterpart of the <a
+                href="#linker">linker</a>. It walks the objects in memory and
+            <a href="#typemap">locates</a> the appropriate collapsing routine
+            for each class as it prepares a set of <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Entry">entries</a>
+            to storage.</p>
+
+            <p>The collapser handles memory cycles, weak references, handling
+            of tied data structures, and various other nits and edge cases with
+            Perl data structures.</a>
+
+            <h3><a name="typemap" href="#top">&uarr;</a>The Type Map</h3>
+
+            <p>The type map is responsible for finding appropriate callbacks
+            for each class stored in the database. These callbacks assign IDs,
+            break down the object for the <a href="#collapser">collapser</a>,
+            and reassmble it during <a href="#linker">loading</a>.</p>
+
+            <p>The default typemap will handle all <a
+                href="http://moose.perl.org">Moose</a> based objects, with rich
+            support for metaclass based customization. This allows you to lazy
+            load certain attributes, skip cache attributes during
+            serialization, assign custom IDs, etc.</p>
+
+            <p>The default typemaps also contains entries for popular modules
+            such as <a
+                href="http://search.cpan.org/perldoc?DateTime">DateTime</a>.</p>
+
+            <p>Optional out of the box support for other popular class builders
+            is also provided.</p>
+
+            <p>Lastly, adding your own entries is trivial. You can <a
+                href="http://search.cpan.org/perldoc?KiokuDB::TypeMap::Entry::StorableHook">reuse
+                existing Storable hooks</a>, use <a
+                href="http://search.cpan.org/perldoc?KiokuDB::TypeMap::Entry::Callback">callbacks</a>,
+            or simply let the
+            collapser <a
+                href="http://search.cpan.org/perldoc?KiokuDB::TypeMap::Entry::Naive">break
+                down the object for you</a>.</p>
+
+            <h3><a name="live_objects" href="#top">&uarr;</a>Live Objects</h3>
+
+            <p>Live objects are objects that KiokuDB has either loaded or
+            stored. The live object manager maps Perl reference addresses to
+            IDs and live entries allowing the <a href="#linker">linker</a> and
+            the <a href="#collapser">collapser</a> to maintain the integrity of
+            the object graph.</a>
+
+            <p>The live object manager additionally handles the various scoping
+            related tasks, such as keeping alive objects only pointed to by
+            weak references, and handling entry state during transactions.</p>
+
+            <h3><a name="indexing" href="#top">&uarr;</a>Indexing</h3>
+
+            <p>Indexing is done before insertion to the database by extracting
+            the relevant search keys in Perl space. Although <a
+                href="http://search.cpan.org>">Search::GIN</a> is still in its
+            infancy, it is capable of performing simple searches on your
+            database on arbitrary search keys.</a>
+
+            <p>An alternative to in memory indexing is relying on the backend
+            to provide searching facilities. The downsides are that this
+            technique breaks the encapsulation of your objects, and also limits
+            you to the data inside a single object, and does not let you index
+            relationship based data.</p>
+
+            <hr/>
+
+            <h2>Backends</h2>
+
+            <h3><a name="bdb" href="#top">&uarr;</a>Berkeley DB</h3>
+
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Backend::BDB">Berkeley
+                DB backend</a> uses the <a
+                href="http://search.cpan.org/perldoc?DBI">BerkeleyDB</a> module
+            to interface with <a
+                href="http://www.oracle.com/technology/products/berkeley-db/index.html">Oracle
+                Berkeley DB</a>. This is a high performance, full features
+            transactional store, supporting <a href="#index">GIN</a> based
+            queries.</p>
+
+            <h3><a name="dbi"href="#top">&uarr;</a>DBI</h3>
+
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Backend::DBI">DBI
+                backend</a> utilizies Perl's <a
+                href="http://search.cpan.org/perldoc?DBI">DBI</a> module to
+            provide database independent transactional storage using simple,
+            portable SQL.</p>
+
+            <p>This backend supports <a href="#indexing">GIN indexing</a> as
+            well as simple SQL where clauses.</p>
+
+            <p>Tested databases include <a
+                href="http://www.sqlite.org/">SQLite</a>, <a
+                href="http://www.postgresql.org/">PostgreSQL</a> and <a
+                href="http://www.mysql.com/">MySQL</a>.</p>
+
+            <h3><a name="files" href="#top">&uarr;</a>File Backend</h3>
+
+            <p>The <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Backend::Files">files
+                backend</a> is the simplest storage provider. It uses <a
+                href="http://search.cpan.org/perldoc?Directory::Transactional">Directory::Transactional</a>
+            to provide transaction support to store each object in its own file
+            on disk.</p>
+
+            <p>This backend has no built in indexing mechanism.</p>
+
+            <h3><a name="couchdb" href="#top">&uarr;</a>CouchDB</h3>
+
+            <p><a href="http://couchdb.apache.org">Apache CouchDB</a> can be
+            used as a backend using the <a
+                href="http://search.cpan.org/perldoc?KiokuDB::Backend::CouchDB">CouchDB
+                backend</a>. This utilizes <a
+                href="http://search.cpan.org/perldoc?AnyEvent::CouchDB">AnyEvent::CouchDB</a>
+            to communicate with CouchDB.</p>
+
+            <h3><a name="simpledb" href="#top">&uarr;</a>Simple DB</h3>
+
+            <p>The <a
+                href="http://github.com/omega/kiokudb-backend-aws-sdb/">SimpleDB</a>
+            backend is still in development, and provides access to <a
+                href="http://aws.amazon.com/simpledb/">Amazon SimpleDB</a>
+            using the <a
+                href="http://search.cpan.org/perldoc?Amazon::SimpleDB">Amazon::SimpleDB</a>
+            module.</p>
+        </div>
+        <div id="footer">
+            &copy; 2008 <a href="http://www.iinteractive.com/">Infinity Interactive</a> &amp; <a href="http://nothingmuch.woobling.org/">Yuval Kogman</a>
+        </div>
+    </body>
+</html>
+
