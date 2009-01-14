@@ -24,6 +24,8 @@ sub verify {
 
     my $l = $self->directory->live_objects;
 
+    $self->exists_ok($self->joe);
+
     {
         my $s = $self->new_scope;
 
@@ -177,6 +179,75 @@ sub verify {
         });
 
         $self->no_live_entries;
+    }
+
+    {
+        {
+            my $s = $self->new_scope;
+
+            my $joe = $self->lookup_ok( $self->joe );
+
+            throws_ok {
+                $self->txn_do(sub {
+                    $self->delete_ok($joe);
+                    $self->deleted_ok($self->joe);
+                    die "foo";
+                });
+            } qr/foo/, "failed transaction";
+
+            $self->exists_ok($self->joe);
+
+            undef $joe;
+        }
+
+        $self->no_live_objects;
+
+        {
+            my $s = $self->new_scope;
+
+            $self->exists_ok($self->joe);
+
+            $self->lookup_ok( $self->joe );
+        }
+
+        $self->no_live_objects;
+    }
+
+    {
+        {
+            my $s = $self->new_scope;
+
+            throws_ok {
+                $self->txn_do(sub {
+                    $self->delete_ok($self->joe);
+                    $self->deleted_ok($self->joe);
+                    die "foo";
+                });
+            } qr/foo/, "failed transaction";
+
+            $self->exists_ok($self->joe);
+        }
+
+        $self->no_live_objects;
+
+        $self->exists_ok($self->joe);
+    }
+
+    {
+        {
+            my $s = $self->new_scope;
+
+            $self->txn_do(sub {
+                $self->delete_ok($self->joe);
+                $self->deleted_ok($self->joe);
+            });
+
+            $self->deleted_ok($self->joe);
+        }
+
+        $self->no_live_objects;
+
+        $self->deleted_ok($self->joe);
     }
 }
 

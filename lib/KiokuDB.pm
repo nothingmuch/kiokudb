@@ -203,9 +203,33 @@ sub _build_linker {
 sub exists {
     my ( $self, @ids ) = @_;
 
-    my @res = $self->backend->exists(@ids);
+    if ( @ids == 1 ) {
+        my $id = $ids[0];
 
-    return @ids == 1 ? $res[0] : @res;
+        if ( my $entry = $self->live_objects->id_to_entry($ids[0]) ) {
+            return not $entry->deleted;
+        }
+
+        return ($self->backend->exists($id))[0]; # backends return a list
+    } else {
+        my %exists;
+
+        @exists{@ids} = $self->live_objects->ids_to_entries(@ids);
+
+        my @missing;
+
+        foreach my $id ( @ids ) {
+            if ( ref ( my $entry = $exists{$id} ) ) {
+                $exists{$id} = not $entry->deleted;
+            } else {
+                push @missing, $id;
+            }
+        }
+
+        @exists{@missing} = $self->backend->exists(@missing);
+
+        return @ids == 1 ? $exists{$ids[0]} : @exists{@ids};
+    }
 }
 
 sub lookup {
