@@ -1,3 +1,6 @@
+0.21
+    - Readded the dependency on JSON in addition to JSON::XS
+
 0.20
     - Refactored KiokuDB::TypeMap::Composite out of KiokuDB::TypeMap::Default
     - Added KiokuDB::TypeMap::Entry::StorableHook, which allows reusing of
