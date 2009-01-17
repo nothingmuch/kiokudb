@@ -600,8 +600,8 @@ Its purpose is to provide persistence for "regular" objects with as little
 effort as possible, without sacrificing control over how persistence is
 actually done, especially for harder to serialize objects.
 
-L<KiokuDB> is also non-invasive: it does not use ties, `AUTOLOAD`, proxy objects,
-C<sv_magic> or any other type of trickery.
+L<KiokuDB> is also non-invasive: it does not use ties, C<AUTOLOAD>, proxy
+objects, C<sv_magic> or any other type of trickery.
 
 Many features important for proper Perl space semantics are supported,
 including shared data, circular structures, weak references, tied structures,
