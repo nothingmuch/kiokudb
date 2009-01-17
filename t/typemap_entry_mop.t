@@ -32,6 +32,8 @@ use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute:
         has trash => ( is => "ro", traits => [qw(DoNotSerialize)], lazy => 1, default => "lala" );
     }
 
+    has junk => ( is => "ro", traits => [qw(KiokuDB::DoNotSerialize)], lazy => 1, default => "barf" );
+
     package Bar;
     use Moose;
 
@@ -66,6 +68,7 @@ use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute:
 my $obj = Foo->new( foo => "HALLO" );
 
 $obj->trash if HAVE_MX_STORAGE;
+$obj->junk;
 
 my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai", id => "the_bar" ) );
 
@@ -126,6 +129,9 @@ foreach my $intrinsic ( 1, 0 ) {
         isa_ok( $expanded, "Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
         isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
+
+        ok( !exists($entry->data->{junk}), "DoNotSerialize trait honored" );
+        is( $expanded->junk, "barf", "junk attr" );
 
         SKIP: {
             skip "MooseX::Storage required for DoNotSerialize test", 2 unless HAVE_MX_STORAGE;
