@@ -668,21 +668,34 @@ Using L<Search::GIN> arbitrary search keys can be indexed for your objects, and
 these objects can then be looked up using queries.
 
 For instance, one of the pre canned searches L<Search::GIN> supports out of the
-box is class indexing. Let's use L<Search::GIN::Extract::Class> to do class
-lookups, as is commonly expected of OODBMSs:
+box is class indexing. Let's use L<Search::GIN::Extract::Callback> to do custom
+indexing of our objects:
 
     my $dir = KiokuDB->new(
         backend => KiokuDB::Backend::BDB::GIN->new(
-            extract => Search::GIN::Extract::Class->new,
+            extract => Search::GIN::Extract::Callback->new(
+                extract => sub {
+                    my ( $object, $extractor, @args ) = @_;
+
+                    if ( $obj->isa("Person") ) {
+                        return {
+                            type => "user",
+                            name => $obj->name,
+                        };
+                    }
+                },
+            ),
         ),
     );
 
     $dir->store( @random_objects );
 
-To look up the objects, we use the corresponding query:
+To look up the objects, we use the a manual key lookup query:
 
-    my $query = Search::GIN::Query::Class->new(
-        isa => "Person", # find any object that ->isa("Person")
+    my $query = Search::GIN::Query::Maual->new(
+        values => {
+            type => "person",
+        },
     );
 
     my $stream = $dir->search($query);
@@ -700,14 +713,9 @@ Or even more simply, if you don't mind loading the whole resultset into memory:
 
     my @people = $stream->all;
 
-The way it works internally that L<Search::GIN::Extract::Class> introspects the
-objects as they are being inserted to the database, and extracts all the keys
-that L<Search::GIN::Query::Class> would need to later find these objects in the
-lookup. This process can be heavily customized and supports far more
-functionality than simple queries like the above. See L<Search::GIN> for more
-details.
+L<Search::GIN> is very much in its infancy, and is very under documented.
+However it does work for simple searches such as this and contains pre canned
+solutions like L<Search::GIN::Extract::Class>.
 
-The most commonly used L<Search::GIN> extractor and query pair is
-L<Search::GIN::Extract::Callback> and L<Search::GIN::Query::Manual>, which
-allow you to generate custom keys and query on these keys by hand.
+In short, it works today, but watch this space for new developments.
 
