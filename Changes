@@ -1,3 +1,10 @@
+0.22
+    - Add TXN::Memory role to provide memory bufferred transactions to backends only
+      supporting atomicity guarantees (e.g. CouchDB)
+    - Documentation improvements
+    - Allow skipping of test suite fixtures on broken backends
+    - Various minor fixes and improvements
+
 0.21
     - Readded the dependency on JSON in addition to JSON::XS
 
