@@ -1,3 +1,10 @@
+# RESOURCES
+
+* [#kiokudb](irc://irc.perl.org/#kiokudb) & [#moose](irc://irc.perl.org/#moose) on irc.perl.org
+* [project homepage](http://www.iinteractive.com/kiokudb)
+* [architectural overview](http://www.iinteractive.com/kiokudb/arch.html)
+* [KiokuDB::Tutorial](http://search.cpan.org/perldoc?KiokuDB::Tutorial)
+
 # DESCRIPTION
 
 [KiokuDB](http://www.iinteractive.com/kiokudb) is a [Moose](http://moose.perl.org) based frontend to various data
