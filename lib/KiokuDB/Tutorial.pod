@@ -43,6 +43,22 @@ You can also use DSN strings to connect to the various backends:
 
     KiokuDB->connect("bdb:dir=foo", create => 1);
 
+=head1 USING THE DBI BACKEND
+
+During this tutorial we will be using the DBI backend for two reasons. The
+first is L<DBI>'s ubiquity - almost everyone has used and knows how to install
+and use it. The second the possibility of easily looking behind the scenes, to
+more clearly demonstrate what L<KiokuDB> is doing.
+
+That said, the examples will work with all backends exactly the same.
+
+The C<$dir> variable used below is created like this:
+
+    my $dir = KiokuDB->connect(
+        "dbi:SQLite:dbname=kiokudb_tutorial.db",
+        create => 1,
+    );
+
 =head1 INSERTING OBJECTS
 
 Let's start with this simple class:
@@ -109,6 +125,63 @@ scope, and then fetch the object from the database again:
 
 In this case since the original instance of Homer is no longer live, but has
 been garbage collected by Perl, L<KiokuDB> will fetch it from the backend.
+
+=head1 WHAT WAS STORED
+
+Let's peek into the database momentarily. Launch the SQL command line tool to
+your database:
+
+    % sqlite3 kiokudb_tutorial.db
+    SQLite version 3.4.0
+    Enter ".help" for instructions
+    sqlite>
+
+The database schema has two tables, C<entries> and C<gin_index>:
+
+    sqlite> .tables
+    entries    gin_index
+
+C<gin_index> is used for more complex queries, and we'll get back to it at the
+end of the tutorial.
+
+Let's have a closer look at C<entries>:
+
+    sqlite> .schema entries
+    CREATE TABLE entries (
+      id varchar NOT NULL,
+      data blob NOT NULL,
+      class varchar,
+      root boolean NOT NULL,
+      tied char(1),
+      PRIMARY KEY (id)
+    );
+
+The main columns are C<id> and C<data>. In L<KiokuDB> every object has an ID
+which serves as a primary key and a BLOB of data associated with it.
+
+Since the default serializer for the DBI backend is
+L<KiokuDB::Serializer::JSON>, we can peek at the data.
+
+First we'll set C<sqlite>'s output mode to C<line>. This is easier to read with large columns:
+
+    sqlite> .mode line
+
+And select the data from the table:
+
+    sqlite> select id, data from entries;
+       id = 201C5B55-E759-492F-8F20-A529C7C02C8B
+     data = {"__CLASS__":"Person","data":{"name":"Homer Simpson"},"id":"201C5B55-E759-492F-8F20-A529C7C02C8B","root":true}
+
+As you can see the C<name> attribute is stored under the C<data> key inside the
+blob, as is the object's class.
+
+The C<data> column contains all of the data necessary to recreate the object.
+
+All the other columns are used solely for lookups. Later on we'll show how to
+create more search columns.
+
+When using L<KiokuDB::Backend::BDB> the on-disk format is actually a hash of
+C<id> to C<data>.
 
 =head1 OBJECT RELATIONSHIPS
 
@@ -210,6 +283,30 @@ You are free to create as many or as few scopes as you like, as long as there
 is at least one, but note that child scopes refer to their parents to ensure
 that all objects that were already live at the time that a scope is created are
 still alive
+
+=head1 REFERENCES IN THE DATABASE
+
+Now that we have an object graph in the database let's have another look at
+what's inside.
+
+    sqlite> select id, data from entries;
+       id = 201C5B55-E759-492F-8F20-A529C7C02C8B
+     data = {"__CLASS__":"Person","data":{"name":"Homer Simpson","spouse":{"$ref":"05A8D61C-6139-4F51-A748-101010CC8B02.data"}},"id":"201C5B55-E759-492F-8F20-A529C7C02C8B","root":true}
+
+       id = 05A8D61C-6139-4F51-A748-101010CC8B02
+     data = {"__CLASS__":"Person","data":{"name":"Marge Simpson","spouse":{"$ref":"201C5B55-E759-492F-8F20-A529C7C02C8B.data"}},"id":"05A8D61C-6139-4F51-A748-101010CC8B02","root":true}
+
+You'll notice the C<spouse> field has a JSON object with a C<$ref> field inside
+it with to the UUID of the target object.
+
+When data is loaded L<KiokuDB> queues up references to unloaded objects and
+then loads them in order to materialize the memory resident object graph.
+
+If you're curious about why the data is represented this way, this format is
+called C<JSPON>, or JavaScript Persistent Object Notation
+(L<http://www.jspon.org/>). When using L<KiokuDB::Backend::Storable> the
+L<KiokuDB::Entry> and L<KiokuDB::Reference> objects are serialized with their
+storable hooks instead.
 
 =head1 OBJECT SETS
 
@@ -397,12 +494,12 @@ For instance, when we run the following code:
 
     $dir->store( $obj_1, $obj_2 );
 
-Then
+While the following is true when the data is being inserted, it will no longer
+be true when C<$obj_1> and C<$obj_2> are loaded from the database:
 
     refaddr($obj_1->file) == refaddr($obj_2->file)
 
-holds true when inserting, but is no longer the case after C<$obj_1> and
-C<$obj_2> are reloaded from the database.
+This is because both C<$obj_1> and C<$obj_2> each got its own copy of C<$path>.
 
 This behavior is usually more appropriate for objects that aren't mutated, but
 are instead cloned and replaced, and for which creating a first class entry in
@@ -435,22 +532,54 @@ results:
        }
     }
 
-This exact API is intentionally vague. In the future it will be compatible with
-L<DBIx::Class> 0.09's syntax.
+This exact API is intentionally still underdefined. In the future it will be
+compatible with L<DBIx::Class> 0.09's syntax.
+
+=head2 DBI SEARCH COLUMNS
+
+In order to make use of the simple search api we need to configure columns for
+our DBI backend.
+
+Let's create a 'name' column to search by:
+
+    my $dir = KiokuDB->connect(
+        "dbi:SQLite:dbname=foo",
+        columns => [
+            # specify extra columns for the 'entries' table
+            # in the same format you pass to DBIC's add_columns
+
+            name => {
+                data_type => "varchar",
+                is_nullable => 1, # probably important
+            },
+        ],
+    );
+
+You can either alter the schema manually, or use C<kioku dump> to back up your
+data, delete the database, connect with C<< create => 1 >> and then use
+C<kioku load>.
+
+To populate this column we'll need to load homer and update him:
+
+    {
+        my $s = $dir->new_scope;
+        $dir->update( $dir->lookup( $homer_id ) );
+    }
+
+And this is what it looks in the database:
+
+       id = 201C5B55-E759-492F-8F20-A529C7C02C8B
+     name = Homer Simpson
 
 =head1 GETTING STARTED WITH BDB
-
-So far we've only made use of L<KiokuDB::Backend::Hash>, so while our objects
-were serialized, they were not actually stored on disk.
 
 The most mature backend for L<KiokuDB> is L<KiokuDB::Backend::BDB>. It performs
 very well, and supports many features, like L<Search::GIN> integration to
 provide customized indexing of your objects and transactions.
 
-L<KiokuDB::Backend::DBI> is newer and not as test, but also supports
-transactions and L<Search::GIN> based queries. It performs well too, though not
-as fast as L<KiokuDB::Backend::BDB>, and is easier to install (all you need is
-your DBD).
+L<KiokuDB::Backend::DBI> is newer and not as tested, but also supports
+transactions and L<Search::GIN> based queries. It performs quite well too, but
+isn't as fast as L<KiokuDB::Backend::BDB>.
 
 =head2 Installing L<KiokuDB::Backend::BDB>
 
@@ -488,8 +617,7 @@ Now that the storage is created we can make use of this backend, much like befor
 Subsequent opens will not required the C<create> argument to be true, but it
 doesn't hurt.
 
-As a convenience feature, L<KiokuDB> provides the C<connect> method. The above
-code could be written more concisely as:
+This C<connect> call is equivalent to the above:
 
     my $dir = KiokuDB->connect( "bdb:dir=path/to/storage", create => 1 );
 
@@ -510,19 +638,23 @@ database are committed if the block was executed cleanly.
 If any error occurred the transaction will be rolled back, and the changes will
 not be visible to subsequent reads.
 
-Note that L<KiokuDB> does B<not> touch live instances, so if you do something like
+Note that L<KiokuDB> does B<not> touch live instances, so if you do something
+like
 
     $dir->txn_do(sub {
         my $scope = $dir->new_scope;
+
         $obj->name("Dancing Hippy");
         $dir->store($obj);
+
+        die "an error";
     });
 
 the C<name> attribute is B<not> rolled back, it is simply the C<store>
 operation that gets reverted.
 
-Transactions will nest properly, and with BDB they generally increase write
-performance.
+Transactions will nest properly, and with most backends they generally increase
+write performance as well.
 
 =head1 QUERIES
 

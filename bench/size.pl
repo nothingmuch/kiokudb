@@ -21,14 +21,14 @@ sub run {
 
     #my $files = KiokuDB->connect("files:dir=" . $dir->subdir("files"), create => 1, global_lock => 1 );
     my $bdb = KiokuDB->connect("bdb:dir=" . $dir->subdir("bdb"), create => 1 );
-    my $sqlite = KiokuDB->connect("dbi:SQLite:dbname=" . $dir->file("sqlite.db"), serializer => "storable" );
+    #my $sqlite = KiokuDB->connect("dbi:SQLite:dbname=" . $dir->file("sqlite.db"), serializer => "storable" );
 
-    $sqlite->backend->dbh->do("PRAGMA default_synchronous = OFF");
+    #$sqlite->backend->dbh->do("PRAGMA default_synchronous = OFF");
 
-    $sqlite->backend->deploy;
+    #$sqlite->backend->deploy;
 
     for ( my $i = 1; 1; $i++ ) {
-        foreach my $b ( $bdb, $sqlite ) {
+        foreach my $b ( $bdb ) {
             $b->txn_do(sub {
                 my $s = $b->new_scope;
                 $b->insert(construct()) for 1 .. 20;
