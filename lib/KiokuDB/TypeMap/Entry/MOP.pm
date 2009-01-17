@@ -37,6 +37,8 @@ sub compile_collapser {
     my ( $self, $meta ) = @_;
 
     my @attrs = grep {
+        !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
+            and
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->compute_all_applicable_attributes;
 
@@ -142,6 +144,8 @@ sub compile_expander {
     my ( %attrs, %lazy );
 
     my @attrs = grep {
+        !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
+            and
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->compute_all_applicable_attributes;
 
