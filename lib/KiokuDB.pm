@@ -551,6 +551,10 @@ __END__
 
 KiokuDB - Object Graph storage engine
 
+=head1 TUTORIAL
+
+If you're new to L<KiokuDB> check out L<KiokuDB::Tutorial>.
+
 =head1 SYNOPSIS
 
     use KiokuDB;
@@ -636,6 +640,12 @@ and use a schema, which makes them fairly predictable.
 When using transparent systems like L<KiokuDB> or L<Pixie> it is more important
 to understand what's going on behind the scenes in order to avoid surprises and
 limitations.
+
+An architectural overview is available on the website:
+L<http://www.iinteractive.com/kiokudb/arch.html>
+
+The process is explained here and in the various component documentation in
+more detail.
 
 =head2 Collapsing
 
