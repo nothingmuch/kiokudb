@@ -71,3 +71,16 @@
     * collection of clusters of data: http://www-sor.inria.fr/publi/GC-PERS-DSM_POS94.html
     * http://pauillac.inria.fr/~lefessan/dgc/
     * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.663
+
+* XS acceleration
+    * LiveObjects
+        * custom uvar magic instead of Scope::Guard all over
+            * should provide significant speed & memory consumption
+              improvements
+    * Linker
+        * inflate_data is actually really ugly in Perl, could be
+          smaller/faster/cleaner in XS
+    * Data::Visitor
+        * Collapser
+        * jspon?
+        * $entry->references
