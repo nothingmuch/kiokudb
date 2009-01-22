@@ -59,6 +59,15 @@ The C<$dir> variable used below is created like this:
         create => 1,
     );
 
+Note that if you are connecting with a username and password you must specify
+these as named arguments:
+
+    my $dir = KiokuDB->connect(
+        $dsn,
+        user     => $user,
+        password => $password,
+    );
+
 =head1 INSERTING OBJECTS
 
 Let's start with this simple class:
