@@ -571,6 +571,10 @@ If you're new to L<KiokuDB> check out L<KiokuDB::Tutorial>.
     );
 
 
+    # create a scope object
+    my $s = $d->new_scope;
+
+
     # takes a snapshot of $some_object
     my $uuid = $d->store($some_object);
 
