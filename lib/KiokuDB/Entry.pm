@@ -3,6 +3,8 @@
 package KiokuDB::Entry;
 use Moose;
 
+use Storable ();
+
 use Moose::Util::TypeConstraints;
 
 use namespace::clean -except => 'meta';
@@ -264,6 +266,11 @@ sub STORABLE_thaw {
         $self->backend_data($backend_data) if ref $backend_data;
         $self->_class_meta($meta) if ref $meta;
     }
+}
+
+sub clone {
+    my $self = shift;
+    Storable::dclone($self); # FIXME a little excessive perhaps?
 }
 
 __PACKAGE__->meta->make_immutable;

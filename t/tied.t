@@ -70,7 +70,10 @@ for my $i ( 0, 1 ) {
     my $sv = $v->live_objects->new_scope;
     my $sl = $l->live_objects->new_scope;
 
-    my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+    my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
+
+    my $entries = $buffer->entries;
+
     is( scalar(@ids), 1, "one root set ID" );
 
     my $copy = dclone($entries);

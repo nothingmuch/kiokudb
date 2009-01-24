@@ -12,6 +12,7 @@ use Scalar::Util qw(isweak refaddr reftype);
 use KiokuDB::Entry;
 use KiokuDB::Entry::Skip;
 use KiokuDB::Reference;
+use KiokuDB::Collapser::Buffer;
 
 use Data::Visitor 0.18;
 
@@ -54,75 +55,12 @@ has '+weaken' => (
     default => 0,
 );
 
-has _entries => (
-    isa => 'HashRef',
+has '_buffer' => (
+    isa => "KiokuDB::Collapser::Buffer",
     is  => "ro",
-    init_arg => undef,
-    clearer => "_clear_entries",
-    writer  => "_set_entries",
+    clearer => "_clear_buffer",
+    writer  => "_set_buffer",
 );
-
-# a list of the IDs of all simple entries
-has _simple_entries => (
-    isa => 'ArrayRef',
-    is  => "ro",
-    init_arg => undef,
-    clearer => "_clear_simple_entries",
-    writer  => "_set_simple_entries",
-);
-
-# keeps track of the simple references which are first class (either weak or
-# shared, and must have an entry)
-has _first_class => (
-    isa => 'HashRef',
-    is  => "ro",
-    init_arg => undef,
-    clearer => "_clear_first_class",
-    writer  => "_set_first_class",
-);
-
-has _options => (
-    isa => 'HashRef',
-    is  => "ro",
-    init_arg => undef,
-    clearer => "_clear_options",
-    writer  => "_set_options",
-);
-
-sub clear_temp_structs {
-    my $self = shift;
-    $self->_clear_entries;
-    $self->_clear_simple_entries;
-    $self->_clear_first_class;
-    $self->_clear_options;
-}
-
-sub collapse_objects {
-    my ( $self, @objects ) = @_;
-
-    my ( $entries, @ids ) = $self->collapse( objects => \@objects );
-
-    # compute the root set
-    my @root_set = delete @{ $entries }{@ids};
-
-    # return the root set and all additional necessary entries
-    return ( @root_set, values %$entries );
-}
-
-sub collapse_known_objects {
-    my ( $self, @objects ) = @_;
-
-    my ( $entries, @ids ) = $self->collapse(
-        objects    => \@objects,
-        only_known => 1,
-    );
-
-    my @root_set = map { $_ and delete $entries->{$_} } @ids;
-
-    # return the root set and all additional necessary entries
-    # may contain undefs
-    return ( @root_set, values %$entries );
-}
 
 sub collapse {
     my ( $self, %args ) = @_;
@@ -135,28 +73,26 @@ sub collapse {
         $args{only} = set(@$objects);
     }
 
-    my $g = Scope::Guard->new(sub {
-        $self->clear_temp_structs;
-    });
+    my $buf = KiokuDB::Collapser::Buffer->new(
+        live_objects => $self->live_objects,
+        options      => \%args,
+    );
 
-    my ( %entries, %fc );
-
-    $self->_set_entries(\%entries);
-    $self->_set_options(\%args);
-    $self->_set_first_class(\%fc);
-    $self->_set_simple_entries([]);
+    my $g = Scope::Guard->new(sub { $self->_clear_buffer });
+    $self->_set_buffer($buf);
 
     # recurse through the object, accumilating entries
     $self->visit(@$objects);
 
-    my @ids = $self->live_objects->objects_to_ids(@$objects);
-    @fc{@ids} = ();
+    my @ids = $buf->merged_objects_to_ids(@$objects);
+
+    $buf->first_class->insert(@ids);
 
     # compact UUID space by merging simple non shared structures into a single
     # deep entry
-    $self->compact_entries() if $self->compact;
+    $buf->compact_entries if $self->compact;
 
-    return ( \%entries, @ids );
+    return ( $buf, @ids );
 }
 
 sub may_compact {
@@ -164,81 +100,25 @@ sub may_compact {
 
     my $id = ref($ref_or_id) ? $ref_or_id->id : $ref_or_id;
 
-    not exists $self->_first_class->{$id};
-}
-
-sub compact_entries {
-    my $self = shift;
-
-    my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->_first_class, $self->_simple_entries, $self->_options );
-
-    # unify non shared simple references
-    if ( my @flatten = grep { not exists $fc->{$_} } @$simple ) {
-        my $flatten = {};
-        @{$flatten}{@flatten} = delete @{$entries}{@flatten};
-
-        $self->live_objects->remove(@flatten);
-
-        $self->compact_entry($_, $flatten) for values %$entries;
-    }
-}
-
-sub compact_entry {
-    my ( $self, $entry, $flatten ) = @_;
-
-    my $data = $entry->data;
-
-    if ( $self->compact_data($data, $flatten) ) {
-        $entry->data($data);
-    }
-}
-
-sub compact_data {
-    my ( $self, $data, $flatten ) = @_;
-
-    if ( ref $data eq 'KiokuDB::Reference' ) {
-        my $id = $data->id;
-
-        if ( my $entry = $flatten->{$id} ) {
-            # replace reference with data from entry, so that the
-            # simple data is inlined, and mark that entry for removal
-            $self->compact_entry($entry, $flatten);
-
-            if ( $entry->tied or $entry->class ) {
-                $entry->clear_id;
-                $_[1] = $entry;
-            } else {
-                $_[1] = $entry->data;
-            }
-            return 1;
-        }
-    } elsif ( ref($data) eq 'ARRAY' ) {
-        ref && $self->compact_data($_, $flatten) for @$data;
-    } elsif ( ref($data) eq 'HASH' ) {
-        ref && $self->compact_data($_, $flatten) for values %$data;
-    } elsif ( ref($data) eq 'KiokuDB::Entry' ) {
-        $self->compact_entry($data, $flatten);
-    } else {
-        # passthrough
-    }
-
-    return;
+    not $self->_buffer->first_class->includes($id);
 }
 
 sub make_entry {
     my ( $self, %args ) = @_;
 
-    my $object = $args{object};
-
-    my $live_objects = $self->live_objects;
-
     if ( my $id = $args{id} ) {
-        my $prev = $live_objects->object_to_entry($object);
+        my $object = $args{object};
 
-        return $self->_entries->{$id} = KiokuDB::Entry->new(
+        my $prev = $self->live_objects->object_to_entry($object);
+
+        my $entry = KiokuDB::Entry->new(
             ( $prev ? ( prev => $prev ) : () ),
             %args,
         );
+
+        $self->_buffer->insert_entry( $id => $entry );
+
+        return $entry;
     } else {
         # intrinsic
         return KiokuDB::Entry->new(%args);
@@ -259,10 +139,7 @@ sub make_skip_entry {
         $id = $prev->id;
     }
 
-    $self->_entries->{$id} = KiokuDB::Entry::Skip->new(
-        ( $prev ? ( prev   => $prev ) : () ),
-        object => $object,
-    );
+    return undef;
 }
 
 sub make_ref {
@@ -270,7 +147,7 @@ sub make_ref {
 
     my $weak = isweak($_[2]);
 
-    $self->_first_class->{$id} = undef if $weak;
+    $self->_buffer->first_class->insert($id) if $weak;
 
     return KiokuDB::Reference->new(
         id => $id,
@@ -281,35 +158,31 @@ sub make_ref {
 sub visit_seen {
     my ( $self, $seen, $prev ) = @_;
 
-    my $id = $self->_seen_id($seen);
+    my $b = $self->_buffer;
 
+    if ( my $entry = $b->intrinsic_entry($seen) ) {
+        return $entry->clone;
+    } elsif ( my $id = $self->_buffer->object_to_id($seen) || $self->live_objects->object_to_id($seen) ) {
+        $self->_buffer->first_class->insert($id) unless blessed($seen);
 
-    # register ID as first class
-    $self->_first_class->{$id} = undef;
-
-    # return a uuid ref
-    return $self->make_ref( $id => $_[1] );
-}
-
-sub _seen_id {
-    my ( $self, $seen ) = @_;
-
-    if ( my $id = $self->live_objects->object_to_id($seen) ) {
-        return $id;
+        # return a uuid ref
+        return $self->make_ref( $id => $_[1] );
+    } else {
+        die { unknown => $seen };
     }
-
-    die { unknown => $seen };
 }
 
 sub visit_ref {
     my ( $self, $ref ) = @_;
 
-    if ( my $entry = $self->_options->{only_new} && $self->live_objects->object_to_entry($ref) ) {
+    my $o = $self->_buffer->options;
+
+    if ( my $entry = $o->{only_new} && $self->live_objects->object_to_entry($ref) ) {
         return $self->make_ref( $entry->id => $_[1] );
     }
 
     if ( my $id = $self->_ref_id($ref) ) {
-        if ( !$self->compact and my $only = $self->_options->{only} ) {
+        if ( !$self->compact and my $only = $o->{only} ) {
             unless ( $only->contains($ref) ) {
                 return $self->make_ref( $id => $_[1] );
             }
@@ -320,7 +193,7 @@ sub visit_ref {
         if ( ref($collapsed) eq 'KiokuDB::Reference' and $collapsed->id eq $id ) {
             return $collapsed; # tied
         } else {
-            push @{ $self->_simple_entries }, $id;
+            push @{ $self->_buffer->simple_entries }, $id;
 
             $self->make_entry(
                 id     => $id,
@@ -351,18 +224,22 @@ sub _ref_id {
 
     if ( my $id = $l->object_to_id($ref) ) {
         return $id;
-    } elsif ( $self->_options->{only_known} ) {
-        if ( $self->compact ) {
-            # if we're compacting this is not an error, we just compact in place
-            # and we generate an error if we encounter this data again in _seen_id
-            return;
-        } else {
-            die { unknown => $ref };
-        }
     } else {
-        my $id = $self->generate_uuid;
-        $l->insert( $id => $ref ); # FIXME see _object_id... this shouldn't be "comitted" to the live objects yet
-        return $id;
+        my $b = $self->_buffer;
+
+        if ( $b->options->{only_known} ) {
+            if ( $self->compact ) {
+                # if we're compacting this is not an error, we just compact in place
+                # and we generate an error if we encounter this data again in visit_seen
+                return;
+            } else {
+                die { unknown => $ref };
+            }
+        } else {
+            my $id = $self->generate_uuid;
+            $b->insert( $id => $ref );
+            return $id;
+        }
     }
 }
 
@@ -378,13 +255,13 @@ sub visit_tied {
     my $tie = $self->visit($tied);
 
     if ( my $id = $self->_ref_id($ref) ) {
-        if ( !$self->compact and my $only = $self->_options->{only} ) {
+        if ( !$self->compact and my $only = $self->_buffer->options->{only} ) {
             unless ( $only->contains($ref) ) {
                 return $self->make_ref( $id => $_[1] );
             }
         }
 
-        push @{ $self->_simple_entries }, $id;
+        push @{ $self->_buffer->simple_entries }, $id;
 
         $self->make_entry(
             id     => $id,
@@ -414,46 +291,75 @@ sub visit_object {
 sub collapse_first_class {
     my ( $self, $collapse, $object, @entry_args ) = @_;
 
-    my $o = $self->_options;
-
-    my $l = $self->live_objects;
-
-    if ( my $entry = $o->{only_new} && $l->object_to_entry($object) ) {
-        return $self->make_ref( $entry->id => $_[1] );
-    }
-
     # Data::Visitor stuff for circular refs
     $self->_register_mapping( $object, $object );
 
-    my $id = $self->_object_id($object, @entry_args) || return;
+    my ( $l, $b ) = ( $self->live_objects, $self->_buffer );
 
-    if ( my $only = $self->_options->{only} ) {
+    my $prev = $l->object_to_entry($object);
+
+    my $o = $b->options;
+
+    if ( $o->{only_new} && $prev ) {
+        return $self->make_ref( $prev->id => $_[2] );
+    }
+
+    if ( my $only = $o->{only} ) {
         unless ( $only->contains($object) ) {
-            return $self->make_ref( $id => $_[1] );
+            if ( $prev ) {
+                return $self->make_ref( $prev->id => $_[2] );
+            } else {
+                die { unknown => $object };
+            }
         }
     }
 
-    my $class = ref $object;
+    my $id = $l->object_to_id($object);
+
+    unless ( $id ) {
+        if ( $o->{only_known} ) {
+            die { unknown => $object };
+        } else {
+            my $id_method = $self->id_method(ref $object);
+
+            $id = $self->$id_method($object);
+
+            if ( defined( my $conflict = $l->id_to_object($id) ) ) {
+                return $self->id_conflict( $id, $_[2], $conflict );
+            } else {
+                $b->insert( $id => $object );
+            }
+        }
+    }
 
     my @args = (
         object => $object,
         id     => $id,
-        class  => $class,
+        class  => ref($object),
         @entry_args,
     );
 
     $self->$collapse(@args);
 
     # we pass $_[1], an alias, so that isweak works
-    return $self->make_ref( $id => $_[1] );
+    return $self->make_ref( $id => $_[2] );
 }
+
+sub id_conflict {
+    my ( $self, $id, $object, $other ) = @_;
+
+    $self->make_skip_entry( id => $id, object => $object );
+
+    $self->_buffer->insert( $id => $object );
+
+    return $self->make_ref( $id => $_[2] );
+}
+
 
 sub collapse_intrinsic {
     my ( $self, $collapse, $object, @entry_args ) = @_;
 
     my $class = ref $object;
-
-    delete $self->{_seen}{ refaddr($object) }; # FIXME Data::Visitor ->_remove_mapping?
 
     my @args = (
         object => $object,
@@ -461,29 +367,11 @@ sub collapse_intrinsic {
         @entry_args,
     );
 
-    $self->$collapse(@args),
-}
+    my $entry = $self->$collapse(@args);
 
-sub _object_id {
-    my ( $self, $object, %args ) = @_;
+    $self->_buffer->insert_intrinsic( $object => $entry );
 
-    my $l = $self->live_objects;
-
-    if ( my $id = $l->object_to_id($object) ) {
-        return $id;
-    } else {
-        my $o = $self->_options;
-        if ( $o && $o->{only_known} ) {
-            die { unknown => $object };
-        }
-
-        my $method = $self->id_method(ref $object);
-        my $id = $self->$method($object) || die "ID method failed to return an ID";
-
-        $l->insert( $id => $object ); # FIXME only do this when about to insert an entry? maybe some sort of accumilation zone?
-
-        return $id;
-    }
+    return $entry;
 }
 
 # we don't reblass in collapse_naive

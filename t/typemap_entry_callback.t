@@ -78,7 +78,10 @@ my $l = KiokuDB::Linker->new(
 {
     my $s = $v->live_objects->new_scope;
 
-    my ( $entries ) = $v->collapse( objects => [ $obj ],  );
+    my ( $buffer ) = $v->collapse( objects => [ $obj ],  );
+
+    my $entries = $buffer->entries;
+
     is( scalar(keys %$entries), 1, "one entry" );
 
     my $entry = ( values %$entries )[0];

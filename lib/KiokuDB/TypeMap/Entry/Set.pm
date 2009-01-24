@@ -78,7 +78,7 @@ sub _compile_collapse {
             # we flatten references to just IDs
             foreach my $item ( @inner ) {
                 $item = $item->id if ref($item) eq 'KiokuDB::Reference';
-                $collapser->_first_class->{$item} = undef; # mark it first class so it doesn't get compacted
+                $collapser->_buffer->first_class->insert($item); # mark it first class so it doesn't get compacted
             }
 
             return $collapser->make_entry(

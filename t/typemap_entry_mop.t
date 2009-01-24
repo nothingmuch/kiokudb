@@ -112,7 +112,9 @@ foreach my $intrinsic ( 1, 0 ) {
     {
         my $s = $v->live_objects->new_scope;
 
-        my ( $entries, $id ) = $v->collapse( objects => [ $obj ],  );
+        my ( $buffer, $id ) = $v->collapse( objects => [ $obj ],  );
+
+        my $entries = $buffer->entries;
 
         my $entry = $entries->{$id};
 
@@ -147,7 +149,9 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $bar = $deep->bar;
 
-        my ( $entries, $id ) = $v->collapse( objects => [ $deep ],  );
+        my ( $buffer, $id ) = $v->collapse( objects => [ $deep ],  );
+
+        my $entries = $buffer->entries;
 
         my $entry = $entries->{$id};
 
@@ -194,7 +198,9 @@ foreach my $intrinsic ( 1, 0 ) {
     {
         my $s = $v->live_objects->new_scope;
 
-        my ( $entries, $id ) = $v->collapse( objects => [ $anon_parent ] );
+        my ( $buffer, $id ) = $v->collapse( objects => [ $anon_parent ] );
+
+        my $entries = $buffer->entries;
 
         my $entry = $entries->{$id};
 
@@ -251,7 +257,9 @@ foreach my $intrinsic ( 1, 0 ) {
     {
         my $s = $v->live_objects->new_scope;
 
-        my ( $entries, $id ) = $v->collapse( objects => [ $obj_with_value ] );
+        my ( $buffer, $id ) = $v->collapse( objects => [ $obj_with_value ] );
+
+        my $entries = $buffer->entries;
 
         my $entry = $entries->{$id};
 
@@ -286,7 +294,9 @@ foreach my $intrinsic ( 1, 0 ) {
     {
         my $s = $v->live_objects->new_scope;
 
-        my ( $entries, $id ) = $v->collapse( objects => [ $once ] );
+        my ( $buffer, $id ) = $v->collapse( objects => [ $once ] );
+
+        my $entries = $buffer->entries;
 
         is( scalar(keys %$entries), 1, "one entry" );
 
@@ -310,8 +320,6 @@ foreach my $intrinsic ( 1, 0 ) {
 
         is( $new_id, $id, "ID is the same" );
 
-        my $skip = $new_entries->{$id};
-
-        is( ref($skip), "KiokuDB::Entry::Skip", "skip entry on second insert" );
+        ok( !exists($new_entries->{$id}), "skipped entry on second insert" );
     }
 }

@@ -120,12 +120,28 @@ sub verify {
         });
     } "can't insert duplicate";
 
+    $self->no_live_objects;
+
     lives_ok {
         my $s = $self->new_scope;
         $self->txn_do(sub {
             my $id = $self->directory->store( KiokuDB::Test::BLOB->new( data => "lalala" ) );
         });
     } "not an error to insert a duplicate of a content addressed object";
+
+    $self->no_live_objects;
+
+    lives_ok {
+        my $s = $self->new_scope;
+
+        my $b = $self->lookup_ok("lalala");
+
+        $self->txn_do(sub {
+            my $id = $self->directory->store( KiokuDB::Test::BLOB->new( data => "lalala" ) );
+        });
+    } "not an error to insert a duplicate of a live content addressed object";
+
+    $self->no_live_objects;
 }
 
 __PACKAGE__
