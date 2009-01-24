@@ -24,12 +24,24 @@ use constant HAVE_URI_WITH_BASE     => eval { require URI::WithBase };
 use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::SaltedDigest };
 use constant HAVE_PATH_CLASS        => eval { require Path::Class };
 use constant HAVE_IXHASH            => eval { require Tie::IxHash };
+use constant HAVE_MX_TRAITS         => eval { require MooseX::Traits };
+use constant HAVE_MX_OP             => eval { require MooseX::Object::Pluggable };
 
 {
     package Some::Role;
     use Moose::Role;
 
     has role_attr => ( is => "rw" );
+
+    package Some::Other::Role;
+    use Moose::Role;
+
+    has other_role_attr => ( is => "rw" );
+
+    package Some::Third::Role;
+    use Moose::Role;
+
+    sub a_role_method { "hello" }
 }
 
 with qw(KiokuDB::Test::Fixture);

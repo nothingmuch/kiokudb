@@ -200,9 +200,11 @@ sub update_entries {
         weaken($ei->{$id} = $entry);
         $eo->{$entry} ||= Scope::Guard->new(sub { delete $ei->{$id} });
 
-        if ( defined(my $obj = $i->{$id}) ) {
+        if ( ref(my $obj = $i->{$id}) ) {
             my $ent = $o->{$obj};
             $ent->{entry} = $entry;
+        } elsif ( ref( my $object = $entry->object ) ) {
+            $self->insert( $entry => $object );
         }
     }
 

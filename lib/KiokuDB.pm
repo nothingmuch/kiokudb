@@ -441,15 +441,6 @@ sub deep_update {
     $self->store_objects( only_known => 1, objects => \@objects );
 }
 
-sub _imply_root {
-    my ( $self, @entries ) = @_;
-
-    foreach my $entry ( @entries ) {
-        next if $entry->has_root; # set by typemap
-        $entry->root(1);
-    }
-}
-
 sub set_root {
     my ( $self, @objects ) = @_;
     $_->root(1) for $self->live_objects->objects_to_entries(@objects);
@@ -473,17 +464,13 @@ sub store_objects {
 
     my $objects = $args{objects};
 
-    my ( $entries, @ids ) = $self->collapser->collapse(%args);
+    my ( $buffer, @ids ) = $self->collapser->collapse(%args);
 
-    if ( $args{root_set} ) {
-        $self->_imply_root(@{$entries}{@ids});
-    }
+    my $entries = $buffer->entries;
 
-    my @insert = grep { ref($_) ne 'KiokuDB::Entry::Skip' } values %$entries;
+    $buffer->imply_root(@ids) if $args{root_set};
 
-    $self->backend->insert(@insert);
-
-    $self->live_objects->update_entries(@insert);
+    $buffer->insert_to_backend($self->backend);
 
     if ( @$objects == 1 ) {
         return $ids[0];

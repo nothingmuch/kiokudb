@@ -62,9 +62,9 @@ SKIP: {
 
     my $s = $l->new_scope;
 
-    my ( $entries, $id ) = $c->collapse(objects => [ $obj ]);
+    my ( $buffer, $id ) = $c->collapse(objects => [ $obj ]);
 
-    my $entry = $entries->{$id};
+    my $entry = $buffer->entries->{$id};
 
     isa_ok( $entry->data->{yes}, "JSON::Boolean", "boolean passed through" );
 

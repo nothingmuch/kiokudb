@@ -69,43 +69,47 @@ use Tie::RefHash;
     );
 
     {
-        my @partial = eval { $v->collapse_known_objects($foo) };
+        my ( $buffer ) = eval { $v->collapse( objects => [ $foo ], only_known => 1 ) };
         is_deeply( $@, { unknown => $foo }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
+        is( $buffer, undef, "no entries for known obj collapse" );
     }
 
     {
         my $obj = Foo->new( bar => $foo->bar );
 
-        $v->_object_id($obj);
+        $v->live_objects->insert( foo => $obj );
 
-        my @partial = eval { $v->collapse_known_objects($obj) };
+        my ( $buffer ) = eval { $v->collapse( objects => [ $obj ], only_known => 1 ) };
         is_deeply( $@, { unknown => $foo->bar }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
+        is( $buffer, undef, "no entries for known obj collapse" );
     }
 
-    $v->_object_id($foo->bar);
+    $v->live_objects->insert( bar => $foo->bar );
 
     {
-        my @partial = eval { $v->collapse_known_objects($foo) };
+        my ( $buffer ) = eval { $v->collapse( objects => [ $foo ], only_known => 1 ) };
         is_deeply( $@, { unknown => $foo }, "error" );
-        is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse" );
+        is( $buffer, undef, "no entries for known obj collapse" );
     }
 
     {
-        my @partial = eval { $v->collapse_known_objects($foo->bar) };
+        my ( $buffer ) = eval  { $v->collapse( objects => [ $foo->bar ], only_known => 1 ) };
         is( $@, "", "no error" );
-        is( scalar(grep { defined } @partial), 1, "one entry for known obj collapse" );
+        isa_ok( $buffer, "KiokuDB::Collapser::Buffer" );
+        is( scalar(values %{ $buffer->entries }), 1, "one entry for known obj collapse" );
     }
 
-    $v->_object_id($foo->bar);
+    my ( $buffer, $id, @rest ) = $v->collapse( objects => [ $foo ] );
 
-    my @entries = $v->collapse_objects($foo);
+    ok( $id, "got an id" );
+
+    is( scalar(@rest), 0, "no other return values" );
+
+    my @entries = sort { $a->id eq $id ? -1 : 1 } values %{ $buffer->entries };
+
+    my $other_id = $entries[1]->id;
 
     is( scalar(@entries), 2, "two entries" );
-
-    my $id = $entries[0]->id;
-    my $other_id = $entries[1]->id;
 
     is( $entries[0]->class, 'Foo', "class" );
 
@@ -150,11 +154,12 @@ use Tie::RefHash;
         blah => [ $x, $x ],
     );
 
-    my @entries = $v->collapse_objects($bar);
+    my ( $buffer, $id ) = $v->collapse( objects => [ $bar ] );
+
+    my @entries = sort { $a->id eq $id ? -1 : 1 } values %{ $buffer->entries };
 
     is( scalar(@entries), 2, "two entries" );
 
-    my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
     is_deeply(
@@ -200,11 +205,12 @@ use Tie::RefHash;
 
     $foo->bar->blah($foo);
 
-    my @entries = $v->collapse_objects($foo);
+    my ( $buffer, $id ) = $v->collapse( objects => [ $foo ] );
+
+    my @entries = sort { $a->id eq $id ? -1 : 1 } values %{ $buffer->entries };
 
     is( scalar(@entries), 2, "two entries" );
 
-    my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
     is( $entries[0]->class, 'Foo', "class" );
@@ -250,11 +256,12 @@ use Tie::RefHash;
 
     weaken($bar->blah->[0]);
 
-    my @entries = $v->collapse_objects($bar);
+    my ( $buffer, $id ) = $v->collapse( objects => [ $bar ] );
+
+    my @entries = sort { $a->id eq $id ? -1 : 1 } values %{ $buffer->entries };
 
     is( scalar(@entries), 2, "two entries" );
 
-    my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
     is_deeply(
@@ -300,11 +307,12 @@ use Tie::RefHash;
     # second one is weak
     weaken($bar->blah->[1]);
 
-    my @entries = $v->collapse_objects($bar);
+    my ( $buffer, $id ) = $v->collapse( objects => [ $bar ] );
+
+    my @entries = sort { $a->id eq $id ? -1 : 1 } values %{ $buffer->entries };
 
     is( scalar(@entries), 2, "two entries" );
 
-    my $id = $entries[0]->id;
     my $other_id = $entries[1]->id;
 
     is_deeply(
@@ -344,11 +352,11 @@ use Tie::RefHash;
 
     my $obj = Foo->new( bar => $data );
 
-    $v->_object_id($obj);
+    $v->live_objects->insert( obj => $obj );
 
-    my @partial = eval { $v->collapse_known_objects($obj) };
+    my ( $buffer ) = eval { $v->collapse( objects => [ $obj ], only_known => 1 ) };
     is_deeply( $@, { unknown => $data }, "error" );
-    is( scalar(grep { defined } @partial), 0, "no entries for known obj collapse with circular simple structure" );
+    is( $buffer, undef, "no entries for known obj collapse with circular simple structure" );
 }
 
 {
@@ -366,8 +374,8 @@ use Tie::RefHash;
 
         my $s = $lo->new_scope;
 
-        my @entries = $v->collapse_objects($obj);
-        is( scalar(@entries), 2, "two entries" );
+        my ( $buffer ) = $v->collapse( objects => [ $obj ] );
+        is( scalar(keys %{ $buffer->entries }), 2, "two entries" );
     }
 
     {
@@ -382,8 +390,8 @@ use Tie::RefHash;
 
         my $s = $lo->new_scope;
 
-        my @entries = $v->collapse_objects($obj);
-        is( scalar(@entries), 1, "one entry with compacter" );
+        my ( $buffer ) = $v->collapse( objects => [ $obj ] );
+        is( scalar(keys %{ $buffer->entries }), 1, "one entry with compacter" );
     }
 }
 
@@ -402,15 +410,19 @@ use Tie::RefHash;
         my $s = $lo->new_scope;
 
         {
-            my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
-            is( scalar(keys %$entries), 2, "two entries for deep collapse" );
+            my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
+            is( scalar(keys %{ $buffer->entries }), 2, "two entries for deep collapse" );
             is( scalar(@ids), 1, "one root set ID" );
+
+            $buffer->update_entries;
         }
 
         {
-            my ( $entries, @ids ) = $v->collapse( objects => [ $obj ], shallow => 1 );
-            is( scalar(keys %$entries), 1, "one entry for shallow collapse" );
+            my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ], shallow => 1 );
+            is( scalar(keys %{ $buffer->entries }), 1, "one entry for shallow collapse" );
             is( scalar(@ids), 1, "one root set ID" );
+
+            $buffer->update_entries;
         }
     }
 }
@@ -438,7 +450,10 @@ use Tie::RefHash;
 
         my $s = $lo->new_scope;
 
-        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
+
+        my $entries = $buffer->entries;
+
         is( scalar(keys %$entries), 1, "one entries for deep collapse with intrinsic value" );
         is( scalar(@ids), 1, "one root set ID" );
 
@@ -447,6 +462,58 @@ use Tie::RefHash;
             {
                 zot => "one",
                 bar => KiokuDB::Entry->new(
+                    class => "Bar",
+                    data  => { blah => "two" },
+                    object => $obj->bar,
+                ),
+            },
+            "intrinsic entry data",
+        );
+    }
+}
+
+{
+    my $bar = Bar->new( blah => "two" );
+    my $obj = Foo->new(
+        zot => "one",
+        bar => $bar,
+        zot => $bar,
+    );
+
+    {
+        my $v = KiokuDB::Collapser->new(
+            backend => KiokuDB::Backend::Hash->new,
+            live_objects => my $lo = KiokuDB::LiveObjects->new,
+            typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        Bar => KiokuDB::TypeMap::Entry::MOP->new(
+                            intrinsic => 1,
+                        ),
+                    },
+                ),
+            ),
+        );
+
+        my $s = $lo->new_scope;
+
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
+
+        my $entries = $buffer->entries;
+
+        is( scalar(keys %$entries), 1, "one entries for deep collapse with shared intrinsic value" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        is_deeply(
+            $entries->{$ids[0]}->data,
+            {
+                zot => "one",
+                bar => KiokuDB::Entry->new(
+                    class => "Bar",
+                    data  => { blah => "two" },
+                    object => $obj->bar,
+                ),
+                zot => KiokuDB::Entry->new(
                     class => "Bar",
                     data  => { blah => "two" },
                     object => $obj->bar,
@@ -485,9 +552,10 @@ use Tie::RefHash;
 
         my $s = $lo->new_scope;
 
-        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
         is( scalar(@ids), 1, "one root set ID" );
 
+        my $entries = $buffer->entries;
         my $root = delete $entries->{$ids[0]};
         my $key  = (values %$entries)[0];
 
@@ -540,8 +608,10 @@ use Tie::RefHash;
 
         my $s = $lo->new_scope;
 
-        my ( $entries, @ids ) = $v->collapse( objects => [ $obj ] );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
         is( scalar(@ids), 1, "one root set ID" );
+
+        my $entries = $buffer->entries;
 
         my $root = $entries->{$ids[0]};
         my $tie  = (grep { $_->class eq 'Tie::RefHash' } values %$entries)[0];
@@ -598,42 +668,50 @@ use Tie::RefHash;
     my $s = $lo->new_scope;
 
     {
-        my ( $entries, @ids ) = $v->collapse( objects => [ $bar ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $bar ], only_new => 1 );
+
+        my $entries = $buffer->entries;
 
         is( scalar(keys %$entries), 1, "one entry" );
         is( scalar(@ids), 1, "one root set ID" );
 
         is( $entries->{$ids[0]}->class, "Bar", "class" );
 
-        $lo->update_entries( values %$entries );
+        $buffer->update_entries;
     }
 
     {
-        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_1 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_1 ], only_new => 1 );
+
+        my $entries = $buffer->entries;
 
         is( scalar(keys %$entries), 1, "one entry with only_new" );
         is( scalar(@ids), 1, "one root set ID" );
 
         is( $entries->{$ids[0]}->class, "Foo", "class" );
 
-        $lo->update_entries( values %$entries );
+        $buffer->update_entries;
     }
 
     {
-        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_2 ] );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_2 ] );
+
+        my $entries = $buffer->entries;
 
         is( scalar(keys %$entries), 2, "two entries" );
         is( scalar(@ids), 1, "one root set ID" );
 
         is( $entries->{$ids[0]}->class, "Foo", "class" );
 
-        $lo->update_entries( values %$entries );
+        $buffer->update_entries;
     }
 
     {
         $lo->insert( foo_3 => $foo_3 );
 
-        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_3 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_3 ], only_new => 1 );
+
+        my $entries = $buffer->entries;
 
         is( $ids[0], "foo_3", "custom ID for object" );
 
@@ -642,11 +720,13 @@ use Tie::RefHash;
 
         is( $entries->{$ids[0]}->class, "Foo", "class" );
 
-        $lo->update_entries( values %$entries );
+        $buffer->update_entries;
     }
 
     {
-        my ( $entries, @ids ) = $v->collapse( objects => [ $foo_4 ], only_new => 1 );
+        my ( $buffer, @ids ) = eval { $v->collapse( objects => [ $foo_4 ], only_new => 1 ) };
+
+        my $entries = $buffer->entries;
 
         is( scalar(keys %$entries), 2, "two entries" );
         is( scalar(@ids), 1, "one root set ID" );
@@ -655,14 +735,15 @@ use Tie::RefHash;
 
         ok( !exists($entries->{$lo->object_to_id($bar)}), "known object doesn't exist in entry set" );
 
+        $buffer->update_entries;
+
         is_deeply(
             $entries->{$ids[0]}->data->{moof},
             [
                 KiokuDB::Reference->new( id => $lo->object_to_id($foo_4->moof->[0]) ),
                 KiokuDB::Reference->new( id => $lo->object_to_id($bar) ),
             ],
+            "references",
         );
-
-        $lo->update_entries( values %$entries );
     }
 }
