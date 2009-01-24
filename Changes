@@ -1,3 +1,11 @@
+0.23
+    - Add KiokuDB::DoNotSerialize trait (MooseX::Storage trait is still respected)
+    - add Collapser::Buffer, which replaces the various temp attrs. Changes
+      from the buffer are only written to live objects after a successful write
+      to the backend. This also fixes duplicate ID::Content objects being
+      inserted when one is already live.
+    - Various doc improvements
+
 0.22
     - Add TXN::Memory role to provide memory bufferred transactions to backends only
       supporting atomicity guarantees (e.g. CouchDB)
