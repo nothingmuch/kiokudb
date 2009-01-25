@@ -115,9 +115,15 @@ sub run {
     }
 }
 
+has get_directory => (
+    isa => "CodeRef|Str",
+    is  => "ro",
+);
+
 has directory => (
     is  => "ro",
     isa => "KiokuDB",
+    lazy_build => 1,
     handles => [qw(
         lookup exists
         store
@@ -149,6 +155,12 @@ has directory => (
         objects_to_ids
     )],
 );
+
+sub _build_directory {
+    my $self = shift;
+    my $method = $self->get_directory or die "either 'directory' or 'get_directory' is required";
+    return $self->$method;
+}
 
 sub live_objects {
     shift->directory->live_objects->live_objects
