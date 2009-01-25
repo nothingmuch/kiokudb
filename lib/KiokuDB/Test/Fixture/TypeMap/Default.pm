@@ -24,12 +24,32 @@ use constant HAVE_URI_WITH_BASE     => eval { require URI::WithBase };
 use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::SaltedDigest };
 use constant HAVE_PATH_CLASS        => eval { require Path::Class };
 use constant HAVE_IXHASH            => eval { require Tie::IxHash };
+use constant HAVE_MX_TRAITS         => eval { require MooseX::Traits };
 
 {
     package Some::Role;
     use Moose::Role;
 
     has role_attr => ( is => "rw" );
+
+    package Some::Other::Role;
+    use Moose::Role;
+
+    has other_role_attr => ( is => "rw" );
+
+    package Some::Third::Role;
+    use Moose::Role;
+
+    sub a_role_method { "hello" }
+
+    package Some::Class;
+    use Moose;
+
+    if ( KiokuDB::Test::Fixture::TypeMap::Default::HAVE_MX_TRAITS ) {
+        with qw(MooseX::Traits);
+    }
+
+    has name => ( is => "rw" );
 }
 
 with qw(KiokuDB::Test::Fixture);
@@ -75,6 +95,15 @@ sub create {
                 obj => Authen::Passphrase::SaltedDigest->new(
                     algorithm => "SHA-1", salt_random => 20,
                     passphrase => "passphrase"
+                ),
+            },
+        ) : (),
+        HAVE_MX_TRAITS ? (
+            traits => {
+                obj => Some::Class->new_with_traits(
+                    traits => [qw(Some::Other::Role Some::Third::Role)],
+                    name => "blah",
+                    other_role_attr => "foo",
                 ),
             },
         ) : (),
@@ -166,6 +195,20 @@ sub verify {
         isa_ok( $file, "Path::Class::File" );
 
         is( $file->basename, "foo.txt", "basename" );
+    }
+
+    if ( HAVE_MX_TRAITS ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
+        my $obj = $self->lookup_ok("traits")->{obj};
+
+        does_ok( $obj, "Some::Other::Role" );
+        does_ok( $obj, "Some::Third::Role" );
+
+        is( $obj->other_role_attr, "foo", "trait attr" );
+        
+        is( $obj->name, "blah", "normal attr" );
     }
 }
 
