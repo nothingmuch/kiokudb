@@ -183,10 +183,10 @@ sub delete_ok {
 sub lookup_ok {
     my ( $self, @ids ) = @_;
 
-    local $Test::Builder::Level = $Test::Builder::Level + 1;
-
     my @ret;
     _lives_and_ret { @ret = $self->lookup( @ids ) } "lookup " . scalar(@ids) . " objects";
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     is( scalar(grep { ref } @ret), scalar(@ids), "all lookups succeeded" );
 
