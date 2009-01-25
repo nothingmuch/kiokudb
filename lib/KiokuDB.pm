@@ -510,7 +510,15 @@ sub delete {
 }
 
 sub txn_do {
-    my ( $self, $code, %args ) = @_;
+    my ( $self, @args ) = @_;
+
+    unshift @args, 'body' if @args % 2 == 1;
+
+    my %args = @args;
+
+    my $code = delete $args{body};
+
+    my $s = $args{scope} && $self->new_scope;
 
     my $backend = $self->backend;
 
@@ -520,7 +528,7 @@ sub txn_do {
         my $rollback = $args{rollback};
         $args{rollback} = sub { $scope->rollback; $rollback && $rollback->() };
 
-        $backend->txn_do( $code, %args );
+        return $backend->txn_do( $code, %args );
     } else {
         return $code->();
     }
@@ -833,12 +841,17 @@ C<update> must be called for the change to take effect.
 
 =item txn_do $code, %args
 
+=item txn_do %args
+
 Executes $code within the scope of a transaction.
 
 This requires that the backend supports transactions
 (L<KiokuDB::Backend::Role::TXN>).
 
 Transactions may be nested.
+
+If the C<scope> argument is true an implicit call to C<new_scope> will be made,
+keeping the scope for the duration of the transaction.
 
 =item search \%proto
 

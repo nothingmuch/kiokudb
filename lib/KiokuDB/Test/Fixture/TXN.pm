@@ -164,7 +164,7 @@ sub verify {
     }
 
     {
-        $self->txn_do(sub {
+        $self->txn_do( scope => 1, body => sub {
             my $s = $self->new_scope;
             {
                 my $s = $self->new_scope;
