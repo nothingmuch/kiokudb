@@ -693,6 +693,44 @@ Lastly, root set membership may also be specified explicitly by the typemap.
 A root set member must be explicitly using C<delete> or removed from the root
 set before it will be purged with any garbage collection scheme.
 
+=head1 TRANSACTIONS
+
+On supporting backends the C<txn_do> method will execute a block and commit the
+transaction at its end.
+
+Nesting of C<txn_do> blocks is always supported, though rolling back a nested
+transaction may produce different results on different backends.
+
+If the backend does not support transactions C<txn_do> simply executes the code
+block normally.
+
+=head1 CONCURRENCY
+
+Most transactional backends are also concurrent.
+
+L<KiokuDB::Backend::BDB> and L<KiokuDB::Backend::CouchDB> default to
+serializable transaction isolation and do not suffer from deadlocks, but
+serialization errors may occur, aborting the transaction (in which case the
+transaction should be tried again).
+
+L<KiokuDB::Backend::Files> provides good concurrency support but will only
+detect deadlocks on platforms which return C<EDEADLK> from C<flock).
+L<Directory::Transactional> may provide alternative mechanisms in the future.
+
+Concurrency support in L<KiokuDB::Backend::DBI> depends on the database. SQLite
+defaults to serializable transaction isolation out of the box, wheras MySQL and
+PostgreSQL default to read committed.
+
+Depending on your application read committed isolation may be sufficient, but
+due to the graph structure nature of the data repeatable reads or serializable
+level isolation is highly reccomended. Read committed isolation generally works
+well when each row in the database is more or less independent of others, and
+various constraints ensure integrity. Unfortunately this is not the case with
+the graph layout.
+
+To enable stronger isolation guarantees see
+L<KiokuDB::Backend::DBI/Transactions> for per-database pointers.
+
 =head1 ATTRIBUTES
 
 L<KiokuDB> uses a number of delegates which do the actual work.
