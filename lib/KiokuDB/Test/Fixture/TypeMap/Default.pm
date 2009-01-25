@@ -25,6 +25,7 @@ use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::Salted
 use constant HAVE_PATH_CLASS        => eval { require Path::Class };
 use constant HAVE_IXHASH            => eval { require Tie::IxHash };
 use constant HAVE_MX_TRAITS         => eval { require MooseX::Traits };
+use constant HAVE_MX_OP             => eval { require MooseX::Object::Pluggable };
 
 {
     package Some::Role;
@@ -47,6 +48,10 @@ use constant HAVE_MX_TRAITS         => eval { require MooseX::Traits };
 
     if ( KiokuDB::Test::Fixture::TypeMap::Default::HAVE_MX_TRAITS ) {
         with qw(MooseX::Traits);
+    }
+
+    if ( KiokuDB::Test::Fixture::TypeMap::Default::HAVE_MX_OP ) {
+        with qw(MooseX::Object::Pluggable);
     }
 
     has name => ( is => "rw" );
@@ -105,6 +110,28 @@ sub create {
                     name => "blah",
                     other_role_attr => "foo",
                 ),
+            },
+        ) : (),
+        HAVE_MX_OP ? (
+            op_one => do {
+                my $obj = Some::Class->new( name => "first" );
+
+                $obj->load_plugin("+Some::Other::Role");
+
+                $obj->other_role_attr("after");
+
+                $obj;
+            },
+            op_two => do {
+                my $obj = Some::Class->new( name => "second" );
+                
+                $obj->load_plugin("+Some::Other::Role");
+
+                $obj->other_role_attr("after");
+
+                $obj->load_plugin("+Some::Third::Role");
+
+                $obj;
             },
         ) : (),
         homer => $homer,
@@ -209,6 +236,24 @@ sub verify {
         is( $obj->other_role_attr, "foo", "trait attr" );
         
         is( $obj->name, "blah", "normal attr" );
+    }
+
+    if ( HAVE_MX_OP ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
+        my $one = $self->lookup_ok("op_one");
+
+        does_ok( $one, "Some::Other::Role" );
+
+        is( $one->other_role_attr, "after", "role attr" );
+
+        my $two = $self->lookup_ok("op_two");
+
+        does_ok( $two, "Some::Other::Role" );
+        does_ok( $two, "Some::Third::Role" );
+
+        is( eval { $two->other_role_attr }, "after", "role attr" );
     }
 }
 

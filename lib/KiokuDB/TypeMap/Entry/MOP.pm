@@ -65,11 +65,16 @@ sub compile_collapser {
 
         # FIXME ancestral roles all the way up to first non anon ancestor,
         # at least check for additional attributes or other metadata which we
-        # should probably error on if anything
+        # should probably error on anything we can't store
+
+        # theoretically this can do multiple inheritence too
 
         my $ancestor = $meta;
+        my @anon;
 
         search: {
+            push @anon, $ancestor;
+
             my @super = $ancestor->superclasses;
 
             if ( @super == 1 ) {
@@ -77,16 +82,36 @@ sub compile_collapser {
                 if ( $ancestor->is_anon_class ) {
                     redo search;
                 }
-            } else {
+            } elsif ( @super > 1 ) {
                 croak "Cannot resolve anonymous class with multiple inheritence: " . $meta->name;
+            } else {
+                croak "no super, ancestor: $ancestor (" . $ancestor->name . ")";
             }
+        }
+
+        my $class_meta = $ancestor->name;
+
+        foreach my $anon ( reverse @anon ) {
+            $class_meta = {
+                roles => [
+                    map { $_->name } map {
+                        $_->isa("Moose::Meta::Role::Composite")
+                            ? @{$_->get_roles}
+                            : $_
+                    } @{ $anon->roles }
+                ],
+                superclasses => [ $class_meta ],
+            };
+        }
+
+        if ( $class_meta->{superclasses}[0] eq $ancestor->name ) {
+            # no need for redundancy, expansion will provide this as the default
+            delete $class_meta->{superclasses};
         }
 
         %attrs = (
             class => $ancestor->name,
-            class_meta => {
-                roles => [ map { $_->name } @{ $meta->roles } ],
-            },
+            class_meta => $class_meta,
         );
     }
 
@@ -161,17 +186,13 @@ sub compile_expander {
     my $anon = $meta->is_anon_class;
 
     return sub {
-        my ( $self, $entry, @args ) = @_;
+        my ( $linker, $entry, @args ) = @_;
 
         if ( $entry->has_class_meta and !$anon ) {
             # the entry is for an anonymous subclass of this class, we need to
             # compile that entry and short circuit to it. if $anon is true then
             # we're already compiled, and the class_meta is already handled
-            my $anon_meta = $meta->create_anon_class(
-                cache => 1,
-                superclasses => [ $entry->class ],
-                %{ $entry->class_meta },
-            );
+            my $anon_meta = $self->reconstruct_anon_class($entry);
 
             my $anon_class = $anon_meta->name;
 
@@ -180,31 +201,31 @@ sub compile_expander {
             }
 
             my $method = $resolver->expand_method($anon_class);
-            return $self->$method($entry, @args);
+            return $linker->$method($entry, @args);
         }
 
 
         my $instance = $meta_instance->create_instance();
 
         # note, this is registered *before* any other value expansion, to allow circular refs
-        $self->register_object( $entry => $instance );
+        $linker->register_object( $entry => $instance );
 
         my $data = $entry->data;
 
         my @values;
 
         foreach my $name ( keys %$data ) {
+            my $attr = $attrs{$name} or croak "Unknown attribibute: $name";
             my $value = $data->{$name};
-            my $attr = $attrs{$name};
 
             if ( ref $value ) {
                 if ( $lazy{$name} and ref($value) eq 'KiokuDB::Reference' ) {
-                    my $thunk = KiokuDB::Thunk->new( id => $value->id, linker => $self, attr => $attr );
+                    my $thunk = KiokuDB::Thunk->new( id => $value->id, linker => $linker, attr => $attr );
                     $meta_instance->set_slot_value($instance, $attr->name, $thunk); # FIXME low level variant of $attr->set_value
                 } else {
                     my @pair = ( $attr, undef );
 
-                    $self->inflate_data($value, \$pair[1]) if ref $value;
+                    $linker->inflate_data($value, \$pair[1]) if ref $value;
                     push @values, \@pair;
                 }
             } else {
@@ -212,7 +233,7 @@ sub compile_expander {
             }
         }
 
-        $self->queue_finalizer(sub {
+        $linker->queue_finalizer(sub {
             foreach my $pair ( @values ) {
                 my ( $attr, $value ) = @$pair;
                 $attr->set_value($instance, $value);
@@ -221,6 +242,29 @@ sub compile_expander {
 
         return $instance;
     }
+}
+
+sub reconstruct_anon_class {
+    my ( $self, $entry ) = @_;
+
+    $self->inflate_class_meta(
+        superclasses => [ $entry->class ],
+        %{ $entry->class_meta },
+    );
+}
+
+sub inflate_class_meta {
+    my ( $self, %meta ) = @_;
+
+    foreach my $super ( @{ $meta{superclasses} } ) {
+        $super = $self->inflate_class_meta(%$super)->name if ref $super;
+    }
+
+    # FIXME should probably get_meta_by_name($entry->class)
+    Moose::Meta::Class->create_anon_class(
+        cache => 1,
+        %meta,
+    );
 }
 
 sub compile_id {
