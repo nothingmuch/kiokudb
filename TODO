@@ -71,6 +71,7 @@
     * collection of clusters of data: http://www-sor.inria.fr/publi/GC-PERS-DSM_POS94.html
     * http://pauillac.inria.fr/~lefessan/dgc/
     * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.663
+    * transactional ref counting: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.33.2363
 
 * XS acceleration
     * LiveObjects
