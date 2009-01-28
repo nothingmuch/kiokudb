@@ -116,7 +116,8 @@ sub _load_all {
     my @objects = $self->_linker->get_or_load_objects($self->_objects->members);
 
     # push all the objects to the set's scope so that they live at least as long as it
-    $self->_live_object_scope->push( @objects );
+    my $scope = $self->_live_object_scope or croak "Can't vivify set, originating object scope is already dead";
+    $scope->push( @objects );
 
     # replace the ID set with the object set
     $self->_set_objects( Set::Object::Weak->new(@objects) );
