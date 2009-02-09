@@ -116,6 +116,7 @@ sub _load_all {
     my @objects = $self->_linker->get_or_load_objects($self->_objects->members);
 
     # push all the objects to the set's scope so that they live at least as long as it
+    $self->_live_object_scope( $self->_live_objects->current_scope ) unless defined $self->_live_object_scope;
     $self->_live_object_scope->push( @objects );
 
     # replace the ID set with the object set
