@@ -795,12 +795,12 @@ An example DSN is:
     my $dir = KiokuDB->connect("bdb:dir=path/to/data/");
 
 The backend moniker name is extracted by splitting on the colon. The rest of
-the string is passed tp C<new_from_dsn>, which is documented in more detail in
+the string is passed to C<new_from_dsn>, which is documented in more detail in
 L<KiokuDB::Backend>.
 
 Typically DSN arguments are separated by C<;>, with C<=> separating keys and
 values. Arguments with no value are assumed to denote boolean truth (e.g.
-C<jspon:dir=foo;pretty> means c<dir => "foo", pretty => 1>).
+C<jspon:dir=foo;pretty> means C<< dir => "foo", pretty => 1 >>).
 
 Extra arguments are passed both to the backend constructor, and the C<KiokuDB>
 constructor.
@@ -898,7 +898,7 @@ keeping the scope for the duration of the transaction.
 Searching requires a backend that supports querying.
 
 The C<\%proto> form is currently unspecified but in the future should provide a
-simple but consistent way of looking objects by attributes.
+simple but consistent way of looking up objects by attributes.
 
 The second form is backend specific querying, for instance
 L<Search::GIN::Query> objects passed to L<KiokuDB::Backend::BDB::GIN> or
