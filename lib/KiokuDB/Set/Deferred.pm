@@ -116,7 +116,15 @@ sub _load_all {
     my @objects = $self->_linker->get_or_load_objects($self->_objects->members);
 
     # push all the objects to the set's scope so that they live at least as long as it
-    my $scope = $self->_live_object_scope or croak "Can't vivify set, originating object scope is already dead";
+    my $scope = $self->_live_object_scope;
+    unless ( $scope ) {
+        if ( my $current_scope = $self->_live_objects->current_scope ) {
+            $scope = $current_scope;
+            $self->_live_object_scope($scope);
+        } else {
+            croak "Can't vivify set, originating object scope is already dead";
+        }
+    }
     $scope->push( @objects );
 
     # replace the ID set with the object set
