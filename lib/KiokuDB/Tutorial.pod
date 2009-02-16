@@ -714,7 +714,7 @@ It can be iterated as follows:
 
     while ( my $block = $stream->next ) {
         foreach my $person ( @$block ) {
-            print "found a preson: ", $person->name;
+            print "found a person: ", $person->name;
         }
     }
 
