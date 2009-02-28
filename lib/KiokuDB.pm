@@ -935,6 +935,24 @@ C<$filter>.
 
 Iterates the root set calling C<$callback> for each object.
 
+=item object_to_id
+
+=item objects_to_ids
+
+=item id_to_object
+
+=item ids_to_objects
+
+Delegates to L<KiokuDB::LiveObjects>
+
+=item directory
+
+Returns C<$self>.
+
+This is used when setting up L<KiokuDB::Role::API> delegation chains. Calling
+C<directory> on any level of delegator will always return the real L<KiokuDB>
+instance no matter how deep.
+
 =back
 
 =head1 GLOBALS
