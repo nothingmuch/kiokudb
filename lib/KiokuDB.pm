@@ -21,6 +21,8 @@ use Carp qw(croak);
 
 use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
+# with qw(KiokuDB::Role::API); # moved lower
+
 sub connect {
     my ( $class, $dsn, @args ) = @_;
 
@@ -148,7 +150,9 @@ has live_objects => (
         clear_live_objects => "clear",
         new_scope          => "new_scope",
         object_to_id       => "object_to_id",
-        objects_to_ids     => "objects_to_ids"
+        objects_to_ids     => "objects_to_ids",
+        id_to_object       => "id_to_object",
+        ids_to_objects     => "ids_to_objects",
     },
 );
 
@@ -199,6 +203,11 @@ sub _build_linker {
         queue => $self->linker_queue,
     );
 }
+
+
+with qw(KiokuDB::Role::API);
+
+
 
 sub exists {
     my ( $self, @ids ) = @_;
@@ -532,6 +541,11 @@ sub txn_do {
     } else {
         return $code->();
     }
+}
+
+sub directory {
+    my $self = shift;
+    return $self;
 }
 
 __PACKAGE__->meta->make_immutable;
