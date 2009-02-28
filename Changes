@@ -1,3 +1,14 @@
+0.24
+    - various doc fixes (Dan Dascalescu)
+    - fix semantics when a Set::Deferred outlives the scope in which it was
+      created and then gets vivified
+    - add a test for MooseX::Traits
+    - doc improvements
+    - concurrency stress test
+    - txn_do takes a 'scope' arg (calls new_scope automatically)
+    - various doc fixes
+    - add KiokuDB::Role::API
+
 0.23
     - Add KiokuDB::DoNotSerialize trait (MooseX::Storage trait is still respected)
     - add Collapser::Buffer, which replaces the various temp attrs. Changes
