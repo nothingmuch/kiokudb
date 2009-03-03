@@ -603,11 +603,6 @@ If you're new to L<KiokuDB> check out L<KiokuDB::Tutorial>.
     # others use GIN queries (DBI supports both)
     $d->search($gin_query);
 
-=head1 ALPHA WARNING
-
-L<KiokuDB> is still in its infancy. No fundamental changes are expected, but
-nevertheless backwards compatibility is not yet guaranteed.
-
 =head1 DESCRIPTION
 
 L<KiokuDB> is a Moose based frontend to various data stores, somewhere in
