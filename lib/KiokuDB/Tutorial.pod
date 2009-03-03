@@ -70,7 +70,7 @@ these as named arguments:
 
 =head1 INSERTING OBJECTS
 
-Let's start with this simple class:
+Let's start by defining a simple class using L<Moose>:
 
     package Person;
     use Moose;
@@ -200,7 +200,7 @@ C<name>:
     package Person;
 
     has spouse => (
-        isa => __PACKAGE__,
+        isa => "Person",
         is  => "rw",
         weak_ref => 1,
     );
