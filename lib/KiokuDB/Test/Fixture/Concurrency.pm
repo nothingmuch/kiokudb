@@ -53,6 +53,8 @@ sub run {
     SKIP: {
         local $Test::Builder::Level = $Test::Builder::Level + 1;
 
+        skip "Set KIOKUDB_STRESS_TEST to run this fixture", 1 unless $ENV{KIOKUDB_STRESS_TEST};
+
         $self->precheck;
 
         lives_ok {
