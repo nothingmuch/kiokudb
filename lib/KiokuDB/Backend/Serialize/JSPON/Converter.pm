@@ -116,6 +116,8 @@ and passed to the constructors of the expander and the collapser.
 
 =head1 ATTRIBUTES
 
+=over 4
+
 =item id_field
 
 =item class_field

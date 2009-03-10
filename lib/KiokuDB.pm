@@ -723,7 +723,7 @@ serialization errors may occur, aborting the transaction (in which case the
 transaction should be tried again).
 
 L<KiokuDB::Backend::Files> provides good concurrency support but will only
-detect deadlocks on platforms which return C<EDEADLK> from C<flock).
+detect deadlocks on platforms which return C<EDEADLK> from C<flock>.
 L<Directory::Transactional> may provide alternative mechanisms in the future.
 
 Concurrency support in L<KiokuDB::Backend::DBI> depends on the database. SQLite
