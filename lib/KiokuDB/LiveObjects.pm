@@ -4,7 +4,7 @@ package KiokuDB::LiveObjects;
 use Moose;
 
 use Scalar::Util qw(weaken);
-use Scope::Guard;
+use KiokuDB::LiveObjects::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
 use Carp qw(croak);
 BEGIN { local $@; eval 'use Devel::PartialDump qw(croak)' };
@@ -198,7 +198,7 @@ sub update_entries {
         push @ret, $ei->{$id} if defined wantarray;
 
         weaken($ei->{$id} = $entry);
-        $eo->{$entry} ||= Scope::Guard->new(sub { delete $ei->{$id} });
+        $eo->{$entry} ||= KiokuDB::LiveObjects::Guard->new( $ei, $id );
 
         if ( ref(my $obj = $i->{$id}) ) {
             my $ent = $o->{$obj};
@@ -293,7 +293,7 @@ sub insert {
 
             if ( $entry and !$ei->{$id} ) {
                 $ei->{$id} = $entry;
-                $eo->{$entry} = Scope::Guard->new(sub { delete $ei->{$id} });
+                $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
             }
 
             # note, $entry = $e->{$id} is *not* desired, it isn't necessarily
@@ -302,7 +302,7 @@ sub insert {
             $o->{$object} = {
                 id => $id,
                 entry => $entry,
-                guard => Scope::Guard->new(sub { delete $i->{$id} }),
+                guard => KiokuDB::LiveObjects::Guard->new( $i, $id ),
             };
         }
     }
@@ -320,7 +320,7 @@ sub insert_entries {
     my @ids = map { $_->id } @entries;
 
     my $ei = $self->_entry_ids;
-    @{ $self->_entry_objects }{@entries} = map { my $id = $_; Scope::Guard->new(sub { delete $ei->{$id} }) } @ids;
+    @{ $self->_entry_objects }{@entries} = map { KiokuDB::LiveObjects::Guard->new( $ei, $_ ) } @ids;
     weaken($_) for @{$ei}{@ids} = @entries;
     return;
 }
