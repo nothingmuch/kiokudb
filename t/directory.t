@@ -54,6 +54,8 @@ sub no_live_objects {
     __PACKAGE__->meta->make_immutable;
 }
 
+my $l = $dir->live_objects;
+
 # Pixie ain't got nuthin on us
 my $id;
 
@@ -73,7 +75,13 @@ my $id;
 
     memory_cycle_ok($x, "cycle is weak");
 
+    memory_cycle_ok($s, "no cycles in scope");
+    memory_cycle_ok($l, "no cycles in live objects");
+
     $id = $dir->store($x);
+
+    memory_cycle_ok($s, "no cycles in scope");
+    memory_cycle_ok($l, "no cycles in live objects");
 
     my $entry = $dir->live_objects->objects_to_entries($x);
 
@@ -94,10 +102,17 @@ my $id;
 
 no_live_objects;
 
+memory_cycle_ok($l, "no cycles in live objects");
+
 {
     my $s = $dir->new_scope;
 
     my $obj = $dir->lookup($id);
+
+    memory_cycle_ok($obj, "no cycles in object");
+
+    memory_cycle_ok($s, "no cycles in scope");
+    memory_cycle_ok($l, "no cycles in live objects");
 
     is( $obj->foo, "dancing", "simple attr" );
     isa_ok( $obj->bar, "Foo", "object attr" );
@@ -107,6 +122,8 @@ no_live_objects;
 }
 
 no_live_objects;
+
+memory_cycle_ok($l, "no cycles in live objects");
 
 {
     my $s = $dir->new_scope;
