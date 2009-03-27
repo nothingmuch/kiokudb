@@ -1,3 +1,8 @@
+0.25
+    - attempt to reduce memory usage by using a custom destruction guard
+    - only run concurrency stress test if env var is set
+    - various doc fixes
+
 0.24
     - various doc fixes (Dan Dascalescu)
     - fix semantics when a Set::Deferred outlives the scope in which it was
