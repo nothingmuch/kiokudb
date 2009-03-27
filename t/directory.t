@@ -6,7 +6,7 @@ use warnings;
 use Test::More 'no_plan';
 use Test::Exception;
 
-BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok {}' }
+BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok { SKIP: { skip "Test::Memory::Cycle missing", 1 }}' }
 
 use Scalar::Util qw(blessed weaken isweak refaddr);
 
