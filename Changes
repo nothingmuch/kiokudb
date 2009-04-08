@@ -1,3 +1,7 @@
+0.26
+    - avoid using deprecated Moose/Class::MOP features
+    - bump deps on Moose and Class::MOP
+
 0.25
     - attempt to reduce memory usage by using a custom destruction guard
     - only run concurrency stress test if env var is set
