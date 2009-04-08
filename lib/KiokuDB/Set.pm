@@ -35,7 +35,7 @@ attr _objects => (
 sub _clone {
     my ( $self, %args ) = @_;
     $args{set} ||= $self->_clone_object_set;
-    $self->meta->clone_instance( $self, %args );
+    $self->meta->clone_object( $self, %args );
 }
 
 sub _clone_object_set {
