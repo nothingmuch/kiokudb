@@ -14,9 +14,9 @@ WriteMakefile(
     PL_FILES     => { },
     EXE_FILES    => [ grep { /\w$/ } glob("bin/*") ],
     PREREQ_PM    => {
-        'Moose' => 0.70,
+        'Moose' => 0.74,
         'MooseX::Role::Parameterized' => 0.02,
-        'Class::MOP' => 0.73,
+        'Class::MOP' => 0.81,
         #'MooseX::AttributeHelpers' => '0.14',
         'MooseX::Types::Path::Class' => 0,
         'Path::Class' => 0,
