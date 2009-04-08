@@ -41,7 +41,7 @@ sub _build__exclude {
 sub _build_includes {
     my $self = shift;
 
-    my @attrs = $self->meta->compute_all_applicable_attributes;
+    my @attrs = $self->meta->get_all_attributes;
 
     my $exclude = $self->_exclude;
 

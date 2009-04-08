@@ -40,7 +40,7 @@ sub compile_collapser {
         !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
             and
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
-    } $meta->compute_all_applicable_attributes;
+    } $meta->get_all_attributes;
 
     my %lazy;
     foreach my $attr ( @attrs ) {
@@ -172,7 +172,7 @@ sub compile_expander {
         !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
             and
         !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
-    } $meta->compute_all_applicable_attributes;
+    } $meta->get_all_attributes;
 
     foreach my $attr ( @attrs ) {
         $attrs{$attr->name} = $attr;

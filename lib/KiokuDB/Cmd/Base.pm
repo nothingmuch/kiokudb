@@ -40,7 +40,7 @@ has exit_code => (
 sub _build_attrs {
     my $self = shift;
 
-    foreach my $attr ( grep { $_->does("EarlyBuild") } $self->meta->compute_all_applicable_attributes ) {
+    foreach my $attr ( grep { $_->does("EarlyBuild") } $self->meta->get_all_attributes ) {
         $attr->get_value($self);
     }
 }
