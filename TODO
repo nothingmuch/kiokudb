@@ -1,3 +1,8 @@
+* smaller dist
+    - KiokuDB - core
+    - KiokuDB::Cmd - cli
+    - KiokuDB::Test - test fixtures
+
 * configuration file
     * need to be able to specify:
         * regular options
@@ -19,10 +24,6 @@
             * predicates as UUIDs?
             * no collapsing by default
         * SPARQL matching with simple search
-
-* concurrency test fixture for backends
-    * forks
-    * threads
 
 * event based
     * linker is almost ready to integrate event based linking
