@@ -18,6 +18,7 @@ WriteMakefile(
         'MooseX::Role::Parameterized' => 0.02,
         'Class::MOP' => 0.81,
         #'MooseX::AttributeHelpers' => '0.14',
+        'MooseX::Clone' => 0.03,
         'MooseX::Types::Path::Class' => 0,
         'Path::Class' => 0,
 
