@@ -450,6 +450,7 @@ sub deep_update {
     $self->store_objects( only_known => 1, objects => \@objects );
 }
 
+# FIXME fails for immutable data...
 sub set_root {
     my ( $self, @objects ) = @_;
     $_->root(1) for $self->live_objects->objects_to_entries(@objects);

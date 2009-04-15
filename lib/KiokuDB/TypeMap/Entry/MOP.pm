@@ -127,7 +127,8 @@ sub compile_collapser {
             my $object = $args{object};
 
             if ( $immutable ) {
-                if ( my $prev = $self->live_objects->object_to_entry($object) ){
+                # FIXME this doesn't handle unset_root
+                if ( my $prev = $self->live_objects->object_to_entry($object) ) {
                     return $self->make_skip_entry( %args, prev => $prev );
                 } elsif ( $content_id ) {
                     if ( ($self->backend->exists($args{id}))[0] ) { # exists works in list context

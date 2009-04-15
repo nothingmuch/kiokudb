@@ -36,7 +36,7 @@ sub _build_backend {
 
     $self->v(" $b\n");
 
-    $self->try_txn_begin($b) unless $self->dry_run;
+    $self->try_txn_begin($b);
 
     $b;
 }

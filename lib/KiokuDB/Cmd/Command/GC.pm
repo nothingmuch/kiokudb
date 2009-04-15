@@ -85,12 +85,13 @@ augment run => sub {
             print STDOUT $g->members;
         } else {
             $self->v("cleaning...\n");
-            $self->backend->delete( $g->members );
-            $self->try_txn_commit($self->backend);
+            $self->backend->delete( $g->members ) unless $self->dry_run;
         }
     } else {
         $self->v("no dead objects\n");
     }
+
+    $self->try_txn_commit( $self->backend );
 };
 
 __PACKAGE__->meta->make_immutable;
