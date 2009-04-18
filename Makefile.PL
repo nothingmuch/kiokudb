@@ -71,7 +71,7 @@ WriteMakefile(
         'YAML::XS' => 0.30,
         'Storable' => 0,
 
-        'IO' => 1.2301,
+        'IO' => 1.23,
 
         # used in command line tools
         'Proc::InvokeEditor' => 1,
