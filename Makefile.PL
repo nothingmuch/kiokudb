@@ -52,7 +52,7 @@ WriteMakefile(
         'Hash::Util::FieldHash::Compat' => 0,
         ( eval { require Hash::Util::FieldHash } ? () : (
             # for 5.8 we need some specific versions of fieldhash deps
-            'Tie::RefHash::Weak' => '0.9',
+            'Tie::RefHash::Weak' => '0.09',
             'Variable::Magic'    => '0.24',
         )),
         'Scope::Guard' => 0,
