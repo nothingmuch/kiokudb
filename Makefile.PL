@@ -18,7 +18,7 @@ WriteMakefile(
         'MooseX::Role::Parameterized' => 0.02,
         'Class::MOP' => 0.81,
         #'MooseX::AttributeHelpers' => '0.14',
-        'MooseX::Clone' => 0.03,
+        'MooseX::Clone' => 0.04,
         'MooseX::Types::Path::Class' => 0,
         'Path::Class' => 0,
 
@@ -41,7 +41,7 @@ WriteMakefile(
             : ( "Data::UUID"          => 0 ) ),
 
         # visits are also important
-        'Data::Visitor' => '0.20',
+        'Data::Visitor' => '0.24',
         'Tie::ToObject' => 0,
         'Task::Weaken'  => 0,
 
