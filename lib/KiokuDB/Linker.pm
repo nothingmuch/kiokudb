@@ -73,7 +73,7 @@ sub expand_objects {
         if ( defined ( my $obj = $l->id_to_object($entry->id) ) ) {
             push @objects, $obj;
         } else {
-            push @objects, $self->_expand_object($entry);
+            $self->inflate_data( $entry, \($objects[@objects]) );
         }
     }
 
@@ -85,25 +85,17 @@ sub expand_objects {
 sub expand_object {
     my ( $self, $entry ) = @_;
 
-    my $obj = $self->_expand_object($entry);
+    $self->inflate_data( $entry, \(my $obj) );
 
     $self->load_queue;
 
     return $obj;
 }
 
-sub _expand_object {
-    my ( $self, $entry ) = @_;
-
-    $self->inflate_data( $entry, \(my $data) );
-
-    return $data;
-}
-
 sub queue_ref {
     my ( $self, $ref, $into ) = @_;
 
-    if ( $self->queue ) {
+    if ( 0 and $self->queue ) {
 
         #my $b = $self->backend;
 

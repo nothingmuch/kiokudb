@@ -5,8 +5,8 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-has id => (
-    isa => "Str",
+has collapsed => (
+    isa => "Ref",
     is  => "ro",
     required => 1,
 );
@@ -29,7 +29,8 @@ has value => (
 
 sub _build_value {
     my $self = shift;
-    $self->linker->get_or_load_object($self->id);
+
+    return $self->linker->expand_object($self->collapsed);
 }
 
 sub vivify {
