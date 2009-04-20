@@ -1,3 +1,12 @@
+0.27
+    - Add roles for digest based IDs
+    - Change dep versions of IO and Tie::RefHash::Weak (they were wrong under
+      5.8) (Thanks to Otto Hirr)
+    - KiokuDB::Lazy did not have any effect unless the value was a first class
+      objects. Now it works for all refs (e.g. arrays of objects)
+    - TODO list updated
+    - correct dry_run option in WithDSN when transactions are unsupported
+
 0.26
     - avoid using deprecated Moose/Class::MOP features
     - bump deps on Moose and Class::MOP
