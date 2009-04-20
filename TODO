@@ -1,31 +1,162 @@
-* smaller dist
-    - KiokuDB - core
-    - KiokuDB::Cmd - cli
-    - KiokuDB::Test - test fixtures
+=== Small ===
 
-* configuration file
+* Doc work
+    * Doc audit
+        * make a doc todo list
+        * especially for backend authors and KiokuDB::Role::*
+    * More command line tool docs
+        * backup, recovery, etc
+    * FAQ and index
+        * where to find information, for instance to do proper backup
+        * procedures for the BDB backend you need to read BerkeleyDB::Manager
+    * Start writing a cookbook
+
+* more roles for KiokuX::User
+    * non ID based
+        * allow username to != object ID, so that users can be renamed
+    * email address handling
+    * role based access control
+        * "real" runtime roles, or a list of RBAC role names
+        * integrate with Catalyst::Plugin::Authorization::Roles
+    * high level password change/reset role using auth token objects
+        * inserts an object pointing to the user, that can reset the password for the user
+        * the ID of the token is secret, and can be emailed to the user
+        * an action that then loads the object, resets the password, and
+          then deletes the auth token object
+
+* symbolic aliases
+    * KiokuDB::Entry::Alias or somesuch
+    * used to set additional high level IDs for objects, after they are
+      already in the database
+    * Linker api to handle these on load
+    * on insert they are just special objects
+    * simple api in KiokuDB.pm to manage aliases (create, delete, etc).
+
+* configuration file support
     * need to be able to specify:
         * regular options
         * typemaps
         * extra libs to load
-        * GIN extractors
+    * shouldn't be hard with MooseX::YAML
+    * KiokuDB->connect("/path/to/my_db.yml");
+    * KiokuDB->connect("/path/to/dir"); # reads /path/to/dir/kiokudb.yml
+    * subdirectories for standard directory layout:
+        * data/ - actual storage
+        * lib/ - possibly used for typemap defs, etc
 
-* Backends:
-    * BDB/DBI
-        * Set::Object/Hash sharding (each key/member is an entry in the BDB
-          hash). This allows finer grained commits (e.g. insertion to a set
-          simultaneously will not cause a failed transaction). Will BDB even
-          allow transactions to do that? probably with MULTIVERSION, because
-          the read won't block
-    * RDF
-        * generate triples
-            * predicates as FQ attr names names
-            * predicates as short attr names
-            * predicates as UUIDs?
-            * no collapsing by default
-        * SPARQL matching with simple search
+* RPC backend
+    * simple proxying of backend methods and a KiokuDB::Backend::Remote client
+    * try for a nonblocking api, be able to plug in to a standalone blocking
+      daemon, a larger setup, or into anyevent/POE without horrible performance
+    * we'll need a preforking daemon for the backend performance
+      (Concurrency::POSIX can make this automatic), but ideally we can have a
+      nonblocking api role for most backends (see event based api below)
+    * see also RPC server below
 
-* event based
+=== Medium ===
+
+* Schema versioning
+    * store version in entries
+    * add an upgrade hook to typemap entries
+        * if $Class::VERSION ne $entry->class_version then the upgrade hook is fired
+        * the upgrade hook is responsible for creating a new entry
+        * convenience api:
+            * hash of callbacks:
+                {
+                    $version => $per_version_hook
+                    $version => $aliased_to_version, # treat objects
+                        # with version $version like they are objects
+                        # of version $aliased_to_version
+                },
+            * if a version is missing that is an error
+    * add a schema upgrade command line tool
+        * scans the DB for entries with versions that != current, and loads and
+          then updates those objects
+
+* split distro
+    - KiokuDB - core modules, for deployment
+    - KiokuDB::Cmd - cli tools
+    - KiokuDB::Test - test fixtures
+
+* $dir->refresh($object), $dir->deep_refresh($object)
+    * add refreshing method to typemap entries
+    * reload entry from the backend
+    * if entry data != live entry data, fire the typemap entry method
+    * if deep, recurse
+    * entry definitions:
+        * MOP entry involves just reassigning values
+        * Naive reassigns %$obj = ( @new_fields );
+        * Callback entry is a callback
+        * Storable - re-fire STORABLE_thaw on the live object?
+        * Passthrough - dies
+        * Set
+            * if shallow downgrade to Deferred and reload IDs assign new member IDs if shallow, downgrade to Deferred
+            * if deep upgrade to Loaded and refresh members
+
+* KiokuDB::Server
+    * server side linkage
+    * return transitive closure of entries to improve latency
+    * server side filtering
+    * server side transactions on behalf of clients
+
+* fix the set_root work on immutable/CAS objects bug (the 'root' flag is not
+  written because the object is skipped)
+
+* caching support
+    * authoritative cache support
+        * entry caching for slower backends
+    * non authoritative cache
+        * various degrees of correctness (simpledb like "gurantees" ;-)
+
+* data sharding
+    * map classes of UIDs to different backends or different tables in a
+      backend
+    * string based i guess, though we could also decorate the entry object with
+      metadata about where it should go in addition
+    * uses:
+        * transient data storage (e.g. web sessions)
+        * grouping of data for scanning purposes
+        * grouping of data for configuration purposes (e.g. different search
+          columns in DBI, content id objects in CAS storage)
+    * actual backend work is more involved but doing the high level is pretty easy
+
+* XS acceleration
+    * LiveObjects
+        * implement custom uvar magic hash instead of Scope::Guard all over
+            * should provide significant speed & memory consumption
+              improvements
+    * Linker
+        * inflate_data is actually really ugly in Perl, could be
+          smaller/faster/cleaner in XS due to lack of of code duplication
+    * Data::Visitor
+        * generic acceleration for Data::Visitor, ask nothingmuch for details
+        * affects:
+            * Collapser
+            * $entry->references
+            * jspon? not anymore but could convert back
+
+* Set::Object and hash key sharding
+    * each hash entry or set member is an entry/row in a table (BDB and DBI)
+      hash).
+    * This allows finer grained commits (e.g. insertion to a set from two
+      competing transactions does not cause a failed transaction) under
+      MULTIVERSION for BDB.
+    * this also allows to run queries that test for set membership (but we
+      still can't write those queries)
+    * sharding thsould be implemented as a base role that backends can
+      implement
+
+=== Large ===
+
+* RDF backend
+    * generate triples
+        * predicates as FQ attr names names
+        * predicates as short attr names
+        * predicates as UUIDs?
+        * disable simple ref collapsing by default?
+    * SPARQL matching for simple search
+
+* event based api
     * linker is almost ready to integrate event based linking
     * if backend returns a cond var for get() then we can return a cond var for
       the whole graph. start with an api for it, and slowly implement actual
@@ -43,46 +174,52 @@
     * what happens with a shared KiokuDB directory? i don't think that's a good
       idea... better that each thread has its own copy? how can we guarantee
       recursive thread sharing of passthrough/callback objects?
+    * investigate by writing tests and then fixing as appropriate
 
-* typemap
-    * DB resident metaclass? like a smalltalk image
-	* class version upgrade path as part of class field
+* persistent metaclass
+    * store Moose class definition in code by creating metaclasses which when
+      loaded redefine the class in memory
+        * might need to subclass Moose::Meta::Class to take care of stored code
+    * this allows us to create a smalltalk inspired environment
 
-* query
-    * http://www.ietf.org/rfc/rfc1960.txt
-
-* GC schemes
-    * Online schemes
-        * entries can already enumerate what they refer to
-        * refcounting is one option
-        * rel index table is another
-            * all references are cross referenced in a table that can be also
-              used to list backrefs. In SQL this table can have delete triggers
-              i guess (ask mugwump), in BDB this would be manual.
-        * incremental scheme
-            * parrot's tricolor garbage collection alrogithm is interesting
-                * the data could be partly maintained during store/delete
-                  operations, with a partial sweep performed every time some
-                  statistic is tipped
-            * generational GC could make sense here, due to the persistence of the data
+* Garbage collection
+    * Online garbage collection schemes
+        * entries can already enumerate their out links
+        * several possibilities:
+            * refcounting
+                * on store diff $entry->references with
+                  $entry->prev->references and update counts
+            * rel index table is another
+                * all references are cross referenced in a table that can be also
+                  used to list backrefs. In SQL this table can have delete triggers
+                  i guess (ask mugwump), in BDB this would be manual.
+            * incremental scheme
+                * parrot's tricolor garbage collection alrogithm is interesting
+                    * the data could be partly maintained during store/delete
+                      operations, with a partial sweep performed every time some
+                      statistic is tipped
+                * generational GC could make sense here, due to the persistence
+                  of the data
     * Offline schemes
+        * currently we do a full sweep in a single transaction
+            * this is potentially like a global lock, except with the
+              possibility of deadlocking, it would be nice to have an
+              incremental scheme with small transactions
         * mark & sweep
-            * LinkChecker
             * tri-color using some auxillary table
-    * collection of clusters of data: http://www-sor.inria.fr/publi/GC-PERS-DSM_POS94.html
-    * http://pauillac.inria.fr/~lefessan/dgc/
-    * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.663
-    * transactional ref counting: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.33.2363
+            * smaller transactions to update the aux table
+            * online updating of the aux table interleaved
+            * final txn reads the aux table, and deletes in a single txn
+            * allows the sweep to be performed incrementally without locking
+              everything
+        * collection of clusters of data: http://www-sor.inria.fr/publi/GC-PERS-DSM_POS94.html
+        * http://pauillac.inria.fr/~lefessan/dgc/
+        * http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.32.663
+        * transactional ref counting: http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.33.2363
 
-* XS acceleration
-    * LiveObjects
-        * custom uvar magic instead of Scope::Guard all over
-            * should provide significant speed & memory consumption
-              improvements
-    * Linker
-        * inflate_data is actually really ugly in Perl, could be
-          smaller/faster/cleaner in XS
-    * Data::Visitor
-        * Collapser
-        * jspon?
-        * $entry->references
+=== Misc ===
+
+this is just a link dump really
+
+http://www.ietf.org/rfc/rfc1960.txt
+
