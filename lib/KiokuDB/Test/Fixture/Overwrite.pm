@@ -36,7 +36,7 @@ sub p {
     KiokuDB::Test::Person->new(@args);
 }
 
-with qw(KiokuDB::Test::Fixture);
+with qw(KiokuDB::Test::Fixture) => { excludes => [qw/populate sort/] };
 
 sub sort { -100 }
 

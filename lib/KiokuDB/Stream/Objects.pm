@@ -41,7 +41,7 @@ has _no_scope => (
     is  => "rw",
 );
 
-with qw(Data::Stream::Bulk);
+with qw(Data::Stream::Bulk) => { excludes => 'loaded' };
 
 sub next {
 	my $self = shift;

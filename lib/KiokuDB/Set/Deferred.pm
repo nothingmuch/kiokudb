@@ -11,7 +11,7 @@ use Scalar::Util qw(refaddr);
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Set::Storage);
+with qw(KiokuDB::Set::Storage) => { excludes => '_apply' };
 
 extends qw(KiokuDB::Set::Base);
 
