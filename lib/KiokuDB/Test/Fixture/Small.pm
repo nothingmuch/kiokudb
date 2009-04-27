@@ -4,6 +4,7 @@ package KiokuDB::Test::Fixture::Small;
 use Moose;
 
 use Test::More;
+use Test::Exception;
 
 use KiokuDB::Test::Person;
 use KiokuDB::Test::Employee;
@@ -96,6 +97,8 @@ sub verify {
         isa_ok( $company, "KiokuDB::Test::Company" );
 
         is( $oscar->name, "oscar", "name" );
+
+        lives_ok { $self->directory->lookup("no_such_id") } "lookup of nonexistent ID is nonfatal";
     });
 }
 __PACKAGE__
