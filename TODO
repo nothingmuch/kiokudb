@@ -146,6 +146,10 @@
     * sharding thsould be implemented as a base role that backends can
       implement
 
+* CodeRefs serialization
+    * PadWalker support for Data::Visitor
+    * look into Lexical::Persistence
+
 === Large ===
 
 * RDF backend
