@@ -229,7 +229,7 @@ Now that we have both objects in the database, lets link them together:
 Now we have created a persistent B<object graph>, that is several objects which
 point to each other.
 
-The reason C<spouse> was had the C<weak_ref> option was so that this circular
+The reason C<spouse> had the C<weak_ref> option was so that this circular
 structure will not leak.
 
 When then objects are updated in the database L<KiokuDB> sees that their
