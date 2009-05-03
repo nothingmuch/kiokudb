@@ -7,73 +7,127 @@ use Test::More 'no_plan';
 use Test::Exception;
 
 use ok 'KiokuDB';
-use ok 'KiokuDB::Backend::Hash';
 
-my $dir = KiokuDB->new(
-    backend => KiokuDB::Backend::Hash->new,
-);
+my $dir = KiokuDB->connect("hash");
 
 {
+
     package WithCodeRef;
     use KiokuDB::Class;
 
     has coderef => (
-        is      => 'rw',
-        isa     => 'CodeRef',
-        default => sub { sub { return 'ok' } },
+        is       => 'rw',
+        isa      => 'CodeRef',
+        required => 1,
     );
 
+    sub apply { shift->coderef->(@_) }
 }
 
-SKIP: {
-    skip "CodeRef storage not supported yet", 3;
+sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
+
+{
+    local $TODO = "CodeRef storage not supported yet";
 
     my $id;
 
     {
-        my $obj = WithCodeRef->new;
-        my $s   = $dir->new_scope;
+        my $obj = obj { 4 + $_[0] };
+
+        my $s = $dir->new_scope;
 
         lives_ok { $id = $dir->store($obj) };
     }
 
     {
-        my $s   = $dir->new_scope;
+        my $s = $dir->new_scope;
+
         $id and my $obj = $dir->lookup($id);
 
-        isa_ok $obj,              'WithCodeRef';
-        is     $obj->coderef->(), 'ok';
+        isa_ok $obj, 'WithCodeRef';
+        is eval { $obj->coderef->(38) }, 42,
     }
 }
 
-SKIP: {
-    skip "CodeRef with shared variables", 1;
+{
+    local $TODO = "closure storage not supported yet";
 
     sub generate_counter {
         my $i = shift;
-        return sub {
+
+        return obj {
             return ++$i;
         }
     }
 
-    my $counter = generate_counter(0);
-    my @objs = map { WithCodeRef->new(coderef => $counter) } (1..2);
-
-    # kick the counter once with first object.
-    $objs[0]->coderef->();
-
     my $id;
 
     {
+        my $i = 1;
+        my $obj = generate_counter(1);
+
+        # kick the counter once with first object.
+        is( $obj->coderef->(), 1 );
+
         my $s = $dir->new_scope;
-        lives_ok { $id = $dir->store($objs[1]) };
+        lives_ok { $id = $dir->store($obj) };
     }
 
     {
         my $s = $dir->new_scope;
-        $id and my $obj2 = $dir->lookup($id);
+        $id and my $obj = $dir->lookup($id);
 
-        is $obj2->coderef->(), 2;
+        is eval { $obj->apply }, 2, "closure variable thawed";
     }
 
+    {
+        my $s = $dir->new_scope;
+        $id and my $obj = $dir->lookup($id);
+
+        is eval { $obj->apply }, 2, "closure variable update not stored without call to update";
+
+        lives_ok { $dir->deep_update($obj) } "deep update lived";
+    }
+
+    {
+        my $s = $dir->new_scope;
+        $id and my $obj = $dir->lookup($id);
+
+        is eval { $obj->apply }, 3, "closure variable updated";
+    }
+}
+
+{
+    local $TODO = "closure storage not supported yet";
+
+    sub closure_pair {
+        my $i = shift;
+        return (
+            sub {
+                return ++$i;
+            },
+            sub { $i },
+        );
+    }
+
+    my @ids;
+
+    {
+        my @objs = generate_counter(0);
+
+        $objs[0]->apply;
+
+        my $s = $dir->new_scope;
+        lives_ok { @ids = $dir->store( @objs ) };
+    }
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $count, $peek ) = $dir->lookup(@ids);
+
+        is eval { $peek->apply }, 1;
+        is eval { $count->apply }, 2;
+        is eval { $peek->apply }, 2, "closure sharing thawed";
+    }
 }
