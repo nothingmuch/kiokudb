@@ -15,7 +15,7 @@ has typemap => (
     is   => "ro",
 );
 
-has [qw(_collapse _expand _id)] => (
+has _compiled => (
     isa => "HashRef",
     is  => "ro",
     default => sub { return {} },
@@ -24,74 +24,62 @@ has [qw(_collapse _expand _id)] => (
 sub resolved {
     my ( $self, $class ) = @_;
 
-    exists $self->_collapse->{$class};
+    exists $self->_compiled->{$class};
 }
 
 sub collapse_method {
     my ( $self, $class ) = @_;
 
-    if ( my $method = $self->_collapse->{$class} ) {
-        return $method;
-    } else {
-        $self->resolve($class);
-        return $self->_collapse->{$class};
-    }
+    return $self->find_or_resolve($class)->collapse_method;
 }
 
 sub expand_method {
     my ( $self, $class ) = @_;
 
-    if ( my $method = $self->_expand->{$class} ) {
-        return $method;
-    } else {
-        $self->resolve($class);
-        return $self->_expand->{$class};
-    }
+    return $self->find_or_resolve($class)->expand_method;
 }
 
 sub id_method {
     my ( $self, $class ) = @_;
 
-    if ( my $method = $self->_id->{$class} ) {
-        return $method;
-    } else {
-        $self->resolve($class);
-        return $self->_id->{$class};
-    }
+    return $self->find_or_resolve($class)->id_method;
 }
 
 sub compile_entry {
     my ( $self, $class, $entry ) = @_;
 
-    $self->register_compiled( $class, $entry->compile($class, $self) );
+    return $self->register_compiled( $class, $entry->compile($class, $self) );
 }
 
 sub register_compiled {
-    my ( $self, $class, $collapse, $expand, $id ) = @_;
-    $self->_collapse->{$class} = $collapse;
-    $self->_expand->{$class}   = $expand;
-    $self->_id->{$class}       = $id;
+    my ( $self, $class, $compiled ) = @_;
+
+    return ( $self->_compiled->{$class} = $compiled );
+}
+
+sub find_or_resolve {
+    my ( $self, $class ) = @_;
+
+    return ( $self->_compiled->{$class} || $self->resolve($class) );
 }
 
 sub resolve {
     my ( $self, $class ) = @_;
 
     if ( my $entry = $self->typemap->resolve($class) ) {
-        $self->compile_entry( $class, $entry );
+        return $self->compile_entry( $class, $entry );
     } else {
-        $self->resolve_fallback($class);
+        return $self->resolve_fallback($class);
     }
-
-    return;
 }
 
 sub resolve_fallback {
     my ( $self, $class ) = @_;
 
     if ( my $meta = Class::MOP::get_metaclass_by_name($class) ) {
-        $self->resolve_fallback_with_meta($class, $meta);
+        return $self->resolve_fallback_with_meta($class, $meta);
     } else {
-        $self->resolve_fallback_without_meta($class);
+        return $self->resolve_fallback_without_meta($class);
     }
 }
 

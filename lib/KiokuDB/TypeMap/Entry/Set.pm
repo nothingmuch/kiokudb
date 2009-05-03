@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::Set;
 use Moose;
 
+use KiokuDB::TypeMap::Entry::Compiled;
+
 no warnings 'recursion';
 
 use KiokuDB::Set::Stored;
@@ -26,13 +28,19 @@ has intrinsic => (
 );
 
 sub compile {
-    my ( $self, @args ) = @_;
+    my ( $self, $class, @args ) = @_;
 
-    my $collapse = $self->intrinsic ? $self->_compile_collapse_intrinsic(@args) : $self->_compile_collapse_first_class(@args);
+    my $collapse = $self->intrinsic ? $self->_compile_collapse_intrinsic($class, @args) : $self->_compile_collapse_first_class($class, @args);
 
     my $expand = $self->_compile_expand(@args);
 
-    return ( $collapse, $expand, "generate_uuid" );
+    return KiokuDB::TypeMap::Entry::Compiled->new(
+        collapse_method => $collapse,
+        expand_method   => $expand,
+        id_method       => "generate_uuid",
+        entry           => $self,
+        class           => $class,
+    );
 }
 
 sub _compile_collapse_intrinsic {

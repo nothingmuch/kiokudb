@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::MOP;
 use Moose;
 
+use KiokuDB::TypeMap::Entry::Compiled;
+
 use Carp qw(croak);
 
 use KiokuDB::Thunk;
@@ -10,6 +12,8 @@ use KiokuDB::Thunk;
 no warnings 'recursion';
 
 use namespace::clean -except => 'meta';
+
+with qw(KiokuDB::TypeMap::Entry);
 
 # not Std because of the ID role support needing to happen early
 has intrinsic => (
@@ -26,11 +30,21 @@ sub compile {
 
     my $meta = Class::MOP::get_metaclass_by_name($class);
 
+    my ( $c, $e, $i );
+
     if ( $meta->is_immutable || $meta->is_anon_class ) {
-        $self->compile_mappings_immutable($meta, @args);
+        ( $c, $e, $i ) = $self->compile_mappings_immutable($meta, @args);
     } else {
-        $self->compile_mappings_mutable($meta, @args);
+        ( $c, $e, $i ) = $self->compile_mappings_mutable($meta, @args);
     }
+
+    return KiokuDB::TypeMap::Entry::Compiled->new(
+        collapse_method => $c,
+        expand_method   => $e,
+        id_method       => $i,
+        entry           => $self,
+        class           => $class,
+    );
 }
 
 sub compile_collapser {

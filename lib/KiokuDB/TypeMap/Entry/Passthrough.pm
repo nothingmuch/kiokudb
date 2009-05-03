@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::Passthrough;
 use Moose;
 
+use KiokuDB::TypeMap::Entry::Compiled;
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry);
@@ -14,17 +16,19 @@ has intrinsic => (
 );
 
 sub compile {
-    my ( $self, @args ) = @_;
+    my ( $self, $class ) = @_;
 
     if ( $self->intrinsic ) {
-        return (
-            sub { $_[1] },
-            sub { $_[1]->data }, # only called on an Entry, if the object is just an object, this won't be called
-            "generate_uuid",
+        return KiokuDB::TypeMap::Entry::Compiled->new(
+            collapse_method => sub { $_[1] },
+            expand_method   => sub { $_[1]->data }, # only called on an Entry, if the object is just an object, this won't be called
+            id_method       => "generate_uuid",
+            entry           => $self,
+            class           => $class,
         );
     } else {
-        return (
-            sub {
+        return KiokuDB::TypeMap::Entry::Compiled->new(
+            collapse_method => sub {
                 my ( $collapser, @args ) = @_;
 
                 $collapser->collapse_first_class(
@@ -38,11 +42,13 @@ sub compile {
                     @args,
                 );
             },
-            sub {
+            expand_method => sub {
                 my ( $linker, $entry ) = @_;
                 return $entry->data;
             },
-            "generate_uuid",
+            id_method => "generate_uuid",
+            entry     => $self,
+            class     => $class,
         );
     }
 }
