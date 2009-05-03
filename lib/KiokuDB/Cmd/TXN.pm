@@ -37,8 +37,6 @@ sub try_txn_commit {
         }
         $self->_clear_txn;
         $self->v(" done\n");
-    } else {
-        warn "no txn";
     }
 }
 
