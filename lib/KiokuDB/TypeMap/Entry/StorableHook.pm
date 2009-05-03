@@ -16,12 +16,12 @@ use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);
 
-sub compile_mappings {
-    my ( $self, $class ) = @_;
+sub compile_collapse_body {
+    my ( $self, $class, @args ) = @_;
 
     my $attach = $class->can("STORABLE_attach") ? 1 : 0;
 
-    my $freeze = sub {
+    return sub {
         my ( $self, %args ) = @_;
 
         my $object = $args{object};
@@ -65,10 +65,14 @@ sub compile_mappings {
             data => $data,
         );
     };
+}
 
-    unless ( $attach ) {
+sub compile_expand {
+    my ( $self, $class, @args ) = @_;
+
+    unless ( $class->can("STORABLE_attach") ) {
         # normal form, STORABLE_freeze
-        return ( $freeze, sub {
+        return sub {
             my ( $self, $entry ) = @_;
 
             my $data = $entry->data;
@@ -109,14 +113,14 @@ sub compile_mappings {
             });
 
             return $instance;
-        });
+        };
     } else {
         # esotheric STORABLE_attach form
-        return ( $freeze, sub {
+        return sub {
             my ( $self, $entry ) = @_;
 
             $entry->class->STORABLE_attach( 0, $entry->data ); # FIXME support non ref
-        });
+        }
     }
 }
 

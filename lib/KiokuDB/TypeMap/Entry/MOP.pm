@@ -3,8 +3,6 @@
 package KiokuDB::TypeMap::Entry::MOP;
 use Moose;
 
-use KiokuDB::TypeMap::Entry::Compiled;
-
 use Carp qw(croak);
 
 use KiokuDB::Thunk;
@@ -13,42 +11,15 @@ no warnings 'recursion';
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry);
-
-# not Std because of the ID role support needing to happen early
-has intrinsic => (
-    isa => "Bool",
-    is  => "ro",
-    predicate => "has_intrinsic",
-);
+with qw(KiokuDB::TypeMap::Entry::Std);
 
 # FIXME collapser and expaner should both be methods in Class::MOP::Class,
 # apart from the visit call
 
-sub compile {
+sub compile_collapse_body {
     my ( $self, $class, @args ) = @_;
 
     my $meta = Class::MOP::get_metaclass_by_name($class);
-
-    my ( $c, $e, $i );
-
-    if ( $meta->is_immutable || $meta->is_anon_class ) {
-        ( $c, $e, $i ) = $self->compile_mappings_immutable($meta, @args);
-    } else {
-        ( $c, $e, $i ) = $self->compile_mappings_mutable($meta, @args);
-    }
-
-    return KiokuDB::TypeMap::Entry::Compiled->new(
-        collapse_method => $c,
-        expand_method   => $e,
-        id_method       => $i,
-        entry           => $self,
-        class           => $class,
-    );
-}
-
-sub compile_collapser {
-    my ( $self, $meta ) = @_;
 
     my @attrs = grep {
         !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
@@ -62,16 +33,6 @@ sub compile_collapser {
     }
 
     my $meta_instance = $meta->get_meta_instance;
-
-    my $method;
-
-    if ( $self->has_intrinsic ) {
-        $method = $self->intrinsic ? "collapse_intrinsic" : "collapse_first_class";
-    } elsif ( $meta->does_role("KiokuDB::Role::Intrinsic") ) {
-        $method = "collapse_intrinsic";
-    } else {
-        $method = "collapse_first_class";
-    }
 
     my %attrs;
 
@@ -129,13 +90,11 @@ sub compile_collapser {
         );
     }
 
-    my $immutable = $meta->does_role("KiokuDB::Role::Immutable");
+    my $immutable  = $meta->does_role("KiokuDB::Role::Immutable");
     my $content_id = $meta->does_role("KiokuDB::Role::ID::Content");
 
-    return sub {
-        my ( $self, $obj, @args ) = @_;
-
-        $self->$method(sub {
+    return (
+        sub {
             my ( $self, %args ) = @_;
 
             my $object = $args{object};
@@ -174,12 +133,15 @@ sub compile_collapser {
                 %args,
                 data => \%collapsed,
             );
-        }, $obj, %attrs, @args);
-    }
+        },
+        %attrs,
+    );
 }
 
-sub compile_expander {
-    my ( $self, $meta, $resolver ) = @_;
+sub compile_expand {
+    my ( $self, $class, $resolver ) = @_;
+
+    my $meta = Class::MOP::get_metaclass_by_name($class);
 
     my ( %attrs, %lazy );
 
@@ -283,9 +245,9 @@ sub inflate_class_meta {
 }
 
 sub compile_id {
-    my ( $self, $meta ) = @_;
+    my ( $self, $class ) = @_;
 
-    if ( $meta->does_role("KiokuDB::Role::ID") ) {
+    if ( Class::MOP::get_metaclass_by_name($class)->does_role("KiokuDB::Role::ID") ) {
         return sub {
             my ( $self, $object ) = @_;
             return $object->kiokudb_object_id;
@@ -295,34 +257,18 @@ sub compile_id {
     }
 }
 
-sub compile_mappings_immutable {
-    my ( $self, @args ) = @_;
-    return (
-        $self->compile_collapser(@args),
-        $self->compile_expander(@args),
-        $self->compile_id(@args),
-    );
-}
+sub should_compile_intrinsic {
+    my ( $self, $class, @args ) = @_;
 
-sub compile_mappings_mutable {
-    my ( $self, @args ) = @_;
+    my $meta = Class::MOP::get_metaclass_by_name($class);
 
-    #warn "Mutable: " . $meta->name;
-
-    return (
-        sub {
-            my $collapser = $self->compile_collapser(@args);
-            shift->$collapser(@_);
-        },
-        sub {
-            my $expander = $self->compile_expander(@args);
-            shift->$expander(@_);
-        },
-        sub {
-            my $id = $self->compile_id(@args);
-            shift->$id(@_);
-        },
-    );
+    if ( $self->has_intrinsic ) {
+        return $self->intrinsic;
+    } elsif ( $meta->does_role("KiokuDB::Role::Intrinsic") ) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

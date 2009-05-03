@@ -3,8 +3,6 @@
 package KiokuDB::TypeMap::Entry::Set;
 use Moose;
 
-use KiokuDB::TypeMap::Entry::Compiled;
-
 no warnings 'recursion';
 
 use KiokuDB::Set::Stored;
@@ -13,7 +11,7 @@ use KiokuDB::Set::Loaded;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry);
+with qw(KiokuDB::TypeMap::Entry::Std);
 
 has defer => (
     isa => "Bool",
@@ -21,49 +19,17 @@ has defer => (
     default => 1,
 );
 
-has intrinsic => (
-    isa => "Bool",
-    is  => "ro",
-    default => 0,
-);
+sub compile_collapse_wrapper {
+    my ( $self, $method, $class, @args ) = @_;
 
-sub compile {
-    my ( $self, $class, @args ) = @_;
-
-    my $collapse = $self->intrinsic ? $self->_compile_collapse_intrinsic($class, @args) : $self->_compile_collapse_first_class($class, @args);
-
-    my $expand = $self->_compile_expand(@args);
-
-    return KiokuDB::TypeMap::Entry::Compiled->new(
-        collapse_method => $collapse,
-        expand_method   => $expand,
-        id_method       => "generate_uuid",
-        entry           => $self,
-        class           => $class,
-    );
-}
-
-sub _compile_collapse_intrinsic {
-    my ( $self, $class ) = @_;
-
-    my $collapse = $self->_compile_collapse($class);
+    my ( $body, @extra ) = $self->compile_collapse_body(@args);
 
     return sub {
-        shift->collapse_intrinsic( $collapse, @_, class => "KiokuDB::Set::Stored" );
+        shift->$method( $body, @extra, @_, class => "KiokuDB::Set::Stored" );
     }
 }
 
-sub _compile_collapse_first_class {
-    my ( $self, $class ) = @_;
-
-    my $collapse = $self->_compile_collapse($class);
-
-    return sub {
-        shift->collapse_first_class( $collapse, @_, class => "KiokuDB::Set::Stored" );
-    }
-}
-
-sub _compile_collapse {
+sub compile_collapse_body {
     my ( $self, $class ) = @_;
 
     if ( $class->isa("KiokuDB::Set::Deferred") ) {
@@ -97,7 +63,7 @@ sub _compile_collapse {
     }
 }
 
-sub _compile_expand {
+sub compile_expand {
     my ( $self, $class ) = @_;
 
     my $defer = $self->defer;

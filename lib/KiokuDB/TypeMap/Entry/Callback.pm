@@ -20,11 +20,12 @@ has id => (
     isa => "Str|CodeRef",
 );
 
-sub compile_mappings {
-    my ( $self, @args ) = @_;
+sub compile_collapse_body {
+    my ( $self, $class, @args ) = @_;
 
     my $collapse_object = $self->collapse;
-    my $collapse = sub {
+
+    return sub {
         my ( $self, %args ) = @_;
 
         my @data = $args{object}->$collapse_object;
@@ -42,9 +43,14 @@ sub compile_mappings {
             data => $data,
         );
     };
+}
+
+sub compile_expand {
+    my ( $self, $class, @args ) =@_;
 
     my $expand_object = $self->expand;
-    my $expand = sub {
+
+    return sub {
         my ( $self, $entry ) = @_;
 
         my @args;
@@ -76,14 +82,19 @@ sub compile_mappings {
 
         return $object;
     };
+}
 
-    my $get_id = $self->id;
-    my $id = $get_id && sub {
-        my ( $self, $object ) = @_;
-        $object->$get_id;
-    };
+sub compile_id {
+    my ( $self, $class, @args ) = @_;
 
-    return ( $collapse, $expand, $id );
+    if ( my $get_id = $self->id ) {
+        return sub {
+            my ( $self, $object ) = @_;
+            $object->$get_id;
+        };
+    } else {
+        return "generate_uuid";
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
