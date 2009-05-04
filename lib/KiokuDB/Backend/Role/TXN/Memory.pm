@@ -9,7 +9,7 @@ with qw(KiokuDB::Backend::Role::TXN);
 
 use namespace::clean -except => 'meta';
 
-requires qw(commit_entries);
+requires qw(commit_entries get_from_storage);
 
 has _txn_stack => (
     isa => "ArrayRef",
@@ -52,6 +52,33 @@ sub txn_loaded_entries {
     }
 
     @entries;
+}
+
+sub get {
+    my ( $self, @uuids ) = @_;
+
+    my %entries;
+    my %remaining = map { $_ => undef } @uuids;
+
+    foreach my $frame ( @{ $self->_txn_stack } ) {
+        foreach my $id ( keys %remaining ) {
+            if ( my $entry = $frame->{modified}{$id} ) {
+                if ( $entry->deleted ) {
+                    return ();
+                }
+                $entries{$id} = $entry;
+                delete $remaining{$id};
+            }
+        }
+
+        last unless keys %remaining;
+    }
+
+    if ( keys %remaining ) {
+        @entries{keys %remaining} = $self->get_from_storage(keys %remaining);
+    }
+
+    return @entries{@uuids};
 }
 
 sub delete {

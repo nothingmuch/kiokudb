@@ -29,7 +29,7 @@ sub clear {
     %{ $self->storage } = ();
 }
 
-sub get {
+sub get_from_storage {
     my ( $self, @uids ) = @_;
 
     my $s = $self->storage;
