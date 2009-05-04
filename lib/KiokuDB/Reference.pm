@@ -3,6 +3,10 @@
 package KiokuDB::Reference;
 use Moose;
 
+use namespace::clean -except => 'meta';
+
+with qw(MooseX::Clone);
+
 has id => (
     isa => "Str",
     is  => "rw",
