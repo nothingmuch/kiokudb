@@ -53,6 +53,13 @@
       nonblocking api role for most backends (see event based api below)
     * see also RPC server below
 
+* Cache::Bounded for immutable objects
+    * simple hack to keep them live longer than normal
+
+* simple profiling hooks
+    * under some debug mode collect timing info for linker & collapser
+    * display this info in Catalyst::Model::KiokuDB's debug output
+
 === Medium ===
 
 * Schema versioning
