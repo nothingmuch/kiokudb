@@ -29,8 +29,8 @@ backends.
 
 =head1 DESCRIPTION
 
-This backend is an informational role for backends which can store unicode perl
-strings safely.
+This backend role is an informational role for backends which can
+store unicode perl strings safely.
 
 This means that B<character> strings inserted to the database will not be
 retreived as B<byte> strings upon deserialization.
