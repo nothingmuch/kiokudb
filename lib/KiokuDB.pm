@@ -700,8 +700,9 @@ The root flag may be modified explicitly:
 
 Lastly, root set membership may also be specified explicitly by the typemap.
 
-A root set member must be explicitly using C<delete> or removed from the root
-set before it will be purged with any garbage collection scheme.
+A root set member must be explicitly removed using C<delete> or by
+removing it from the root set. Only non-members of the root set will be
+purged with any garbage collection scheme.
 
 =head1 TRANSACTIONS
 
