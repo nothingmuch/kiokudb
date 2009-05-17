@@ -157,6 +157,27 @@
     * PadWalker support for Data::Visitor
     * look into Lexical::Persistence
 
+* Attribute meta traits
+    * each of these is relatively small and self contained
+    * lazy build attributes (for cached values)
+        * build on store
+        * keep when storing but dont build on store
+            * make sure update() on immutable objects works for this, too
+        * do not serialize
+    * ID attribute
+        * don't store ID twice, once as a field and once in the entry (skip the
+          field)
+        * better than KiokuDB::Role::ID
+    * Digest Part
+        * resistent to subclassing/role composition
+            * however, order must be stable, sort get_all_attributes
+                * order by sort index is provided
+                * rest of attributes sorted:
+                    * required attributes before non required ones
+                    * sub sort by name
+                * required attributes first, ordered by sort index or name if no sort index is provided
+    * Build on store meta trait
+
 === Large ===
 
 * RDF backend
