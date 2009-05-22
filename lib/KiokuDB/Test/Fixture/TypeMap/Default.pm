@@ -19,6 +19,7 @@ use constant required_backend_roles => qw(TypeMap::Default);
 
 use Tie::RefHash;
 use constant HAVE_DATETIME          => eval { require DateTime };
+use constant HAVE_DATETIME_FMT      => eval { require DateTime::Format::Strptime };
 use constant HAVE_URI               => eval { require URI };
 use constant HAVE_URI_WITH_BASE     => eval { require URI::WithBase };
 use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::SaltedDigest };
@@ -85,6 +86,7 @@ sub create {
         refhash => \%refhash,
         HAVE_IXHASH            ? ( ixhash => \%ixhash                                           ) : (),
         HAVE_DATETIME          ? ( datetime   => { obj => DateTime->now }                       ) : (),
+        HAVE_DATETIME_FMT      ? ( datetime_fmt   => { obj => DateTime->now(formatter => DateTime::Format::Strptime->new( pattern => '%F' ) ) }                       ) : (),
         HAVE_PATH_CLASS        ? ( path_class => { obj => Path::Class::file('bar', 'foo.txt') } ) : (),
         HAVE_URI               ? ( uri        => { obj => URI->new('http://www.google.com/') }  ) : (),
         HAVE_URI_WITH_BASE     ? (
@@ -190,6 +192,26 @@ sub verify {
 
         isa_ok( $date, "DateTime" );
     }
+    
+    if ( HAVE_DATETIME_FMT ) {
+        $self->no_live_objects;
+        my $s = $self->new_scope;
+
+        my $date = $self->lookup_ok("datetime_fmt")->{obj};
+
+        isa_ok( $date, "DateTime" );
+        
+        SKIP: {
+            skip "Not possible with JSON atm", 1 if (
+                $self->directory->backend->can("serializer")
+                and $self->directory->backend->serializer->isa('KiokuDB::Serializer::JSON')
+            );
+            
+            isa_ok( $date->formatter, "DateTime::Format::Strptime" );
+        }
+        
+    }
+    
 
     if ( HAVE_URI ) {
         $self->no_live_objects;
