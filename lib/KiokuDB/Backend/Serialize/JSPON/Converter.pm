@@ -5,16 +5,18 @@ use Moose::Role;
 
 use namespace::clean -except => 'meta';
 
-use constant _jspon_fields => qw(
-    id
-    class
-    class_meta
-    root
-    deleted
-    tied
-    ref
-    data
-);
+sub _jspon_fields {
+    return qw(
+        id
+        class
+        class_meta
+        root
+        deleted
+        tied
+        ref
+        data
+    );
+}
 
 has id_field => (
     isa => "Str",
