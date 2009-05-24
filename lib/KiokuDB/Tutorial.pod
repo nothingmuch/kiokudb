@@ -667,7 +667,7 @@ write performance as well.
 
 =head1 QUERIES
 
-L<KiokuDB:Backend::BDB::GIN> is a subclass of L<KiokuDB::Backend::BDB> that
+L<KiokuDB::Backend::BDB::GIN> is a subclass of L<KiokuDB::Backend::BDB> that
 provides L<Search::GIN> integration.
 
 L<Search::GIN> is a framework to index and query objects, inspired by Postgres'
