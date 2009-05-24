@@ -701,7 +701,7 @@ indexing of our objects:
 
 To look up the objects, we use the a manual key lookup query:
 
-    my $query = Search::GIN::Query::Maual->new(
+    my $query = Search::GIN::Query::Manual->new(
         values => {
             type => "person",
         },
