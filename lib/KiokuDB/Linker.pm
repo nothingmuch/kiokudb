@@ -211,6 +211,8 @@ sub inflate_data {
 
             $$into = $obj;
         }
+
+        $data->object($$into);
     } elsif ( ref($data) eq 'HASH' ) {
         my %targ;
         $self->register_object( $entry => \%targ ) if $entry;

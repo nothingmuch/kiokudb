@@ -6,6 +6,8 @@ use Moose;
 use Test::More;
 use Test::Exception;
 
+use Scalar::Util qw(refaddr);
+
 use KiokuDB::Test::Person;
 use KiokuDB::Test::Employee;
 use KiokuDB::Test::Company;
@@ -83,6 +85,12 @@ sub verify {
         isa_ok( $joe, "KiokuDB::Test::Employee" );
 
         isa_ok( $oscar, "KiokuDB::Test::Person" );
+
+        my $entry = $self->directory->live_objects->object_to_entry($joe);
+
+        ok( $entry->has_object, "entry is associated with object" );
+
+        is( refaddr($entry->object), refaddr($joe), "the right object" );
 
         is( $joe->name, "joe", "name" );
 
