@@ -10,6 +10,10 @@ use KiokuDB::Test::Person;
 use KiokuDB::Test::Employee;
 use KiokuDB::Test::Company;
 
+sub p;
+
+use namespace::clean -except => 'meta';
+
 sub p {
     my @args = @_;
     unshift @args, "name" if @args % 2;
