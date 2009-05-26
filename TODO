@@ -62,6 +62,11 @@
 
 === Medium ===
 
+* root set membership delegated to typemap
+    * will allow Root and NonRoot roles in MOP typemap entry
+    * top level values for ->store and ->insert still set default
+    * ->set_root always authoritative
+
 * Schema versioning
     * store version in entries
     * add an upgrade hook to typemap entries
