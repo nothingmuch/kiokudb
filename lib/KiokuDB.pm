@@ -26,7 +26,7 @@ use namespace::clean -except => [qw(meta SERIAL_IDS)];
 sub connect {
     my ( $class, $dsn, @args ) = @_;
 
-    if ( -d $dsn ) {
+    if ( -d $dsn || $dsn =~ /\.yml/ ) {
         return $class->configure($dsn, @args);
     } else {
         require KiokuDB::Util;

@@ -53,9 +53,14 @@ sub dsn_to_backend {
 sub load_config {
     my ( $base ) = @_;
 
-    my $config_file = dir($base)->file("kiokudb.yml");
+    my $config_file;
+    if ( $base =~ /\.yml/ ) {
+        $config_file = $base;
+    } else {
+        $config_file = dir($base)->file("kiokudb.yml");
+        $config_file->openr;
+    }
 
-    $config_file->openr;
 
     require MooseX::YAML;
     MooseX::YAML::LoadFile($config_file);
