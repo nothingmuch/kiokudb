@@ -54,7 +54,7 @@ sub load_config {
     my ( $base ) = @_;
 
     my $config_file;
-    if ( $base =~ /\.yml/ ) {
+    if ( $base =~ /\.yml$/ ) {
         $config_file = $base;
     } else {
         $config_file = dir($base)->file("kiokudb.yml");

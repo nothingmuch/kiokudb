@@ -43,6 +43,18 @@ You can also use DSN strings to connect to the various backends:
 
     KiokuDB->connect("bdb:dir=foo", create => 1);
 
+Or use a configuration file
+
+    KiokuDB->connect("/path/to/my_db.yml");
+    KiokuDB->connect("/path/to/dir");
+
+With a configuration file like this:
+
+    backend:
+      class: KiokuDB::Backend::DBI
+      dsn: dbi:SQLite:dbname=/tmp/test.db
+      create: 1
+
 =head1 USING THE DBI BACKEND
 
 During this tutorial we will be using the DBI backend for two reasons. The
