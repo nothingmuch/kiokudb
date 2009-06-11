@@ -32,7 +32,7 @@ has live_objects => (
     required => 1,
 );
 
-sub DESTROY {
+sub DEMOLISH {
     my $self = shift;
 
     # consider possibilities of optimizing live object set removal at this
