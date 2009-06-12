@@ -41,11 +41,21 @@ has includes => (
 
 sub _build_includes { [] }
 
+my %loaded;
+
 sub resolve {
     my ( $self, $class ) = @_;
 
-    # if we're linking it might not be set
-    Class::MOP::_try_load_one_class($class);
+    # if we're linking the class might not be loaded yet
+    unless ( $loaded{$class}++ ) {
+        ( my $pmfile = $class . ".pm" ) =~ s{::}{/}g;
+
+        my $e = do { local $@; eval { require $pmfile }; $@ };
+
+        if ($e) {
+            croak $e unless $e =~ /^Can't locate \Q$pmfile\E in \@INC/;
+        }
+    }
 
     # if this is an anonymous class, redo the lookup using a single named
     # ancestor
