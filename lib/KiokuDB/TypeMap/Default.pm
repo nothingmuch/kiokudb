@@ -54,6 +54,7 @@ sub reftype_entries {
         'HASH'   => "KiokuDB::TypeMap::Entry::Ref",
         'SCALAR' => "KiokuDB::TypeMap::Entry::Ref",
         'GLOB'   => "KiokuDB::TypeMap::Entry::Ref",
+        'CODE'   => "KiokuDB::TypeMap::Entry::Closure",
     );
 }
 

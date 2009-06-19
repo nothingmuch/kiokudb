@@ -27,8 +27,6 @@ my $dir = KiokuDB->connect("hash");
 sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
 
 {
-    local $TODO = "CodeRef storage not supported yet";
-
     my $id;
 
     {
@@ -36,8 +34,12 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
 
         my $s = $dir->new_scope;
 
-        lives_ok { $id = $dir->store($obj) };
+        lives_ok { $id = $dir->store($obj) } "store object with coderef";
     }
+
+    $dir->live_objects->clear; # non closure coderefs live forever
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 
     {
         my $s = $dir->new_scope;
@@ -45,12 +47,45 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
         $id and my $obj = $dir->lookup($id);
 
         isa_ok $obj, 'WithCodeRef';
-        is eval { $obj->coderef->(38) }, 42,
+        is eval { $obj->coderef->(38) }, 42, "apply coderef",
     }
 }
 
 {
-    local $TODO = "closure storage not supported yet";
+    my ( $sv, $av, $hv, $all );
+
+    $dir->live_objects->clear;
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $x, @x, %x );
+
+        lives_ok { $sv  = $dir->store( sv  => sub { $x++ } ) } "SV";
+        lives_ok { $av  = $dir->store( av  => sub { $x[0]++ } ) } "AV";
+        lives_ok { $hv  = $dir->store( hv  => sub { $x{foo}++ } ) } "HV";
+        lives_ok { $all = $dir->store( all => sub { $x++; $x[0]++; $x{foo}++ } ) } "SV, AV, HV";
+    }
+
+    {
+        foreach my $id ( $sv, $av, $hv, $all ) {
+            is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+            my $s = $dir->new_scope;
+
+            my $sub;
+            lives_ok { $sub = $dir->lookup($id) } "load closure $id";
+
+            ok( $sub, "thawed closure" );
+
+            is( eval { $sub->() }, 0, "first invocation" );
+            is( eval { $sub->() }, 1, "second invocation" );
+        }
+    }
+}
+
+{
+    $dir->live_objects->clear;
 
     sub generate_counter {
         my $i = shift;
@@ -63,15 +98,16 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
     my $id;
 
     {
-        my $i = 1;
-        my $obj = generate_counter(1);
+        my $obj = generate_counter(0);
 
         # kick the counter once with first object.
-        is( $obj->coderef->(), 1 );
+        is( $obj->coderef->(), 1, "apply closure before storing" );
 
         my $s = $dir->new_scope;
-        lives_ok { $id = $dir->store($obj) };
+        lives_ok { $id = $dir->store($obj) } "store object with closure";
     }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 
     {
         my $s = $dir->new_scope;
@@ -80,14 +116,20 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
         is eval { $obj->apply }, 2, "closure variable thawed";
     }
 
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
     {
         my $s = $dir->new_scope;
         $id and my $obj = $dir->lookup($id);
 
         is eval { $obj->apply }, 2, "closure variable update not stored without call to update";
 
-        lives_ok { $dir->deep_update($obj) } "deep update lived";
+        ok( $dir->object_to_id($obj->coderef), "code ref has an ID" );
+
+        eval { $dir->deep_update($obj->coderef) };
     }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 
     {
         my $s = $dir->new_scope;
@@ -97,37 +139,247 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
     }
 }
 
+sub closure_pair {
+    my $i = shift;
+    return (
+        sub {
+            return ++$i;
+        },
+        sub { $i },
+    );
+}
+
 {
-    local $TODO = "closure storage not supported yet";
-
-    sub closure_pair {
-        my $i = shift;
-        return (
-            sub {
-                return ++$i;
-            },
-            sub { $i },
-        );
-    }
-
     my @ids;
 
     {
-        my @objs = generate_counter(0);
+        my ( $count, $peek ) = map { &obj($_) } closure_pair(0);
 
-        $objs[0]->apply;
+        is( $peek->apply, 0, "peek" );
+        $count->apply;
+        is( $peek->apply, 1, "peek" );
 
         my $s = $dir->new_scope;
-        lives_ok { @ids = $dir->store( @objs ) };
+        lives_ok { @ids = $dir->store( $count, $peek ) } "store pair of closures";
     }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 
     {
         my $s = $dir->new_scope;
 
         my ( $count, $peek ) = $dir->lookup(@ids);
 
-        is eval { $peek->apply }, 1;
-        is eval { $count->apply }, 2;
+        ok( $count, "count thawed" );
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->apply }, 1, "closure sharing";;
+        is eval { $count->apply }, 2, "closure sharing";
         is eval { $peek->apply }, 2, "closure sharing thawed";
+    }
+}
+
+{
+    my @ids;
+
+    {
+        my ( $count, $peek ) = closure_pair(0);
+
+        is( $peek->(), 0, "peek" );
+        $count->();
+        is( $peek->(), 1, "peek" );
+
+        my $s = $dir->new_scope;
+        lives_ok { @ids = $dir->store( $count, $peek ) } "store pair of closures";
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $count, $peek ) = $dir->lookup(@ids);
+
+        ok( $count, "count thawed" );
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->() }, 1, "closure sharing";;
+        is eval { $count->() }, 2, "closure sharing";
+        is eval { $peek->() }, 2, "closure sharing thawed";
+
+        $dir->deep_update($count);
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $count, $peek ) = $dir->lookup(@ids);
+
+        is eval { $peek->() }, 2, "closure sharing thawed after deep update from other closure";
+    }
+}
+
+{
+    my @ids;
+
+    {
+        my ( $count, $peek ) = closure_pair(0);
+
+        is( $peek->(), 0, "peek" );
+        $count->();
+        is( $peek->(), 1, "peek" );
+
+        my $s = $dir->new_scope;
+        lives_ok { $ids[0] = $dir->store($count) } "store count closure";
+        lives_ok { $ids[1] = $dir->store($peek ) } "store peek closures";
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $count, $peek ) = $dir->lookup(@ids);
+
+        ok( $count, "count thawed" );
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->() }, 1, "closure sharing";;
+        is eval { $count->() }, 2, "closure sharing";
+        is eval { $peek->() }, 2, "closure sharing thawed";
+
+        $dir->deep_update($count);
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my ( $count, $peek ) = $dir->lookup(@ids);
+
+        is eval { $peek->() }, 2, "closure sharing thawed after deep update from other closure";
+    }
+}
+
+{
+    my @ids;
+
+    {
+        my ( $count, $peek ) = closure_pair(0);
+
+        is( $peek->(), 0, "peek" );
+        $count->();
+        is( $peek->(), 1, "peek" );
+
+        my $s = $dir->new_scope;
+        lives_ok { @ids = $dir->store( $count, $peek ) } "store pair of closures";
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my $peek = $dir->lookup($ids[1]);
+
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->() }, 1, "closure sharing";;
+    }
+
+    {
+        my $s = $dir->new_scope;
+
+        my $count = $dir->lookup($ids[0]);
+
+        ok( $count, "count thawed" );
+
+        is eval { $count->() }, 2, "closure sharing";
+
+        $dir->deep_update($count);
+    }
+
+    {
+        my $s = $dir->new_scope;
+
+        my $peek = $dir->lookup($ids[1]);
+
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->() }, 2, "closure sharing after disjoint update";
+    }
+}
+
+{
+    my @ids;
+
+    {
+        my ( $count, $peek ) = closure_pair(0);
+
+        is( $peek->(), 0, "peek" );
+        $count->();
+        is( $peek->(), 1, "peek" );
+
+        my $s = $dir->new_scope;
+        lives_ok { @ids = $dir->store( $count, $peek ) } "store pair of closures";
+    }
+
+    is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+    {
+        my $s = $dir->new_scope;
+
+        my $peek = $dir->lookup($ids[1]);
+
+        ok( $peek, "peek thawed" );
+
+        is eval { $peek->() }, 1, "closure sharing";;
+
+        my $count = $dir->lookup($ids[0]);
+
+        ok( $count, "count thawed" );
+
+        is eval { $count->() }, 2, "closure sharing";
+
+        is eval { $peek->() }, 2, "closure sharing after disjoint update (both values live)";
+    }
+}
+
+{
+    my ( $set_id, $get_id );
+
+    {
+        my %names;
+
+        ( $set_id, $get_id ) = $dir->txn_do( scope => 1, body => sub {
+            $dir->insert( sub { $names{$_[0]} = $_[1] }, sub { $names{$_[0]} } );
+        });
+
+        is_deeply( [ $dir->live_objects->live_objects ], [ \%names ], "names is live" );
+
+        {
+            my $s = $dir->new_scope;
+
+            my $set = $dir->lookup($set_id);
+
+            ok( $set, "got set" );
+
+            $set->( foo => 42 );
+
+            is_deeply( \%names, { foo => 42 }, "still live closure variable updated" );
+
+            $dir->update(\%names);
+        }
+    }
+
+    {
+        my $s = $dir->new_scope;
+
+        my $get = $dir->lookup($get_id);
+
+        is( $get->("foo"), 42, "names updated" );
     }
 }

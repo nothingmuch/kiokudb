@@ -75,5 +75,8 @@ WriteMakefile(
 
         # used in command line tools
         'Proc::InvokeEditor' => 1,
+
+        # closure serializing support
+        'PadWalker' => 1.8
     },
 );
