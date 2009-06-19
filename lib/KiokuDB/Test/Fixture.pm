@@ -186,6 +186,12 @@ sub update_ok {
     _lives_and_ret { $self->update( @objects ) } "updated " . scalar(@objects) . " objects";
 }
 
+sub insert_ok {
+    my ( $self, @objects ) = @_;
+
+    _lives_and_ret { $self->insert( @objects ) } "inserted " . scalar(@objects) . " objects";
+}
+
 sub delete_ok {
     my ( $self, @objects ) = @_;
 
