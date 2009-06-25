@@ -425,7 +425,7 @@ When the collapser encounters an object it will ask
 L<KiokuDB::TypeMap::Resolver> for a collapsing routine based on the class of
 the object.
 
-This lookup is typically performed by C<ref $object>, not using inheritence,
+This lookup is typically performed by C<ref $object>, not using inheritance,
 because a typemap entry that is safe to use with a superclass isn't necessarily
 safe to use with a subclass. If you B<do> want inherited entries, specify
 C<isa_entries>:
