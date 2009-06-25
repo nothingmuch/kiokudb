@@ -84,9 +84,12 @@ sub create {
 
     my $foo = "blah";
 
+    my @x = ( 1 );
+
     return (
         scalar  => \$foo,
         refhash => \%refhash,
+        coderef => sub { $x[0]++; },
         HAVE_IXHASH            ? ( ixhash => \%ixhash                                           ) : (),
         HAVE_DATETIME          ? ( datetime   => { obj => DateTime->now }                       ) : (),
         HAVE_DATETIME_FMT      ? ( datetime_fmt   => { obj => DateTime->now(formatter => DateTime::Format::Strptime->new( pattern => '%F' ) ) }                       ) : (),
@@ -168,6 +171,46 @@ sub verify {
 
         is_deeply( [ sort { ref($a) ? -1 : ( ref($b) ? 1 : ( $a cmp $b ) ) } keys %$rh ], [ ["foo"], "blah" ], "keys" );
 
+    }
+
+    $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $c = $self->lookup_ok("coderef");
+
+        is( ref($c), "CODE", "coderef" );
+
+        is( $c->(), 1, "invoke closure" );
+        is( $c->(), 2, "invoke closure" );
+    }
+
+    $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $c = $self->lookup_ok("coderef");
+
+        is( ref($c), "CODE", "coderef" );
+
+        is( $c->(), 1, "invoke closure" );
+        is( $c->(), 2, "invoke closure" );
+
+        $self->store_ok($c);
+    }
+
+    $self->no_live_objects;
+
+    {
+        my $s = $self->new_scope;
+
+        my $c = $self->lookup_ok("coderef");
+
+        is( ref($c), "CODE", "coderef" );
+
+        is( $c->(), 3, "closure updated" );
     }
 
     $self->no_live_objects;
