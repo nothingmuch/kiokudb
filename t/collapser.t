@@ -15,6 +15,7 @@ use ok 'KiokuDB::TypeMap';
 use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::TypeMap::Entry::MOP';
 use ok 'KiokuDB::TypeMap::Entry::Callback';
+use ok 'KiokuDB::TypeMap::Entry::Ref';
 use ok 'KiokuDB::Backend::Hash';
 
 sub KiokuDB::Entry::BUILD { shift->root }; # force building of root for is_deeply
@@ -51,7 +52,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -140,7 +146,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -189,7 +200,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -240,7 +256,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -290,7 +311,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -341,7 +367,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new,
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 
@@ -368,7 +399,12 @@ use Tie::RefHash;
             live_objects => my $lo = KiokuDB::LiveObjects->new,
             compact => 0,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new,
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                    },
+                ),
             ),
         );
 
@@ -384,7 +420,12 @@ use Tie::RefHash;
             live_objects => my $lo = KiokuDB::LiveObjects->new,
             compact => 1,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new,
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                    },
+                ),
             ),
         );
 
@@ -403,7 +444,12 @@ use Tie::RefHash;
             backend => KiokuDB::Backend::Hash->new,
             live_objects => my $lo = KiokuDB::LiveObjects->new,
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-                typemap => KiokuDB::TypeMap->new,
+                typemap => KiokuDB::TypeMap->new(
+                    entries => {
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                    },
+                ),
             ),
         );
 
@@ -443,6 +489,8 @@ use Tie::RefHash;
                         Bar => KiokuDB::TypeMap::Entry::MOP->new(
                             intrinsic => 1,
                         ),
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
                     },
                 ),
             ),
@@ -490,6 +538,8 @@ use Tie::RefHash;
                         Bar => KiokuDB::TypeMap::Entry::MOP->new(
                             intrinsic => 1,
                         ),
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
                     },
                 ),
             ),
@@ -545,6 +595,8 @@ use Tie::RefHash;
                             collapse  => "STORABLE_freeze",
                             expand    => "STORABLE_thaw",
                         ),
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
                     },
                 ),
             ),
@@ -601,6 +653,8 @@ use Tie::RefHash;
                             collapse  => "STORABLE_freeze",
                             expand    => "STORABLE_thaw",
                         ),
+                        ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                        HASH  => KiokuDB::TypeMap::Entry::Ref->new,
                     },
                 ),
             ),
@@ -661,7 +715,12 @@ use Tie::RefHash;
         backend => KiokuDB::Backend::Hash->new,
         live_objects => my $lo = KiokuDB::LiveObjects->new,
         typemap_resolver => KiokuDB::TypeMap::Resolver->new(
-            typemap => KiokuDB::TypeMap->new(),
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
         ),
     );
 

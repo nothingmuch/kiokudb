@@ -38,6 +38,12 @@ sub _build_core_typemap {
     my $self = shift;
 
     $self->_create_typemap(
+        entries => {
+            'ARRAY'  => "KiokuDB::TypeMap::Entry::Ref",
+            'HASH'   => "KiokuDB::TypeMap::Entry::Ref",
+            'SCALAR' => "KiokuDB::TypeMap::Entry::Ref",
+            'GLOB'   => "KiokuDB::TypeMap::Entry::Ref",
+        },
         isa_entries => {
             'KiokuDB::Set::Base' => {
                 type      => "KiokuDB::TypeMap::Entry::Set",

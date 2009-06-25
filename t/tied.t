@@ -9,6 +9,7 @@ use Scalar::Util qw(refaddr reftype blessed);
 use Storable qw(dclone);
 
 use ok 'KiokuDB::TypeMap::Entry::Callback';
+use ok 'KiokuDB::TypeMap::Entry::Ref';
 use ok 'KiokuDB::TypeMap::Resolver';
 use ok 'KiokuDB::Collapser';
 use ok 'KiokuDB::Linker';
@@ -51,6 +52,8 @@ for my $i ( 0, 1 ) {
                         return $self;
                     },
                 ),
+                ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                HASH  => KiokuDB::TypeMap::Entry::Ref->new,
             },
         ),
     );

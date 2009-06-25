@@ -172,7 +172,7 @@ sub visit_seen {
     }
 }
 
-sub visit_ref {
+sub visit_ref_fallback {
     my ( $self, $ref ) = @_;
 
     my $o = $self->_buffer->options;
@@ -280,12 +280,15 @@ sub visit_tied {
     }
 }
 
-sub visit_object {
-    my ( $self, $object ) = @_;
+sub visit_object { shift->visit_with_typemap(@_) }
+sub visit_ref { shift->visit_with_typemap(@_) }
 
-    my $collapse = $self->collapse_method(ref $object);
+sub visit_with_typemap {
+    my ( $self, $ref ) = @_;
 
-    $self->$collapse($_[1]);
+    my $collapse = $self->collapse_method(ref $ref);
+
+    shift->$collapse(@_);
 }
 
 sub collapse_first_class {
