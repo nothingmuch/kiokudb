@@ -82,9 +82,13 @@ sub _create_entry {
 
     return if exists $self->_exclude->{$class};
 
-    return ( $class => $entry ) if blessed $entry;
-
-    return ( $class => $self->_construct_entry( %$entry, class => $class ) );
+    if ( blessed $entry ) {
+        return ( $class => $entry );
+    } elsif ( ref $entry ) {
+        return ( $class => $self->_construct_entry( %$entry, class => $class ) );
+    } else {
+        return ( $class => $self->_construct_entry( type => $entry, class => $class ) );
+    }
 }
 
 sub _create_entries {
