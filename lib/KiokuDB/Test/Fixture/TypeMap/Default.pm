@@ -82,7 +82,10 @@ sub create {
 
     $homer->role_attr("foo");
 
+    my $foo = "blah";
+
     return (
+        scalar  => \$foo,
         refhash => \%refhash,
         HAVE_IXHASH            ? ( ixhash => \%ixhash                                           ) : (),
         HAVE_DATETIME          ? ( datetime   => { obj => DateTime->now }                       ) : (),
@@ -142,6 +145,18 @@ sub create {
 
 sub verify {
     my $self = shift;
+
+    {
+        my $s = $self->new_scope;
+
+        my $scalar = $self->lookup_ok("scalar");
+
+        is( ref($scalar), "SCALAR", "reftype for scalar" );
+
+        is( $$scalar, "blah", "value" );
+    }
+
+    $self->no_live_objects;
 
     {
         my $s = $self->new_scope;

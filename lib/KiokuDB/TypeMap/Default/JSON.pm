@@ -7,7 +7,9 @@ use namespace::clean -except => 'meta';
 
 extends qw(KiokuDB::TypeMap);
 
-with qw(KiokuDB::TypeMap::Default::Canonical);
+with 'KiokuDB::TypeMap::Default::Canonical' => {
+    excludes => [qw(reftype_entries)],
+};
 
 has json_boolean_typemap => (
     traits     => [qw(KiokuDB::TypeMap)],
@@ -15,6 +17,15 @@ has json_boolean_typemap => (
     is         => "ro",
     lazy_build => 1,
 );
+
+sub reftype_entries {
+    my $self = shift;
+
+    return (
+        $self->KiokuDB::TypeMap::Default::Canonical::reftype_entries,
+        SCALAR => "KiokuDB::TypeMap::Entry::JSON::Scalar",
+    );
+}
 
 sub _build_json_boolean_typemap {
     my $self = shift;
