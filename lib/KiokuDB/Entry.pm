@@ -40,7 +40,6 @@ has deleted => (
 );
 
 has data => (
-    traits => [qw(Clone)],
     is  => "ro",
     writer    => "_data",
     predicate => "has_data",
@@ -78,6 +77,7 @@ has prev => (
     isa => __PACKAGE__,
     is  => "rw",
     predicate => "has_prev",
+    clearer => "clear_prev",
 );
 
 has object => (
@@ -85,6 +85,7 @@ has object => (
     is => "rw",
     weak_ref => 1,
     predicate => "has_object",
+    clearer => "clear_object",
 );
 
 sub deletion_entry {

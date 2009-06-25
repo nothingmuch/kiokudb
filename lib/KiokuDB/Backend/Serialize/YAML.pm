@@ -18,7 +18,12 @@ with qw(
 sub serialize {
     my ( $self, $entry ) = @_;
 
-    Dump($entry);
+    my $clone = $entry->clone;
+
+    $clone->clear_prev;
+    $clone->root( $entry->root );
+
+    Dump($clone);
 }
 
 sub deserialize {
