@@ -77,5 +77,8 @@ WriteMakefile(
 
         # closure serializing support
         'PadWalker' => 1.9,
+
+        # Role::ID::Digest
+        'Digest::SHA' => 0,
     },
 );
