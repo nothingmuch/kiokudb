@@ -76,6 +76,6 @@ WriteMakefile(
         'Proc::InvokeEditor' => 1,
 
         # closure serializing support
-        'PadWalker' => 1.8
+        'PadWalker' => 1.9
     },
 );
