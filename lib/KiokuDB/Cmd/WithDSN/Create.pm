@@ -15,6 +15,7 @@ with qw(
 requires "v";
 
 has clear => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     cmd_aliases => "x",
@@ -22,6 +23,7 @@ has clear => (
 );
 
 has create => (
+    traits => [qw(Getopt)],
     isa => "Bool",
     is  => "ro",
     default => 1,
