@@ -21,7 +21,7 @@ my $tr = KiokuDB::TypeMap::Resolver->new(
 
 isa_ok( $tr, "KiokuDB::TypeMap::Resolver" );
 
-foreach my $class ( qw(DateTime Path::Class::Entity URI Tie::RefHash Authen::Passphrase JSON::Boolean) ) {
+foreach my $class ( qw(DateTime Path::Class::Entity URI Tie::RefHash Authen::Passphrase JSON::Boolean SCALAR) ) {
     my $e = $t->resolve($class);
 
     does_ok( $e, "KiokuDB::TypeMap::Entry", "entry for $class" );
