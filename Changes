@@ -1,3 +1,14 @@
+0.28
+    - YAML serializer no longer stores extra data
+    - MooseX::Clone is available for entry/reference
+    - TypeMap::Entry::Std role was split up to smaller roles
+    - TXN::Memory implements get() properly now (but not iterations yet)
+    - ->connect("/path/to/config.yml") is now supported
+    - propagate errors when loading classes in the linker
+    - core reftypes (ARRAY, HASH etc) are handled by the typemap
+    - SCALAR refs can be stored in JSON by using a custom typemap
+    - Support for serializing closures
+
 0.27
     - Add roles for digest based IDs
     - Change dep versions of IO and Tie::RefHash::Weak (they were wrong under
