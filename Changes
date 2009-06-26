@@ -1,3 +1,7 @@
+0.29
+    - work around Test::Exception leak relating to closures in 5.8
+    - fix various new warnings with Moose
+
 0.28
     - YAML serializer no longer stores extra data
     - MooseX::Clone is available for entry/reference
