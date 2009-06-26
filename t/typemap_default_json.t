@@ -42,8 +42,8 @@ SKIP: {
         package My::Object;
         use Moose;
 
-        has yes => ( default => sub { JSON::true() } );
-        has no => ( default => sub { JSON::false() } );
+        has yes => ( is => "ro", default => sub { JSON::true() } );
+        has no  => ( is => "ro", default => sub { JSON::false() } );
     }
 
     my $obj = My::Object->new;
