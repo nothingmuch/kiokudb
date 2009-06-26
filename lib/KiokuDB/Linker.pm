@@ -237,6 +237,19 @@ sub inflate_data {
         $self->register_object( $entry => \$targ ) if $entry;
         $self->inflate_data( $$data, \$targ );
         $$into = \$targ;
+    } elsif ( ref($data0 eq 'GLOB' ) ) {
+        my $new_glob = Symbol::gensym();
+        $self->register_object( $entry => $new_glob );
+
+        foreach my $slot (qw(SCALAR ARRAY HASH)) {
+            if ( my $value = *$glob{$_} ) {
+                my $targ;
+                $self->inflate_data( $value, \$targ);
+                *$new_glob = $targ;
+            }
+        }
+
+        $$into = $new_glob;
     } else {
         if ( blessed($data) ) {
             # this branch is for passthrough intrinsic values
