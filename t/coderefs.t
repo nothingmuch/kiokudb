@@ -52,8 +52,6 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
 }
 
 {
-    my ( $sv, $av, $hv, $all );
-
     $dir->live_objects->clear;
 
     {
@@ -61,14 +59,20 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
 
         my ( $x, @x, %x );
 
-        lives_ok { $sv  = $dir->store( sv  => sub { $x++ } ) } "SV";
-        lives_ok { $av  = $dir->store( av  => sub { $x[0]++ } ) } "AV";
-        lives_ok { $hv  = $dir->store( hv  => sub { $x{foo}++ } ) } "HV";
-        lives_ok { $all = $dir->store( all => sub { $x++; $x[0]++; $x{foo}++ } ) } "SV, AV, HV";
+        # these tests cause leaks in 5.8 if they use Test::Exception
+
+        eval { $dir->store( sv  => sub { $x++ } ) };
+        ok( !$@, "SV" );
+        eval { $dir->store( av  => sub { $x[0]++ } ) };
+        ok( !$@, "AV" );
+        eval { $dir->store( hv  => sub { $x{foo}++ } ) };
+        ok( !$@, "HV" );
+        eval { $dir->store( all => sub { $x++; $x[0]++; $x{foo}++ } ) };
+        ok( !$@, "SV, AV, HV" );
     }
 
     {
-        foreach my $id ( $sv, $av, $hv, $all ) {
+        foreach my $id ( qw(sv av hv all) ) {
             is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 
             my $s = $dir->new_scope;
