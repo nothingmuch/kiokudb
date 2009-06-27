@@ -159,8 +159,8 @@
       implement
 
 * CodeRefs serialization
-    * PadWalker support for Data::Visitor
-    * look into Lexical::Persistence
+    * if the subname of the CV is valid and it has a ->FILE then maybe store as
+      a symbolic ref instead (requiring the file to load it)?
 
 * Attribute meta traits
     * each of these is relatively small and self contained
