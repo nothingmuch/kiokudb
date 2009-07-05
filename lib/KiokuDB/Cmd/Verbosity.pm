@@ -5,6 +5,8 @@ use Moose::Role;
 
 use MooseX::Getopt;
 
+with qw(KiokuDB::Role::Verbosity);
+
 use namespace::clean -except => 'meta';
 
 has verbose => (
@@ -14,19 +16,6 @@ has verbose => (
     cmd_aliases => "v",
     documentation => "more output",
 );
-
-sub BUILD {
-    my $self = shift;
-
-    STDERR->autoflush(1) if $self->verbose;
-}
-
-sub v {
-    my $self = shift;
-    return unless $self->verbose;
-
-    STDERR->print(@_);
-}
 
 __PACKAGE__
 
