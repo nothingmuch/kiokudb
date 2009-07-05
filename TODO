@@ -85,11 +85,6 @@
         * scans the DB for entries with versions that != current, and loads and
           then updates those objects
 
-* split distro
-    - KiokuDB - core modules, for deployment
-    - KiokuDB::Cmd - cli tools
-    - KiokuDB::Test - test fixtures
-
 * $dir->refresh($object), $dir->deep_refresh($object)
     * add refreshing method to typemap entries
     * reload entry from the backend
