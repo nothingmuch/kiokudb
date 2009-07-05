@@ -1,9 +1,48 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 
 use strict;
 use warnings;
 
-use KiokuDB::Cmd;
+use KiokuDB;
 
-KiokuDB::Cmd->run; # cleaner errors
+unless ( try_run() ) {
+    if ( $INC{"KiokuDB/Cmd.pm"} ) {
+        print "KiokuDB::Cmd is not up to date ($KiokuDB::REQUIRED_CMD_VERSION is required, $KiokuDB::Cmd::VERSION installed)\n";
+    } else {
+        print "KiokuDB::Cmd is not installed (it's now shipped in a separate distribution).\n";
+    }
+
+    if ( try_auto_install() ) {
+        delete $INC{"KiokuDB/Cmd.pm"};
+        try_run();
+    }
+}
+
+print "\nPlease install an up to date KiokuDB::Cmd from CPAN\n";
+exit 1;
+
+
+sub try_run {
+    return unless eval { require KiokuDB::Cmd; 1 };
+    return unless KiokuDB::Cmd->is_up_to_date;
+
+    KiokuDB::Cmd->run;
+    exit;
+}
+
+sub try_auto_install {
+    if (eval {
+        require Module::AutoInstall;
+        require ExtUtils::MakeMaker;
+        1;
+    }) {
+        print "\n";
+        if ( ExtUtils::MakeMaker::prompt("Module::AutoInstall is available. Should I use it to install KiokuDB::Cmd?", "N/y") =~ /^y/i ) {
+            my @installed = Module::AutoInstall->install( [], "KiokuDB::Cmd" => $KiokuDB::REQUIRED_CMD_VERSION );
+            return @installed > 0;
+        }
+    }
+
+    return;
+}
 

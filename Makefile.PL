@@ -18,13 +18,7 @@ WriteMakefile(
         'MooseX::Role::Parameterized' => 0.10,
         #'MooseX::AttributeHelpers' => '0.14',
         'MooseX::Clone' => 0.04,
-        'MooseX::Types::Path::Class' => 0,
         'Path::Class' => 0,
-
-        # Command line utilities
-        'MooseX::Getopt' => 0,
-        'App::Cmd' => 0.202,
-        'MooseX::App::Cmd' => 0,
 
         # configure
         'MooseX::YAML' => 0.02,
@@ -71,9 +65,6 @@ WriteMakefile(
         'Storable' => 0,
 
         'IO' => 1.23,
-
-        # used in command line tools
-        'Proc::InvokeEditor' => 1,
 
         # closure serializing support
         'PadWalker' => 1.9,
