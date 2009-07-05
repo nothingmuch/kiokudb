@@ -1,3 +1,6 @@
+0.30
+    - Split KiokuDB::Cmd into a separate distribution
+
 0.29
     - work around Test::Exception leak relating to closures in 5.8
     - fix various new warnings with Moose
