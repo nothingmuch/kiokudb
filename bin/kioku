@@ -1,9 +1,0 @@
-#!/usr/bin/env perl
-
-use strict;
-use warnings;
-
-use KiokuDB::Cmd;
-
-KiokuDB::Cmd->run; # cleaner errors
-

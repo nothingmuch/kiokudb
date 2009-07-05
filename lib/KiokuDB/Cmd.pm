@@ -3,9 +3,22 @@
 package KiokuDB::Cmd;
 use Moose;
 
+use KiokuDB;
+
 use namespace::clean -except => 'meta';
 
 extends qw(MooseX::App::Cmd);
+
+our $VERSION = "0.01";
+our $KIOKUDB_VERSION = "0.29";
+
+sub is_up_to_date {
+    KiokuDB->VERSION($KIOKUDB_VERSION);
+
+    return unless KiokuDB->cmd_is_up_to_date;
+
+    return 1;
+}
 
 __PACKAGE__->meta->make_immutable;
 
