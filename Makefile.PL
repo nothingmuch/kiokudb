@@ -6,6 +6,22 @@ use ExtUtils::MakeMaker;
 
 require 5.008; # utf8 and what not
 
+
+my @cmd_dep;
+if ( eval { require KiokuDB::Cmd; 1 } ) {
+    open my $fh, "<", "lib/KiokuDB.pm" or die $!;
+    while ( <$fh> ) {
+        if ( /REQUIRED_CMD_VERSION\s*=/ ) {
+            eval $_;
+            last;
+        }
+    }
+
+    unless ( eval { KiokuDB::Cmd->VERSION($::REQUIRED_CMD_VERSION); 1 } ) {
+        warn "Note: Adding KiokuDB::Cmd $::REQUIRED_CMD_VERSION to dependencies because a previous version is installed.\n\n";
+        push @cmd_dep, "KiokuDB::Cmd" => $::REQUIRED_CMD_VERSION;
+    }
+}
 WriteMakefile(
     NAME         => 'KiokuDB',
     VERSION_FROM => 'lib/KiokuDB.pm',
@@ -71,5 +87,7 @@ WriteMakefile(
 
         # Role::ID::Digest
         'Digest::SHA' => 0,
+
+        @cmd_dep,
     },
 );
