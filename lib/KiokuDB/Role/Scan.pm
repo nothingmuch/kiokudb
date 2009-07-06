@@ -16,7 +16,7 @@ role {
 
     my $result_class = $meta->result_class;
 
-    with qw(KiokuDB::Cmd::Verbosity);
+    with qw(KiokuDB::Role::Verbosity);
 
     has backend => (
         does => "KiokuDB::Backend::Role::Scan",

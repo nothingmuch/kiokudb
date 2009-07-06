@@ -8,7 +8,7 @@ use KiokuDB::GC::Naive::Sweep;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Cmd::Verbosity);
+with qw(KiokuDB::Role::Verbosity);
 
 has backend => (
     does => "KiokuDB::Backend::Role::Scan",
