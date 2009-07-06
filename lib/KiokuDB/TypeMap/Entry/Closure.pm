@@ -39,6 +39,8 @@ sub compile_collapse_body {
                 $buffer->first_class->insert(map { $_->id } values %$pad_entry_data ); # maybe only if entry($_->id)->object's refcount is > 1 (only shared closure vars) ?
             }
 
+            # FIXME find all GVs in the optree and insert refs to them?
+            # i suppose they should be handled like named...
             $data{body} = $self->_deparse($sub);
         } else {
             ( my $pkg_file = "${pkg}.pm" ) =~ s{::}{/}g;
