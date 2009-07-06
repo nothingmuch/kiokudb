@@ -1,5 +1,7 @@
 0.31
     - Remove MooseX::Getopt usage from verbosity role
+    - Don't depend on KiokuDB::Cmd in makefile, just warn (avoids recursive
+      dependency)
 
 0.30
     - Split KiokuDB::Cmd into a separate distribution
