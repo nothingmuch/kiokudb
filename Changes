@@ -1,3 +1,6 @@
+0.31
+    - Remove MooseX::Getopt usage from verbosity role
+
 0.30
     - Split KiokuDB::Cmd into a separate distribution
 
