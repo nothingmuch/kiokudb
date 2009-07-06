@@ -12,6 +12,8 @@ has company => (
     is  => "rw",
 );
 
+sub lalala { 333 }
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

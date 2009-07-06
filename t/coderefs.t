@@ -387,3 +387,86 @@ sub closure_pair {
         is( $get->("foo"), 42, "names updated" );
     }
 }
+
+sub blah { 42 }
+
+{
+    my $blah_id= $dir->txn_do( scope => 1, body => sub {
+        $dir->insert(\&blah)
+    });
+
+    $dir->live_objects->clear;
+
+    {
+        my $s = $dir->new_scope;
+
+        my $blah = $dir->lookup($blah_id);
+
+        ok( $blah, "got named sub" );
+
+        is( $blah->(), 42, "correct value" );
+
+        is( $blah, \&blah, "right refaddr" );
+    }
+
+    $dir->live_objects->clear;
+}
+
+{
+    $dir->txn_do( scope => 1, body => sub {
+        $dir->backend->insert(
+            KiokuDB::Entry->new(
+                id => "lalala",
+                data => {
+                    package => "KiokuDB::Test::Employee",
+                    name    => "lalala",
+                },
+                class => "CODE",
+            ),
+        );
+    });
+
+    {
+        my $s = $dir->new_scope;
+
+        ok( !exists($INC{"KiokuDB/Test/Employee.pm"}), "Employee.pm not loaded" );
+
+        my $sub = $dir->lookup("lalala");
+
+        ok( $sub, "loaded sub" );
+
+        ok( $INC{"KiokuDB/Test/Employee.pm"}, "Employee.pm loaded" );
+
+        is( $sub, \&KiokuDB::Test::Employee::lalala, "right refaddr" );
+        is( $sub->(), 333, "right value" );
+    }
+
+    $dir->live_objects->clear;
+}
+
+{
+    my $sub_id = $dir->txn_do( scope => 1, body => sub {
+        $dir->insert(\&KiokuDB::Test::Employee::company);
+    });
+
+    my $entry = $dir->live_objects->id_to_entry($sub_id);
+
+    ok( !exists($entry->{data}{file}), "Moose accessor detected" );
+    is_deeply( $entry->{data}, { package => "KiokuDB::Test::Employee", name => "company" }, "FQ reference only" );
+
+    $dir->live_objects->clear;
+}
+
+
+{
+    my $sub_id = $dir->txn_do( scope => 1, body => sub {
+        $dir->insert(\&Scalar::Util::weaken);
+    });
+
+    my $entry = $dir->live_objects->id_to_entry($sub_id);
+
+    ok( !exists($entry->{data}{file}), "XSUB detected" );
+    is_deeply( $entry->{data}, { package => "Scalar::Util", name => "weaken" }, "FQ reference only" );
+
+    $dir->live_objects->clear;
+}
