@@ -9,8 +9,8 @@ use namespace::clean -except => 'meta';
 
 extends qw(MooseX::App::Cmd);
 
-our $VERSION = "0.01";
-our $KIOKUDB_VERSION = "0.29";
+our $VERSION = "0.02";
+our $KIOKUDB_VERSION = "0.31";
 
 sub is_up_to_date {
     KiokuDB->VERSION($KIOKUDB_VERSION);
