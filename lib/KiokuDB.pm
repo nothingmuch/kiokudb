@@ -23,7 +23,7 @@ use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
 # with qw(KiokuDB::Role::API); # moved lower
 
-our $REQUIRED_CMD_VERSION = "0.01";
+our $REQUIRED_CMD_VERSION = "0.02";
 sub cmd_is_up_to_date {
     require KiokuDB::Cmd;
     eval { KiokuDB::Cmd->VERSION($REQUIRED_CMD_VERSION); 1 };
