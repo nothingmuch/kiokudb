@@ -9,6 +9,12 @@ use KiokuDB::Thunk;
 
 no warnings 'recursion';
 
+sub does_role {
+    my ($meta, $role) = @_;
+    return unless my $does = $meta->can('does_role');
+    return $meta->$does($role);
+}
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);
@@ -22,14 +28,14 @@ sub compile_collapse_body {
     my $meta = Class::MOP::get_metaclass_by_name($class);
 
     my @attrs = grep {
-        !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
+        !does_role($_->meta, 'KiokuDB::Meta::Attribute::DoNotSerialize')
             and
-        !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
+        !does_role($_->meta, 'MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->get_all_attributes;
 
     my %lazy;
     foreach my $attr ( @attrs ) {
-        $lazy{$attr->name}  = $attr->does("KiokuDB::Meta::Attribute::Lazy");
+        $lazy{$attr->name}  = does_role($attr->meta, "KiokuDB::Meta::Attribute::Lazy");
     }
 
     my $meta_instance = $meta->get_meta_instance;
@@ -90,8 +96,8 @@ sub compile_collapse_body {
         );
     }
 
-    my $immutable  = $meta->does_role("KiokuDB::Role::Immutable");
-    my $content_id = $meta->does_role("KiokuDB::Role::ID::Content");
+    my $immutable  = does_role($meta, "KiokuDB::Role::Immutable");
+    my $content_id = does_role($meta, "KiokuDB::Role::ID::Content");
 
     return (
         sub {
@@ -146,14 +152,14 @@ sub compile_expand {
     my ( %attrs, %lazy );
 
     my @attrs = grep {
-        !$_->does('KiokuDB::Meta::Attribute::DoNotSerialize')
+        !does_role($_->meta, 'KiokuDB::Meta::Attribute::DoNotSerialize')
             and
-        !$_->does('MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
+        !does_role($_->meta, 'MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
     } $meta->get_all_attributes;
 
     foreach my $attr ( @attrs ) {
         $attrs{$attr->name} = $attr;
-        $lazy{$attr->name}  = $attr->does("KiokuDB::Meta::Attribute::Lazy");
+        $lazy{$attr->name}  = does_role($attr->meta, "KiokuDB::Meta::Attribute::Lazy");
     }
 
     my $meta_instance = $meta->get_meta_instance;
@@ -247,7 +253,7 @@ sub inflate_class_meta {
 sub compile_id {
     my ( $self, $class ) = @_;
 
-    if ( Class::MOP::get_metaclass_by_name($class)->does_role("KiokuDB::Role::ID") ) {
+    if ( does_role(Class::MOP::get_metaclass_by_name($class), "KiokuDB::Role::ID") ) {
         return sub {
             my ( $self, $object ) = @_;
             return $object->kiokudb_object_id;
@@ -264,7 +270,7 @@ sub should_compile_intrinsic {
 
     if ( $self->has_intrinsic ) {
         return $self->intrinsic;
-    } elsif ( $meta->does_role("KiokuDB::Role::Intrinsic") ) {
+    } elsif ( does_role($meta, "KiokuDB::Role::Intrinsic") ) {
         return 1;
     } else {
         return 0;
