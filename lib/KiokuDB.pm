@@ -868,7 +868,8 @@ It is an error to update an object not in the database.
 
 =item deep_update @objects
 
-Update @objects and all of the objects they reference.
+Update @objects and all of the objects they reference. All references
+objects must already be in the database.
 
 =item insert @objects
 
