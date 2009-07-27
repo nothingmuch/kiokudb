@@ -225,7 +225,7 @@ Let's first create and insert another object:
         Person->new( name => "Marge Simpson" ),
     );
 
-Now that we have both objects in the database, lets link them together:
+Now that we have both objects in the database, let's link them together:
 
     {
         my $scope = $dir->new_scope;
@@ -244,7 +244,7 @@ point to each other.
 The reason C<spouse> had the C<weak_ref> option was so that this circular
 structure will not leak.
 
-When then objects are updated in the database L<KiokuDB> sees that their
+When then objects are updated in the database, L<KiokuDB> sees that their
 C<spouse> attribute contains references, and this relationship will be encoded
 using their unique ID in storage.
 
@@ -283,7 +283,7 @@ If this was not done, by the time C<$homer> was returned from C<lookup> his
 C<spouse> attribute would have been cleared because there is no other reference
 to Marge.
 
-If, on the other hand the circular structure was not weak it would have to be
+If, on the other hand the circular structure was not weak, it would have to be
 broken manually, which is very error prone.
 
 By using this idiom:
@@ -303,7 +303,7 @@ While scopes can nest, this is not a requirement.
 You are free to create as many or as few scopes as you like, as long as there
 is at least one, but note that child scopes refer to their parents to ensure
 that all objects that were already live at the time that a scope is created are
-still alive
+still alive.
 
 =head1 REFERENCES IN THE DATABASE
 
@@ -318,7 +318,7 @@ what's inside.
      data = {"__CLASS__":"Person","data":{"name":"Marge Simpson","spouse":{"$ref":"201C5B55-E759-492F-8F20-A529C7C02C8B.data"}},"id":"05A8D61C-6139-4F51-A748-101010CC8B02","root":true}
 
 You'll notice the C<spouse> field has a JSON object with a C<$ref> field inside
-it with to the UUID of the target object.
+it holding the UUID of the target object.
 
 When data is loaded L<KiokuDB> queues up references to unloaded objects and
 then loads them in order to materialize the memory resident object graph.
@@ -558,7 +558,7 @@ compatible with L<DBIx::Class> 0.09's syntax.
 
 =head2 DBI SEARCH COLUMNS
 
-In order to make use of the simple search api we need to configure columns for
+In order to make use of the simple search API we need to configure columns for
 our DBI backend.
 
 Let's create a 'name' column to search by:
@@ -580,7 +580,7 @@ You can either alter the schema manually, or use C<kioku dump> to back up your
 data, delete the database, connect with C<< create => 1 >> and then use
 C<kioku load>.
 
-To populate this column we'll need to load homer and update him:
+To populate this column we'll need to load Homer and update him:
 
     {
         my $s = $dir->new_scope;
@@ -635,7 +635,7 @@ Now that the storage is created we can make use of this backend, much like befor
 
     my $dir = KiokuDB->new( backend => $backend );
 
-Subsequent opens will not required the C<create> argument to be true, but it
+Subsequent opens will not require the C<create> argument to be true, but it
 doesn't hurt.
 
 This C<connect> call is equivalent to the above:
@@ -739,4 +739,3 @@ However it does work for simple searches such as this and contains pre canned
 solutions like L<Search::GIN::Extract::Class>.
 
 In short, it works today, but watch this space for new developments.
-
