@@ -345,7 +345,7 @@ The last entry that was loaded from the store, or successfully written to the
 store for a given UUID is kept in the live object set.
 
 The collapser creates transient Entry objects, which if written to the store
-successfully are replace the previous one.
+successfully replace the previous one.
 
 =item backend_data
 
