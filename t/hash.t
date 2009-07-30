@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
@@ -13,3 +13,5 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
     }
 }
 
+
+done_testing;

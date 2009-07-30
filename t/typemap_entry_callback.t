@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(refaddr reftype blessed);
 
@@ -99,3 +99,5 @@ my $l = KiokuDB::Linker->new(
     is_deeply( $expanded, $obj, "is_deeply" );
 }
 
+
+done_testing;

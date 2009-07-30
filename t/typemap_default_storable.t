@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 use Test::Moose;
 
@@ -34,3 +34,6 @@ foreach my $class ( qw(DateTime Path::Class::Entity URI Tie::RefHash Authen::Pas
 }
 
 ok( !$t->resolve("JSON::Boolean"), "no JSON::Boolean" );
+
+
+done_testing;

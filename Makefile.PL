@@ -79,7 +79,7 @@ WriteMakefile(
         'Module::Pluggable::Object' => 0,
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
-        'Test::More' => 0,
+        'Test::More' => 0.88,
 
         'Search::GIN' => 0.03,
 

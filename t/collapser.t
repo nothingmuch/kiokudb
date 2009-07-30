@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(weaken isweak);
 use Storable qw(dclone);
@@ -806,3 +806,6 @@ use Tie::RefHash;
         );
     }
 }
+
+
+done_testing;

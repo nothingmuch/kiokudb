@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 
 use ok 'KiokuDB';
@@ -470,3 +470,6 @@ sub blah { 42 }
 
     $dir->live_objects->clear;
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Moose;
 
 use constant HAVE_YAML => eval { require YAML::XS } ? 1 : 0;
@@ -67,3 +67,5 @@ $_->make_mutable, $_->make_immutable for KiokuDB::Entry->meta; # recreate new
     }
 }
 
+
+done_testing;

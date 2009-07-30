@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::Test::Digested';
 
@@ -34,3 +34,6 @@ is( $foo->digest, KiokuDB::Test::Digested->new( foo => "blaitty4" )->digest, "di
 use Data::Dumper;
 
 like( Dumper($foo->digest_parts), qr/blaitty4/, "contains digest parts" );
+
+
+done_testing;

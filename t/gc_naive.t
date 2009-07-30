@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::GC::Naive';
 use ok 'KiokuDB::Entry';
@@ -159,3 +159,6 @@ use Data::Stream::Bulk::Util qw(bulk);
         is_deeply( [ sort $l->seen->members ], [ sort qw(foo parent), 1 .. 1000 ], "seen IDs are 'foo', 'bar' and 'parent'" );
     }
 }
+
+
+done_testing;

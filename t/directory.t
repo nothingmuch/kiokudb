@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 
 BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok { SKIP: { skip "Test::Memory::Cycle missing", 1 }}' }
@@ -639,3 +639,6 @@ no_live_objects;
 };
 
 no_live_objects;
+
+
+done_testing;

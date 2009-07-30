@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(refaddr blessed);
 
@@ -151,3 +151,6 @@ my $l = KiokuDB::Linker->new(
 
     is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(refaddr reftype blessed);
 use Storable qw(dclone);
@@ -92,3 +92,5 @@ for my $i ( 0, 1 ) {
     isa_ok( tied(%$h), "Tie::RefHash", "tied to Tie::RefHash" );
 }
 
+
+done_testing;

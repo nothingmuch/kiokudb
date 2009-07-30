@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use KiokuDB::Test;
 
 use Scalar::Util qw(refaddr);
@@ -51,3 +51,5 @@ my $dir = KiokuDB->new(
 
 run_all_fixtures($dir);
 
+
+done_testing;

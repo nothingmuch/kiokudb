@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 
 use ok 'KiokuDB';
@@ -129,3 +129,6 @@ foreach my $format ( qw(storable json yaml) ) {
         }
     }
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(refaddr reftype blessed);
 
@@ -113,3 +113,6 @@ my $l = KiokuDB::Linker->new(
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $deep, "is_deeply" );
 }
+
+
+done_testing;

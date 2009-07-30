@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 use Scalar::Util qw(weaken);
 
@@ -239,3 +239,6 @@ use ok 'KiokuDB::Entry';
         "live object set is now empty"
     );
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::LinkChecker';
 use ok 'KiokuDB::Entry';
@@ -105,3 +105,6 @@ use Data::Stream::Bulk::Util qw(bulk);
         is_deeply( [ sort $l->referenced->members ], [ sort qw(bar gorch) ], "referenced ID is 'gorch'" );
     }
 }
+
+
+done_testing;

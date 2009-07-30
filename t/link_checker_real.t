@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::LinkChecker';
 use ok 'KiokuDB::Backend::Hash';
@@ -53,3 +53,6 @@ my $deleted_id = do {
     cmp_ok( $l->missing->size, '==', 1, "one missing entry" );
     is_deeply( [ $l->missing->members ], [ $deleted_id ], "ID is correct" );
 }
+
+
+done_testing;

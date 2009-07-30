@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB::Entry';
@@ -40,3 +40,6 @@ is_deeply(
     [ sort { $a->id <=> $b->id } @entries[0 .. 1] ],
     "search",
 );
+
+
+done_testing;

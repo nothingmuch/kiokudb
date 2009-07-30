@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 
 use Scalar::Util qw(reftype);
@@ -58,3 +58,4 @@ ok( my $method_meta = $tr->expand_method("Foo"), "code" );
 is( reftype($method_meta), "CODE", "expand method" );
 
 
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Moose;
 use Test::Exception;
 
@@ -304,3 +304,6 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         );
     } qr/\bCA\b/, "mixed entry conflict";
 }
+
+
+done_testing;

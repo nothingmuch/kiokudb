@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Exception;
 use Test::Moose;
 
@@ -69,3 +69,6 @@ SKIP: {
     isa_ok( $entry->data->{yes}, "JSON::Boolean", "boolean passed through" );
 
 }
+
+
+done_testing;

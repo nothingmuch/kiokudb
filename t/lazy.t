@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Moose;
 use Test::Exception;
 
@@ -155,3 +155,5 @@ my $dir = KiokuDB->new( backend => KiokuDB::Backend::Hash->new );
     );
 }
 
+
+done_testing;

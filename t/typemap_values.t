@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Set::Object;
 use constant HAVE_URI        => eval { require URI };
@@ -127,3 +127,6 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
         isa_ok( ( $foo->foo->members )[0], "Foo", 'set enumeration' );
     }
 }
+
+
+done_testing;

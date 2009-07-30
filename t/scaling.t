@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB';
 use ok 'KiokuDB::Test::Fixture::ObjectGraph';
@@ -75,3 +75,6 @@ is( $count, 22, "number of objects in DB" );
 
     is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Moose;
 
 use Scalar::Util qw(refaddr reftype blessed);
@@ -323,3 +323,6 @@ foreach my $intrinsic ( 1, 0 ) {
         ok( !exists($new_entries->{$id}), "skipped entry on second insert" );
     }
 }
+
+
+done_testing;

@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use ok 'KiokuDB::Set::Transient';
 use ok 'KiokuDB::Set::Deferred';
@@ -252,3 +252,6 @@ is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
 }
 
 is_deeply( [ $dir->live_objects->live_objects ], [], "no live objects" );
+
+
+done_testing;

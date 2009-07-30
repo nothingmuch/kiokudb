@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Storable qw(dclone);
 
@@ -154,3 +154,5 @@ is_deeply(
     "set entry (ids)",
 );
 
+
+done_testing;

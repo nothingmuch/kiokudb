@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 use Test::Moose;
 
 use ok 'KiokuDB::Backend::Serialize::JSPON';
@@ -169,3 +169,6 @@ my $tied = KiokuDB::Entry->new(
     is( $legacy->tied, "H", "legacy 'tied' field upgraded" );
 
 }
+
+
+done_testing;

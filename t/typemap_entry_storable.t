@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use Test::More;
 
 use Scalar::Util qw(refaddr reftype blessed);
 
@@ -200,3 +200,6 @@ is_deeply( [ $l->live_objects->live_objects ], [], "no live objects" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $attach, "is_deeply" );
 }
+
+
+done_testing;
