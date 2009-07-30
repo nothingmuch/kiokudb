@@ -1,3 +1,8 @@
+0.32
+    - Don't assume all metaclasses have the does_role method
+    - Various documentation fixes
+    - Add no warnings 'recursion' to KiokuDB::Linker
+
 0.31
     - Remove MooseX::Getopt usage from verbosity role
     - Don't depend on KiokuDB::Cmd in makefile, just warn (avoids recursive
