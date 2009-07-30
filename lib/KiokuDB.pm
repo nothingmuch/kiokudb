@@ -857,10 +857,14 @@ storage.
 
 =item store @objects
 
+=item store %objects
+
 Recursively collapses C<@objects> and inserts or updates the entries.
 
 This performs a full update of every reachable object from C<@objects>,
 snapshotting everything.
+
+Strings found in the object list are assumed to be IDs for the following objects.
 
 =item update @objects
 
@@ -874,6 +878,8 @@ Update @objects and all of the objects they reference. All references
 objects must already be in the database.
 
 =item insert @objects
+
+=item insert %objects
 
 Inserts objects to the database.
 
