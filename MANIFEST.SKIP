@@ -42,3 +42,5 @@
 
 # XS shit
 \.(?:bs|c|o)$
+
+\.gitignore$
