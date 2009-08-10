@@ -696,7 +696,7 @@ indexing of our objects:
         backend => KiokuDB::Backend::BDB::GIN->new(
             extract => Search::GIN::Extract::Callback->new(
                 extract => sub {
-                    my ( $object, $extractor, @args ) = @_;
+                    my ( $obj, $extractor, @args ) = @_;
 
                     if ( $obj->isa("Person") ) {
                         return {
@@ -704,6 +704,8 @@ indexing of our objects:
                             name => $obj->name,
                         };
                     }
+
+                    return;
                 },
             ),
         ),
