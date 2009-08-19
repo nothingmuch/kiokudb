@@ -38,7 +38,12 @@ sub vivify {
 
     my $value = $self->value;
 
-    $self->attr->set_value( $instance, $value );
+    my $attr = $self->attr;
+
+    $attr->set_raw_value($instance, $value);
+
+    $attr->_weaken_value($instance)
+        if ref $value and $attr->is_weak_ref;
 
     return $value;
 }

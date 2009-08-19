@@ -35,7 +35,7 @@ $dir->txn_do(scope => 1, body => sub {
 
 	lives_ok {
 		local $SIG{ALRM} = sub { die "timed out" };
-        local $SIG{__WARN__} = sub { die "warnings" };
+        local $SIG{__WARN__} = sub { die @_ if $_[0] =~ /recursion/i; warn @_ };
 		alarm 1;
 		$foo->bar( Bar->new );
 		alarm 0;

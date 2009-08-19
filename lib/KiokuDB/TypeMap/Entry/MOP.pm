@@ -130,7 +130,7 @@ sub compile_collapse_body {
                         }
                     }
 
-                    my $value = $attr->get_value($object);
+                    my $value = $attr->get_raw_value($object);
                     $collapsed{$name} = ref($value) ? $self->visit($value) : $value;
                 }
             }
@@ -202,9 +202,9 @@ sub compile_expand {
             my $value = $data->{$name};
 
             if ( ref $value ) {
-                if ( $lazy{$name} and ref($value) ) {
+                if ( $lazy{$name} ) {
                     my $thunk = KiokuDB::Thunk->new( collapsed => $value, linker => $linker, attr => $attr );
-                    $meta_instance->set_slot_value($instance, $attr->name, $thunk); # FIXME low level variant of $attr->set_value
+                    $attr->set_raw_value($instance, $thunk);
                 } else {
                     my @pair = ( $attr, undef );
 
@@ -212,14 +212,15 @@ sub compile_expand {
                     push @values, \@pair;
                 }
             } else {
-                $attr->set_value($instance, $value);
+                $attr->set_raw_value($instance, $value);
             }
         }
 
         $linker->queue_finalizer(sub {
             foreach my $pair ( @values ) {
                 my ( $attr, $value ) = @$pair;
-                $attr->set_value($instance, $value);
+                $attr->set_raw_value($instance, $value);
+                $attr->_weaken_value($instance) if $attr->is_weak_ref;
             }
         });
 
