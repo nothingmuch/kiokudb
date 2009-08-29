@@ -24,14 +24,6 @@
         * an action that then loads the object, resets the password, and
           then deletes the auth token object
 
-* symbolic aliases
-    * KiokuDB::Entry::Alias or somesuch
-    * used to set additional high level IDs for objects, after they are
-      already in the database
-    * Linker api to handle these on load
-    * on insert they are just special objects
-    * simple api in KiokuDB.pm to manage aliases (create, delete, etc).
-
 * configuration file support
     * need to be able to specify:
         * regular options

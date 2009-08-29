@@ -287,6 +287,13 @@ sub lookup {
         die $e;
     }
 
+    # resolve aliases
+    foreach my $obj ( @objects ) {
+        while ( ref $obj eq 'KiokuDB::Alias' ) {
+            $obj = $obj->target;
+        }
+    }
+
     if ( @ids == 1 ) {
         return $objects[0];
     } else {
