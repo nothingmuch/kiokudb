@@ -18,6 +18,7 @@ use KiokuDB::Stream::Objects;
 
 use Hash::Util::FieldHash::Compat qw(idhash);
 use Carp qw(croak);
+use Try::Tiny;
 
 use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
@@ -28,7 +29,7 @@ no warnings 'recursion';
 our $REQUIRED_CMD_VERSION = "0.02";
 sub cmd_is_up_to_date {
     require KiokuDB::Cmd;
-    eval { KiokuDB::Cmd->VERSION($REQUIRED_CMD_VERSION); 1 };
+    try { KiokuDB::Cmd->VERSION($REQUIRED_CMD_VERSION); 1 };
 }
 
 
@@ -271,27 +272,19 @@ sub lookup {
 
     my $linker = $self->linker;
 
-    my ( $e, @objects );
+    try {
+        my @objects = $linker->get_or_load_objects(@ids);
 
-    eval {
-        local $@;
-        eval { @objects = $linker->get_or_load_objects(@ids) };
-        $e = $@;
-    };
-
-    if ( $e ) {
-        if ( ref($e) and $e->{missing} ) {
-            return;
+        if ( @ids == 1 ) {
+            return $objects[0];
+        } else {
+            return @objects;
         }
+    } catch {
+        die $_ unless ref and $_->{missing};
 
-        die $e;
-    }
-
-    if ( @ids == 1 ) {
-        return $objects[0];
-    } else {
-        return @objects;
-    }
+        return;
+    };
 }
 
 sub search {

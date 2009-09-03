@@ -4,6 +4,7 @@ package KiokuDB::Backend::Role::TXN;
 use Moose::Role;
 
 use Carp qw(croak);
+use Try::Tiny;
 
 use namespace::clean -except => 'meta';
 
@@ -20,43 +21,30 @@ sub txn_do {
 
 	my @txn_args = $self->txn_begin;
 
-	my @result;
+    try {
+        my @ret;
 
-	my $wantarray = wantarray; # gotta capture, eval { } has its own
+        if ( wantarray ) {
+            @ret = $coderef->(@args);
+        } elsif ( defined wantarray ) {
+            $ret[0] = $coderef->(@args);
+        } else {
+            $coderef->(@args);
+        }
 
-	my ( $success, $err ) = do {
-		local $@;
+        $commit->() if $commit;
+        $self->txn_commit(@txn_args);
 
-		my $success = eval {
-			if ( $wantarray ) {
-				@result = $coderef->(@args);
-			} elsif( defined $wantarray ) {
-				$result[0] = $coderef->(@args);
-			} else {
-				$coderef->(@args);
-			}
+        return wantarray ? @ret : $ret[0];
+    } catch {
+        my $err = $_;
 
-			$commit && $commit->();
-			$self->txn_commit(@txn_args);
-
-			1;
+		try {
+			$self->txn_rollback(@txn_args);
+            $rollback->() if $rollback;
+        } catch {
+			croak "Transaction aborted: $err, rollback failed: $_";
 		};
-
-		( $success, $@ );
-	};
-
-	if ( $success ) {
-		return wantarray ? @result : $result[0];
-	} else {
-		my $rollback_exception = do {
-			local $@;
-			eval { $self->txn_rollback(@txn_args); $rollback && $rollback->() };
-			$@;
-		};
-
-		if ($rollback_exception) {
-			croak "Transaction aborted: $err, rollback failed: $rollback_exception";
-		}
 
 		die $err;
 	}

@@ -4,6 +4,7 @@ use Moose;
 use Test::More;
 use Test::Exception;
 
+use Try::Tiny;
 use List::Util qw(sum);
 use Scope::Guard;
 use POSIX qw(_exit :sys_wait_h);
@@ -121,7 +122,7 @@ sub check_consistency {
     my ( $counter, @accounts );
 
     attempt: foreach my $attempt ( 1 .. FORKS ) {
-        last attempt if eval {
+        last attempt if try {
             $self->txn_do(sub {
                 my $s = $self->new_scope;
 
@@ -164,7 +165,7 @@ sub run_child {
     my ( $self, $child ) = @_;
 
     for ( 1 .. ITER ) {
-        eval {
+        try {
             $self->txn_do(sub {
                 my $s = $self->new_scope;
 
@@ -199,7 +200,7 @@ sub run_child {
     my $ok;
 
     attempt: foreach my $attempt ( 1 .. FORKS*2 ) {
-        last attempt if eval {
+        last attempt if try {
             $self->txn_do(sub {
                 my $s = $self->new_scope;
 

@@ -4,6 +4,7 @@ package KiokuDB::TypeMap;
 use Moose;
 
 use Carp qw(croak);
+use Try::Tiny;
 
 use KiokuDB::TypeMap::Entry;
 use KiokuDB::TypeMap::Entry::Alias;
@@ -50,11 +51,11 @@ sub resolve {
     unless ( $loaded{$class}++ ) {
         ( my $pmfile = $class . ".pm" ) =~ s{::}{/}g;
 
-        my $e = do { local $@; eval { require $pmfile }; $@ };
-
-        if ($e) {
-            croak $e unless $e =~ /^Can't locate \Q$pmfile\E in \@INC/;
-        }
+        try {
+            require $pmfile;
+        } catch {
+            croak $_ unless /^Can't locate \Q$pmfile\E in \@INC/;
+        };
     }
 
     # if this is an anonymous class, redo the lookup using a single named

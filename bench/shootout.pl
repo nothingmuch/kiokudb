@@ -7,6 +7,7 @@ use Test::TempDir;
 use Path::Class;
 use Storable qw(nstore retrieve);
 use Scalar::Util qw(blessed);
+use Try::Tiny;
 
 use KiokuDB;
 
@@ -38,10 +39,10 @@ sub bench {
 
     $mxsd_sqlite->backend->deploy;
 
-    my $mxsd_mysql = eval { KiokuDB->connect("dbi:mysql:test", serializer => "storable") }; warn $@ if $@;
+    my $mxsd_mysql = try { KiokuDB->connect("dbi:mysql:test", serializer => "storable") } catch  { warn @_ };
     $mxsd_mysql && $mxsd_mysql->backend->deploy({ add_drop_table => 1, producer_args => { mysql_version => 5 } });
 
-    my $mxsd_pg = eval { KiokuDB->connect("dbi:Pg:dbname=test", serializer => "storable") }; warn $@ if $@;
+    my $mxsd_pg = try { KiokuDB->connect("dbi:Pg:dbname=test", serializer => "storable") } catch { warn $@ };
     $mxsd_pg && $mxsd_pg->backend->deploy({ add_drop_table => 1 });
 
     $dir->subdir("mxsd_bdb_dumb")->mkpath;
@@ -66,7 +67,7 @@ sub bench {
         my $name = $ENV{KIOKU_COUCHDB_NAME} || "kioku-$$";
 
         my $db = $couch->db($name);
-        eval { $db->drop };
+        try { $db->drop };
 
         $db->create;
 

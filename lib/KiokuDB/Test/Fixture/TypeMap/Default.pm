@@ -8,6 +8,7 @@ use Moose;
 use Encode;
 use Test::More;
 use Test::Moose;
+use Try::Tiny;
 
 use KiokuDB::Test::Person;
 use KiokuDB::Test::Employee;
@@ -18,15 +19,15 @@ use namespace::clean -except => 'meta';
 use constant required_backend_roles => qw(TypeMap::Default);
 
 use Tie::RefHash;
-use constant HAVE_DATETIME          => eval { require DateTime };
-use constant HAVE_DATETIME_FMT      => eval { require DateTime::Format::Strptime };
-use constant HAVE_URI               => eval { require URI };
-use constant HAVE_URI_WITH_BASE     => eval { require URI::WithBase };
-use constant HAVE_AUTHEN_PASSPHRASE => eval { require Authen::Passphrase::SaltedDigest };
-use constant HAVE_PATH_CLASS        => eval { require Path::Class };
-use constant HAVE_IXHASH            => eval { require Tie::IxHash };
-use constant HAVE_MX_TRAITS         => eval { require MooseX::Traits };
-use constant HAVE_MX_OP             => eval { require MooseX::Object::Pluggable };
+use constant HAVE_DATETIME          => try { require DateTime };
+use constant HAVE_DATETIME_FMT      => try { require DateTime::Format::Strptime };
+use constant HAVE_URI               => try { require URI };
+use constant HAVE_URI_WITH_BASE     => try { require URI::WithBase };
+use constant HAVE_AUTHEN_PASSPHRASE => try { require Authen::Passphrase::SaltedDigest };
+use constant HAVE_PATH_CLASS        => try { require Path::Class };
+use constant HAVE_IXHASH            => try { require Tie::IxHash };
+use constant HAVE_MX_TRAITS         => try { require MooseX::Traits };
+use constant HAVE_MX_OP             => try { require MooseX::Object::Pluggable };
 
 {
     package Some::Role;

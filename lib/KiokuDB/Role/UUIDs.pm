@@ -3,12 +3,14 @@
 package KiokuDB::Role::UUIDs;
 use Moose::Role;
 
+use Try::Tiny;
+
 use namespace::clean -except => 'meta';
 
 if ( defined &KiokuDB::SERIAL_IDS and KiokuDB::SERIAL_IDS() ) {
     with qw(KiokuDB::Role::UUIDs::SerialIDs);
 } else {
-    my $have_libuuid = do { local $@; eval { require Data::UUID::LibUUID; 1 } };
+    my $have_libuuid = try { require Data::UUID::LibUUID; 1 };
 
     my $backend = $have_libuuid ? "LibUUID" : "DataUUID";
 

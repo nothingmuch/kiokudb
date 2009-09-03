@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use KiokuDB;
+use Try::Tiny;
 
 unless ( try_run() ) {
     if ( $INC{"KiokuDB/Cmd.pm"} ) {
@@ -23,7 +24,7 @@ exit 1;
 
 
 sub try_run {
-    return unless eval { require KiokuDB::Cmd; 1 };
+    return unless try { require KiokuDB::Cmd; 1 };
     return unless KiokuDB::Cmd->is_up_to_date;
 
     KiokuDB::Cmd->run;
@@ -31,7 +32,7 @@ sub try_run {
 }
 
 sub try_auto_install {
-    if (eval {
+    if (try {
         require Module::AutoInstall;
         require ExtUtils::MakeMaker;
         1;

@@ -5,6 +5,7 @@ use Moose;
 
 use Test::More;
 use Test::Exception;
+use Try::Tiny;
 
 use namespace::clean -except => 'meta';
 
@@ -39,7 +40,7 @@ sub verify {
                     my ( $db_entry ) = $self->backend->get( $self->joe );
                     is( $db_entry->data->{name}, "lalalala", "entry written to DB" );
 
-                    eval {
+                    try {
                         $self->txn_do(sub {
                             $joe->name("oi");
                             $self->update_ok($joe);
