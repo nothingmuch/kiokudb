@@ -1,3 +1,11 @@
+0.33
+    - Added Japanese tutorial KiokuDB::Tutorial::JA (ktat)
+    - Correct indexing tutorial example (ask)
+    - Use done_testing() instead of no_plan (dandv)
+    - Fix behavior of KiokuDB::Lazy attributes with a trigger (a Moose change
+      caused infinite recursion)
+    - add a refresh method (no deep_refresh yet)
+
 0.32
     - Don't assume all metaclasses have the does_role method
     - Various documentation fixes
