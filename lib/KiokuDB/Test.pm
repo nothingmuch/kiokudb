@@ -48,7 +48,7 @@ KiokuDB::Test - Reusable tests for L<KiokuDB> backend authors.
 
 =head1 SYNOPSIS
 
-    use Test::More 'no_plan';
+    use Test::More;
 
     use KiokuDB::Test;
 
@@ -57,6 +57,8 @@ KiokuDB::Test - Reusable tests for L<KiokuDB> backend authors.
     my $b = KiokuDB::Backend::MySpecialBackend->new( ... );
 
     run_all_fixtures( KiokuDB->new( backend => $b ) );
+
+    done_testing();
 
 =head1 DESCRIPTION
 
