@@ -14,7 +14,6 @@ with qw(
     KiokuDB::TypeMap::Entry::Std::ID
     KiokuDB::TypeMap::Entry::Std::Compile
     KiokuDB::TypeMap::Entry::Std::Intrinsic
-    KiokuDB::TypeMap::Entry::Std::Expand
 );
 
 

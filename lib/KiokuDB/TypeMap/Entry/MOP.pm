@@ -17,7 +17,12 @@ sub does_role {
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry::Std);
+with (
+    'KiokuDB::TypeMap::Entry::Std',
+    'KiokuDB::TypeMap::Entry::Std::Expand' => {
+        alias => { compile_expand => 'compile_expand_body' },
+    }
+);
 
 # FIXME collapser and expaner should both be methods in Class::MOP::Class,
 # apart from the visit call
@@ -145,28 +150,15 @@ sub compile_collapse_body {
 }
 
 sub compile_expand {
-    my ( $self, $class, $resolver ) = @_;
+    my ( $self, $class, $resolver, @args ) = @_;
 
     my $meta = Class::MOP::get_metaclass_by_name($class);
-
-    my ( %attrs, %lazy );
-
-    my @attrs = grep {
-        !does_role($_->meta, 'KiokuDB::Meta::Attribute::DoNotSerialize')
-            and
-        !does_role($_->meta, 'MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
-    } $meta->get_all_attributes;
-
-    foreach my $attr ( @attrs ) {
-        $attrs{$attr->name} = $attr;
-        $lazy{$attr->name}  = does_role($attr->meta, "KiokuDB::Meta::Attribute::Lazy");
-    }
-
-    my $meta_instance = $meta->get_meta_instance;
 
     my $typemap_entry = $self;
 
     my $anon = $meta->is_anon_class;
+
+    my $inner = $self->compile_expand_body($class, $resolver, @args);
 
     return sub {
         my ( $linker, $entry, @args ) = @_;
@@ -187,11 +179,51 @@ sub compile_expand {
             return $linker->$method($entry, @args);
         }
 
+        $linker->$inner($entry, @args);
+    }
+}
 
-        my $instance = $meta_instance->create_instance();
+sub compile_create {
+    my ( $self, $class ) = @_;
 
-        # note, this is registered *before* any other value expansion, to allow circular refs
-        $linker->register_object( $entry => $instance );
+    my $meta = Class::MOP::get_metaclass_by_name($class);
+
+    my $meta_instance = $meta->get_meta_instance;
+
+    return sub { $meta_instance->create_instance() };
+}
+
+sub compile_clear {
+    my ( $self, $class ) = @_;
+
+    return sub {
+        my ( $linker, $obj ) = @_;
+        %$obj = (); # FIXME
+    }
+}
+
+sub compile_expand_data {
+    my ( $self, $class, @args ) = @_;
+
+    my $meta = Class::MOP::get_metaclass_by_name($class);
+
+    my $meta_instance = $meta->get_meta_instance;
+
+    my ( %attrs, %lazy );
+
+    my @attrs = grep {
+        !does_role($_->meta, 'KiokuDB::Meta::Attribute::DoNotSerialize')
+            and
+        !does_role($_->meta, 'MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize')
+    } $meta->get_all_attributes;
+
+    foreach my $attr ( @attrs ) {
+        $attrs{$attr->name} = $attr;
+        $lazy{$attr->name}  = does_role($attr->meta, "KiokuDB::Meta::Attribute::Lazy");
+    }
+
+    return sub {
+        my ( $linker, $instance, $entry, @args ) = @_;
 
         my $data = $entry->data;
 

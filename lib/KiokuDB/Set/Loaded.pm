@@ -23,6 +23,16 @@ sub insert   {
     $self->_objects->insert(@objects)
 }
 
+sub _set_ids {
+    my ( $self, $id_set ) = @_;
+
+    # replace the object set with the ID set
+    $self->_set_objects( $id_set );
+
+    # and go back to being deferred
+    bless $self, "KiokuDB::Set::Deferred";
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

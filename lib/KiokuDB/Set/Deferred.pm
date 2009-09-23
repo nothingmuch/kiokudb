@@ -130,11 +130,6 @@ sub _load_all {
     # replace the ID set with the object set
     $self->_set_objects( Set::Object::Weak->new(@objects) );
 
-    # clear unnecessary structures
-    $self->_clear_linker;
-    $self->_clear_live_objects;
-    $self->_clear_live_object_scope;
-
     # and swap in loaded behavior
     bless $self, "KiokuDB::Set::Loaded";
 }
@@ -163,6 +158,13 @@ sub _apply {
         $self->_load_all;
         return $self->$method(@sets);
     }
+}
+
+sub _set_ids {
+    my ( $self, $id_set ) = @_;
+
+    # replace the object set with the ID set
+    $self->_set_objects( $id_set );
 }
 
 __PACKAGE__->meta->make_immutable;

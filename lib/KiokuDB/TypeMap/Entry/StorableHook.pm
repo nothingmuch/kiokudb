@@ -11,10 +11,14 @@ no warnings 'recursion';
 # predeclare for namespace::clean;
 sub _type ($);
 sub _new ($;$);
+sub _clear ($);
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry::Std);
+with qw(
+    KiokuDB::TypeMap::Entry::Std
+    KiokuDB::TypeMap::Entry::Std::Expand
+);
 
 sub compile_collapse_body {
     my ( $self, $class, @args ) = @_;
@@ -67,7 +71,7 @@ sub compile_collapse_body {
     };
 }
 
-sub compile_expand {
+sub compile_create {
     my ( $self, $class, @args ) = @_;
 
     unless ( $class->can("STORABLE_attach") ) {
@@ -90,9 +94,40 @@ sub compile_expand {
             }
 
             bless $instance, $entry->class;
+        };
+    } else {
+        # esotheric STORABLE_attach form
+        return sub {
+            my ( $self, $entry ) = @_;
 
-            # note, this is registered *before* any other value expansion, to allow circular refs
-            $self->register_object( $entry => $instance );
+            $entry->class->STORABLE_attach( 0, $entry->data ); # FIXME support non ref
+        };
+    }
+}
+
+sub compile_clear {
+    my ( $self, $class, @args ) = @_;
+
+    return sub {
+        my ( $linker, $instance ) = @_;
+
+        _clear($instance);
+    };
+}
+
+sub compile_expand_data {
+    my ( $self, $class, @args ) = @_;
+
+    unless ( $class->can("STORABLE_attach") ) {
+        # normal form, STORABLE_freeze
+        return sub {
+            my ( $self, $instance, $entry ) = @_;
+
+            my $data = $entry->data;
+
+            my ( $reftype, @args ) = ref $data ? @$data : ( substr($data, 0, 1), substr($data, 1) );
+
+            shift @args if ref $args[0]; # tied
 
             my ( $str, @refs ) = @args;
 
@@ -111,16 +146,10 @@ sub compile_expand {
             $self->queue_finalizer(sub {
                 $instance->STORABLE_thaw( 0, $str, @inflated );
             });
-
-            return $instance;
         };
     } else {
         # esotheric STORABLE_attach form
-        return sub {
-            my ( $self, $entry ) = @_;
-
-            $entry->class->STORABLE_attach( 0, $entry->data ); # FIXME support non ref
-        }
+        return sub { };
     }
 }
 
@@ -171,6 +200,23 @@ sub _new ($;$) {
 		croak sprintf "Unexpected object type (%d)", $type;
     }
 }
+
+sub _clear ($) {
+    my $obj = shift;
+
+    my $type = reftype($obj);
+
+    if ( $type eq 'SCALAR' or $type eq 'REF' ) {
+        undef $$obj;
+    } elsif ( $type eq 'HASH' ) {
+        %$obj = ();
+    } elsif ( $type eq 'ARRAY' ) {
+        @$obj = ();
+    } else {
+		croak sprintf "Unexpected object type (%s)", reftype($obj);
+    }
+}
+
 
 __PACKAGE__->meta->make_immutable;
 

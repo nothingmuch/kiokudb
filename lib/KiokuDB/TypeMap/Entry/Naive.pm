@@ -36,6 +36,8 @@ sub compile_expand {
     };
 }
 
+sub compile_refresh { return sub { die "TODO" } }
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

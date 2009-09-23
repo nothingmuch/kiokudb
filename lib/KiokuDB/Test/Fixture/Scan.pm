@@ -57,7 +57,7 @@ sub verify {
         my $child_entries = $self->backend->child_entries;
 
         does_ok( $child_entries, "Data::Stream::Bulk" );
-        my $children = $child_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
+        my $children = $child_entries->filter(sub {[ $self->directory->linker->register_and_expand_entries(@$_) ]});
 
         my @objs = $children->all;
 
@@ -80,7 +80,7 @@ sub verify {
 
         does_ok( $all_entries, "Data::Stream::Bulk" );
 
-        my $all = $all_entries->filter(sub {[ $self->directory->linker->load_entries(@$_) ]});
+        my $all = $all_entries->filter(sub {[ $self->directory->linker->register_and_expand_entries(@$_) ]});
 
         my @objs = $all->all;
 

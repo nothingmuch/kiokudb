@@ -37,6 +37,18 @@ sub compile_expand {
     }
 }
 
+sub compile_refresh {
+    my ( $self, $class, @args ) = @_;
+
+    return sub {
+        my ( $linker, $scalar, $entry ) = @_;
+
+        $linker->inflate_data($entry->data, $scalar );
+
+        return $scalar;
+    };
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

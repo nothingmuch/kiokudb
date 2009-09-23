@@ -9,6 +9,7 @@ requires qw(
     compile_collapse
     compile_expand
     compile_id
+    compile_refresh
 );
 
 sub compile {
@@ -18,6 +19,7 @@ sub compile {
         collapse_method => $self->compile_collapse($class, @args),
         expand_method   => $self->compile_expand($class, @args),
         id_method       => $self->compile_id($class, @args),
+        refresh_method  => $self->compile_refresh($class, @args),
         class           => $class,
     );
 }

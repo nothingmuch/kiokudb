@@ -59,21 +59,14 @@ sub verify {
 
         isa_ok( my $entry = $dir->live_objects->object_to_entry($obj), "KiokuDB::Entry" );
 
-        my $updated = $entry->clone(
-            data => {
-                %{ $entry->data },
-                age => 1841,
-            },
-            prev => $entry,
-        );
+        my $updated = $entry->clone( prev => $entry );
+        $updated->data->{age} = 1841;
 
         is( $obj->age, 10, "age attr" );
 
         $dir->backend->insert( $updated );
 
         is( $obj->age, 10, "age attr not updated even though it was written" );
-
-        local $TODO = "refresh not yet implemented";
 
         lives_ok { $dir->refresh($obj) } "no error in refresh";
 

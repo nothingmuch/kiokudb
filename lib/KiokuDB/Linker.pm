@@ -21,6 +21,7 @@ has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "ro",
     required => 1,
+    handles => [qw(id_to_object ids_to_objects object_to_id objects_to_ids id_to_entry ids_to_entries)],
 );
 
 has backend => (
@@ -32,7 +33,7 @@ has backend => (
 has typemap_resolver => (
     isa => "KiokuDB::TypeMap::Resolver",
     is  => "ro",
-    handles => [qw(expand_method)],
+    handles => [qw(expand_method refresh_method)],
     required => 1,
 );
 
@@ -266,24 +267,40 @@ sub get_or_load_objects {
 sub load_objects {
     my ( $self, @ids ) = @_;
 
+    return $self->expand_objects( $self->get_or_load_entries(@ids) );
+}
+
+sub get_or_load_entries {
+    my ( $self, @ids ) = @_;
+
     my %entries;
-    @entries{@ids} = $self->live_objects->ids_to_entries(@ids);
+    @entries{@ids} = $self->ids_to_entries(@ids);
 
     if ( my @load = grep { !$entries{$_} } @ids ) {
-        #confess if @load == 1;
-        @entries{@load} = $self->backend->get(@load);
-
-        if ( my @missing = grep { !$entries{$_} } @load ) {
-            die { missing => \@missing };
-        }
-
-        $self->live_objects->insert_entries( @entries{@load} );
+        @entries{@load} = $self->load_entries(@load);
     }
 
-    return $self->expand_objects( @entries{@ids} );
+    return @entries{@ids};
 }
 
 sub load_entries {
+    my ( $self, @ids ) = @_;
+
+    my @entries = $self->backend->get(@ids);
+
+    if ( @entries != @ids or grep { !$_ } @entries ) {
+        my %entries;
+        @entries{@ids} = @entries;
+        my @missing = grep { !$entries{$_} } @ids;
+        die { missing => \@missing };
+    }
+
+    $self->live_objects->insert_entries( @entries );
+
+    return @entries;
+}
+
+sub register_and_expand_entries {
     my ( $self, @entries ) = @_;
 
     $self->live_objects->insert_entries(@entries),
@@ -300,17 +317,47 @@ sub get_or_load_object {
     }
 }
 
+sub refresh_objects {
+    my ( $self, @objects ) = @_;
+
+    $self->refresh_object($_) for @objects;
+}
+
+sub refresh_object {
+    my ( $self, $object ) = @_;
+
+    my $id = $self->object_to_id($object);
+
+    my $entry = $self->load_entry($id);
+
+    my $refresh = $self->refresh_method( $entry->class );
+
+    $self->$refresh($object, $entry);
+    $self->load_queue;
+
+    return $object;
+}
+
+sub get_or_load_entry {
+    my ( $self, $id ) = @_;
+
+    $self->id_to_entry($id) || $self->load_entry($id);
+}
+
+sub load_entry {
+    my ( $self, $id ) = @_;
+
+    my $entry = ( $self->backend->get($id) )[0] || die { missing => [ $id ] };
+
+    $self->live_objects->insert_entries($entry);
+
+    return $entry;
+}
+
 sub load_object {
     my ( $self, $id ) = @_;
 
-    my $entry = $self->live_objects->id_to_entry($id);
-
-    unless ( $entry ) {
-        $entry = ( $self->backend->get($id) )[0] || die { missing => [ $id ] };
-        $self->live_objects->insert_entries($entry);
-    }
-
-    $self->expand_object($entry);
+    $self->expand_object( $self->get_or_load_entry($id) );
 }
 
 __PACKAGE__->meta->make_immutable;

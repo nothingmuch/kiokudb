@@ -52,8 +52,8 @@ sub next {
 
     if ( @$entries ) {
         $self->_scope( $self->directory->new_scope )
-            unless $self->_no_scope;;
-        return [ $self->linker->load_entries(@$entries) ];
+            unless $self->_no_scope;
+        return [ $self->linker->register_and_expand_entries(@$entries) ];
     } else {
         return;
     }

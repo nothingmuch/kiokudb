@@ -140,6 +140,14 @@ sub compile_expand {
     };
 }
 
+sub compile_refresh {
+    my $self = shift;
+
+    return sub {
+        croak "refreshing of closures is not yet supported";
+    };
+}
+
 sub _eval_body {
     my ( $self, $body, $pad ) = @_;
 

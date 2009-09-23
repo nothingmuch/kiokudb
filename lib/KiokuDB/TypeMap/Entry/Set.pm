@@ -11,7 +11,10 @@ use KiokuDB::Set::Loaded;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::TypeMap::Entry::Std);
+with qw(
+    KiokuDB::TypeMap::Entry::Std
+    KiokuDB::TypeMap::Entry::Std::Expand
+);
 
 has defer => (
     isa => "Bool",
@@ -63,23 +66,54 @@ sub compile_collapse_body {
     }
 }
 
-sub compile_expand {
+sub compile_create {
+    my ( $self, $class ) = @_;
+
+    if ( $self->defer ) {
+        return sub {
+            my ( $linker, $entry ) = @_;
+
+            my $members = $entry->data;
+
+            if ( grep { ref } @$members ) {
+                return KiokuDB::Set::Loaded->new( set => Set::Object::Weak->new(), _linker => $linker );
+            } else {
+                return KiokuDB::Set::Deferred->new( set => Set::Object->new( @$members ), _linker => $linker );
+            }
+        };
+    } else {
+        return sub {
+            my ( $linker, $entry ) = @_;
+
+            return KiokuDB::Set::Loaded->new( set => Set::Object::Weak->new, _linker => $linker );
+        };
+    }
+}
+
+sub compile_clear {
+    my ( $self, $class ) = @_;
+
+    sub {
+        my ( $linker, $obj ) = @_;
+        $obj->_set_ids( Set::Object->new() );
+    }
+}
+
+sub compile_expand_data {
     my ( $self, $class ) = @_;
 
     my $defer = $self->defer;
 
     return sub {
-        my ( $linker, $entry ) = @_;
+        my ( $linker, $instance, $entry ) = @_;
 
         my $members = $entry->data;
 
-        if ( !$defer or grep { ref } @$members ) {
-            my $inner_set = Set::Object::Weak->new;
-            # inflate the set
-            my $set = KiokuDB::Set::Loaded->new( set => $inner_set, _linker => $linker );
+        my $inner_set = $instance->_objects;
 
-            $linker->register_object( $entry => $set );
-
+        if ( ref $instance eq 'KiokuDB::Set::Deferred' ) {
+            $inner_set->insert( @$members );
+        } else {
             foreach my $item ( @$members ) {
                 if ( ref $item ) {
                     $linker->inflate_data( $item, \( my $obj ) );
@@ -89,13 +123,6 @@ sub compile_expand {
                     $inner_set->insert( $linker->get_or_load_object($item) );
                 }
             }
-
-            return $set;
-        } else {
-            # just IDs, no inflation
-            my $set = KiokuDB::Set::Deferred->new( set => Set::Object->new( @$members ), _linker => $linker );
-            $linker->register_object( $entry => $set );
-            return $set;
         }
     }
 }

@@ -39,6 +39,12 @@ sub expand_method {
     return $self->find_or_resolve($class)->expand_method;
 }
 
+sub refresh_method {
+    my ( $self, $class ) = @_;
+
+    return $self->find_or_resolve($class)->refresh_method;
+}
+
 sub id_method {
     my ( $self, $class ) = @_;
 

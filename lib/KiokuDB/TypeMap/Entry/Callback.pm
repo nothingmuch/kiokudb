@@ -5,6 +5,8 @@ use Moose;
 
 no warnings 'recursion';
 
+use Carp qw(croak);
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);
@@ -15,7 +17,7 @@ has [qw(collapse expand)] => (
     required => 1,
 );
 
-has id => (
+has [qw(id refresh)] => (
     is  => "ro",
     isa => "Str|CodeRef",
 );
@@ -45,43 +47,72 @@ sub compile_collapse_body {
     };
 }
 
+sub _entry_data_to_args {
+    my ( $self, $linker, $entry ) = @_;
+
+    my $data = $entry->data;
+
+    if ( ref $data ) {
+        my @args;
+
+        my $refs = 0;
+
+        foreach my $value ( @$data ) {
+            if ( ref $value ) {
+                push @args, undef;
+                $linker->inflate_data($value, \$args[-1]);
+                $refs++;
+            } else {
+                push @args, $value;
+            }
+        }
+
+        $linker->load_queue if $refs; # force @args to be fully vivified
+
+        return @args;
+    } else {
+        return $data;
+    }
+}
+
 sub compile_expand {
     my ( $self, $class, @args ) =@_;
 
     my $expand_object = $self->expand;
 
     return sub {
-        my ( $self, $entry ) = @_;
+        my ( $linker, $entry ) = @_;
 
-        my @args;
-
-        my $data = $entry->data;
-
-        if ( ref $data ) {
-            my $refs = 0;
-
-            foreach my $value ( @$data ) {
-                if ( ref $value ) {
-                    push @args, undef;
-                    $self->inflate_data($value, \$args[-1]);
-                    $refs++;
-                } else {
-                    push @args, $value;
-                }
-            }
-
-            $self->load_queue if $refs; # force @args to be fully vivified
-        } else {
-            @args = ( $data );
-        }
+        my @args = $self->_entry_data_to_args($linker, $entry);
 
         # does *NOT* support circular refs
         my $object = $entry->class->$expand_object(@args);
 
-        $self->register_object( $entry => $object );
+        $linker->register_object( $entry => $object );
 
         return $object;
     };
+}
+
+
+sub compile_refresh {
+    my ( $self, $class, @args ) = @_;
+
+    if ( my $refresh_object = $self->refresh ) {
+        return sub {
+            my ( $linker, $object, $entry ) = @_;
+
+            my @args = $self->_entry_data_to_args($linker, $entry);
+
+            $object->$refresh_object(@args);
+
+            return $object;
+        };
+    } else {
+        return sub {
+            croak "No refresh method provided for $class by typemap entry $self";
+        };
+    }
 }
 
 sub compile_id {

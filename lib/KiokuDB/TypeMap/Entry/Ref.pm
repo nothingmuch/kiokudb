@@ -21,6 +21,21 @@ sub compile_expand {
     return "expand_object";
 }
 
+sub compile_refresh {
+    my ( $self, $class, @args ) = @_;
+
+    return sub {
+        my ( $linker, $object, $entry ) = @_;
+
+        my $new = $linker->expand_object($entry);
+
+        require Data::Swap;
+        Data::Swap::swap($new, $object); # FIXME remove!
+
+        return $object;
+    };
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__

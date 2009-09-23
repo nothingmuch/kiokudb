@@ -322,6 +322,43 @@ foreach my $intrinsic ( 1, 0 ) {
 
         ok( !exists($new_entries->{$id}), "skipped entry on second insert" );
     }
+
+    {
+        my $s = $v->live_objects->new_scope;
+
+        my ( $buffer, $id ) = $v->collapse( objects => [ $deep ],  );
+
+        my $entries = $buffer->entries;
+
+        my $entry = $entries->{$id};
+
+        my $sl = $l->live_objects->new_scope;
+
+        $l->backend->insert( values %$entries );
+
+        my $expanded = eval { $l->expand_object($entry) };
+
+        isa_ok( $expanded, "Foo", "expanded object" );
+
+        my $bar_addr = refaddr($expanded->bar);
+
+        my $clone = $entry->clone( prev => $entry );
+        $clone->data->{foo} = "henry";
+
+        $l->backend->insert($clone);
+
+        is( $expanded->foo, "la", "attr value" );
+
+        $l->refresh_object($expanded);
+
+        is( $expanded->foo, "henry", "attr refreshed" );
+
+        if ( $intrinsic ) {
+            isnt( refaddr($expanded->bar), $bar_addr, "bar recreated" );
+        } else {
+            is( refaddr($expanded->bar), $bar_addr, "bar left in place" );
+        }
+    }
 }
 
 

@@ -3,7 +3,7 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-has [qw(expand_method collapse_method id_method)] => (
+has [qw(expand_method collapse_method id_method refresh_method)] => (
     isa => "CodeRef|Str",
     is  => "ro",
     required => 1,

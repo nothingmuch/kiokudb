@@ -396,6 +396,25 @@ sub _register {
     return @objs;
 }
 
+sub refresh {
+    my ( $self, @objects ) = @_;
+
+    my $l = $self->live_objects;
+
+    croak "Object not in storage"
+        if grep { not defined } $l->objects_to_entries(@objects);
+
+    $self->linker->refresh_objects(@objects);
+
+    if ( defined wantarray ) {
+        if ( @objects == 1 ) {
+           return $objects[0];
+        } else {
+           return @objects;
+        }
+    }
+}
+
 sub store {
     my ( $self, @args ) = @_;
 

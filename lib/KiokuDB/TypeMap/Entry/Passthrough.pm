@@ -3,6 +3,8 @@
 package KiokuDB::TypeMap::Entry::Passthrough;
 use Moose;
 
+use Carp qw(croak);
+
 use KiokuDB::TypeMap::Entry::Compiled;
 
 use namespace::clean -except => 'meta';
@@ -23,6 +25,9 @@ sub compile {
             collapse_method => sub { $_[1] },
             expand_method   => sub { $_[1]->data }, # only called on an Entry, if the object is just an object, this won't be called
             id_method       => "generate_uuid",
+            refresh_method => sub {
+                croak "Refreshing Passthrough typemap entries is not supported ($class)";
+            },
             entry           => $self,
             class           => $class,
         );
@@ -47,6 +52,9 @@ sub compile {
                 return $entry->data;
             },
             id_method => "generate_uuid",
+            refresh_method => sub {
+                croak "Refreshing Passthrough typemap entries is not supported ($class)";
+            },
             entry     => $self,
             class     => $class,
         );
