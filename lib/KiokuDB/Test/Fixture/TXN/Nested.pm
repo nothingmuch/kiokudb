@@ -40,6 +40,7 @@ sub verify {
                     my ( $db_entry ) = $self->backend->get( $self->joe );
                     is( $db_entry->data->{name}, "lalalala", "entry written to DB" );
 
+                    my $err;
                     try {
                         $self->txn_do(sub {
                             $joe->name("oi");
@@ -55,12 +56,14 @@ sub verify {
 
                             die "foo";
                         });
+                    } catch {
+                        $err = $_;
                     };
 
                     my ( $db_entry_rolled_back ) = $self->backend->get( $self->joe );
                     is( $db_entry_rolled_back->data->{name}, "lalalala", "rolled back nested txn" );
 
-                    die $@;
+                    die $err;
                 });
             } qr/foo/, "failed transaction";
 
