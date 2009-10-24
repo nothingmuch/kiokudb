@@ -1,3 +1,9 @@
+0.34
+    - fix an incorrect conversion to Try::Tiny (Dylan)
+    - remove ciruclar role definition that causes does_role to inf loop
+    - laxen the exception matching regex for missing .pm files in @INC to
+      address CPAN testers reports with a different formatting for that error
+
 0.33
     - Added Japanese tutorial KiokuDB::Tutorial::JA (ktat)
     - Correct indexing tutorial example (ask)
