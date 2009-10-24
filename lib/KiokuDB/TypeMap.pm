@@ -54,7 +54,7 @@ sub resolve {
         try {
             require $pmfile;
         } catch {
-            croak $_ unless /^Can't locate \Q$pmfile\E in \@INC/;
+            croak $_ unless /Can't locate \Q$pmfile\E in \@INC/;
         };
     }
 
