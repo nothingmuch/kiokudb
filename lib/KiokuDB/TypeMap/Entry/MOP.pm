@@ -230,7 +230,7 @@ sub compile_expand_data {
         my @values;
 
         foreach my $name ( keys %$data ) {
-            my $attr = $attrs{$name} or croak "Unknown attribibute: $name";
+            my $attr = $attrs{$name} or croak "Unknown attribute: $name";
             my $value = $data->{$name};
 
             if ( ref $value ) {
