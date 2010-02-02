@@ -636,6 +636,28 @@ no_live_objects;
     is( $id, "blah", "custom id" );
 
     is( $dir->live_objects->object_to_id($foo), "blah", "object to id" );
+
+    isa_ok( my $entry = $dir->live_objects->object_to_entry($foo), "KiokuDB::Entry" );
+
+    ok( $entry->root, "root object" );
+};
+
+no_live_objects;
+
+{
+    my $s = $dir->new_scope;
+
+    my $id = $dir->insert_nonroot(
+        nonroot_object => my $foo = Foo->new( foo => "lala" ),
+    );
+
+    is( $id, "nonroot_object", "custom id" );
+
+    is( $dir->live_objects->object_to_id($foo), "nonroot_object", "object to id" );
+
+    isa_ok( my $entry = $dir->live_objects->object_to_entry($foo), "KiokuDB::Entry" );
+
+    ok( !$entry->root, "not root" );
 };
 
 no_live_objects;

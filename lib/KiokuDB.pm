@@ -415,16 +415,19 @@ sub refresh {
     }
 }
 
-sub store {
-    my ( $self, @args ) = @_;
+sub _store {
+    my ( $self, $root, @args ) = @_;
 
     my @objects = $self->_register(@args);
 
-    $self->store_objects( root_set => 1, objects => \@objects );
+    $self->store_objects( root_set => $root, objects => \@objects );
 }
 
-sub insert {
-    my ( $self, @args ) = @_;
+sub store         { shift->_store( 1, @_ ) }
+sub store_nonroot { shift->_store( 0, @_ ) }
+
+sub _insert {
+    my ( $self, $root, @args ) = @_;
 
     my @objects = $self->_register(@args);
 
@@ -437,13 +440,16 @@ sub insert {
         croak "Objects already in database: @in_storage";
     }
 
-    $self->store_objects( root_set => 1, only_new => 1, objects => \@objects );
+    $self->store_objects( root_set => $root, only_new => 1, objects => \@objects );
 
     # return IDs only for unknown objects
     if ( defined wantarray ) {
         return $self->live_objects->objects_to_ids(@objects);
     }
 }
+
+sub insert         { shift->_insert( 1, @_ ) }
+sub insert_nonroot { shift->_insert( 0, @_ ) }
 
 sub update {
     my ( $self, @args ) = @_;
@@ -871,12 +877,19 @@ storage.
 
 =item store %objects
 
+=item store_nonroot @objects
+
+=item store_nonroot %objects
+
 Recursively collapses C<@objects> and inserts or updates the entries.
 
 This performs a full update of every reachable object from C<@objects>,
 snapshotting everything.
 
 Strings found in the object list are assumed to be IDs for the following objects.
+
+The C<nonroot> variant will not mark the objects as members of the root set
+(therefore they will be subject to garbage collection).
 
 =item update @objects
 
@@ -893,6 +906,10 @@ objects must already be in the database.
 
 =item insert %objects
 
+=item insert_nonroot @objects
+
+=item insert_nonroot %objects
+
 Inserts objects to the database.
 
 It is an error to insert objects that are already in the database, all elements
@@ -900,6 +917,10 @@ of C<@objects> must be new, but their referants don't have to be.
 
 C<@objects> will be collapsed recursively, but the collapsing stops at known
 objects, which will not be updated.
+
+The C<nonroot> variant will not mark the objects as members of the root set
+(therefore they will be subject to garbage collection).
+
 
 =item delete @objects_or_ids
 

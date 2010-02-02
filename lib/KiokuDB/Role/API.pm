@@ -11,9 +11,9 @@ requires qw(
 
     exists
 
-    store
+    store store_nonroot
 
-    insert
+    insert insert_nonroot
     update
     deep_update
 
