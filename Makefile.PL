@@ -46,7 +46,7 @@ WriteMakefile(
         'Path::Class' => 0,
 
         # configure
-        'MooseX::YAML' => 0.02,
+        'MooseX::YAML' => 0.04,
 
         # misc dev shit
         'Try::Tiny' => 0,
