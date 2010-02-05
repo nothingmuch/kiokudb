@@ -1,3 +1,8 @@
+0.35
+    - bump dependency version for MooseX::YAML to prevent bad interaction with
+      MooseX::Blessed::Reconstruct
+    - add insert_nonroot and store_nonroot methods
+
 0.34
     - fix an incorrect conversion to Try::Tiny (Dylan)
     - remove ciruclar role definition that causes does_role to inf loop
