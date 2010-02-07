@@ -59,8 +59,8 @@ With a configuration file like this:
 
 During this tutorial we will be using the DBI backend for two reasons. The
 first is L<DBI>'s ubiquity - almost everyone has used and knows how to install
-and use it. The second the possibility of easily looking behind the scenes, to
-more clearly demonstrate what L<KiokuDB> is doing.
+and use it. The second is the possibility of easily looking behind the scenes,
+to more clearly demonstrate what L<KiokuDB> is doing.
 
 That said, the examples will work with all backends exactly the same.
 
