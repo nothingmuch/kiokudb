@@ -222,6 +222,8 @@ with qw(KiokuDB::Role::API);
 sub exists {
     my ( $self, @ids ) = @_;
 
+    return unless @ids;
+
     if ( @ids == 1 ) {
         my $id = $ids[0];
 
@@ -269,6 +271,8 @@ sub exists {
 
 sub lookup {
     my ( $self, @ids ) = @_;
+
+    return unless @ids;
 
     my $linker = $self->linker;
 
@@ -399,6 +403,8 @@ sub _register {
 sub refresh {
     my ( $self, @objects ) = @_;
 
+    return unless @objects;
+
     my $l = $self->live_objects;
 
     croak "Object not in storage"
@@ -420,6 +426,8 @@ sub _store {
 
     my @objects = $self->_register(@args);
 
+    return unless @objects;
+
     $self->store_objects( root_set => $root, objects => \@objects );
 }
 
@@ -430,6 +438,8 @@ sub _insert {
     my ( $self, $root, @args ) = @_;
 
     my @objects = $self->_register(@args);
+
+    return unless @objects;
 
     idhash my %entries;
 
@@ -518,6 +528,8 @@ sub store_objects {
 
 sub delete {
     my ( $self, @ids_or_objects ) = @_;
+
+    return unless @ids_or_objects;
 
     my $l = $self->live_objects;
 
