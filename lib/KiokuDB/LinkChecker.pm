@@ -33,7 +33,7 @@ sub process_block {
         my @new = grep { !$referenced->includes($_) && !$seen->includes($_) } @ids;
 
         my %exists;
-        @exists{@new} = $backend->exists(@new);
+        @exists{@new} = $backend->exists(@new) if @new;
 
         if ( my @missing = grep { not $exists{$_} } @new ) {
             $self->v("\rfound broken entry: " . $entry->id . " (references nonexisting IDs @missing)\n");
