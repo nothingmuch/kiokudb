@@ -11,6 +11,13 @@ use namespace::clean -except => 'meta';
 
 requires qw(commit_entries get_from_storage);
 
+# extremely slow/shitty fallback method, will be deprecated eventually
+sub exists_in_storage {
+    my ( $self, @uuids ) = @_;
+
+    map { $self->get_from_storage($_) ? 1 : '' } @uuids;
+}
+
 has _txn_stack => (
     isa => "ArrayRef",
     is  => "ro",
@@ -20,7 +27,10 @@ has _txn_stack => (
 sub txn_begin {
     my $self = shift;
 
-    push @{ $self->_txn_stack }, { modified => {}, read => [] };
+    push @{ $self->_txn_stack }, {
+        modified => {},
+        read => [],
+    };
 }
 
 sub txn_rollback {
@@ -54,6 +64,7 @@ sub txn_loaded_entries {
     @entries;
 }
 
+# FIXME remove duplication between get/exists
 sub get {
     my ( $self, @uuids ) = @_;
 
@@ -79,6 +90,31 @@ sub get {
     }
 
     return @entries{@uuids};
+}
+
+# FIXME remove duplication between get/exists
+sub exists {
+    my ( $self, @uuids ) = @_;
+
+    my %exists;
+    my %remaining = map { $_ => undef } @uuids;
+
+    foreach my $frame ( @{ $self->_txn_stack } ) {
+        foreach my $id ( keys %remaining ) {
+            if ( my $entry = $frame->{modified}{$id} ) {
+                $exists{$id} = not $entry->deleted;
+                delete $remaining{$id};
+            }
+        }
+
+        last unless keys %remaining;
+    }
+
+    if ( keys %remaining ) {
+        @exists{keys %remaining} = $self->exists_in_storage(keys %remaining);
+    }
+
+    return @exists{@uuids};
 }
 
 sub delete {

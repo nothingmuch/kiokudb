@@ -243,17 +243,18 @@ sub remove {
 
     foreach my $thing ( @stuff ) {
         if ( ref $thing ) {
-            delete $o->{$thing}; # guard invokes
-            delete $eo->{$thing}; # in case it's a ref, same deal
+            delete $eo->{$thing};
+            if ( my $id = (delete $o->{$thing} || {})->{id} ) { # guard invokes
+                delete $i->{$id};
+                delete $ei->{$id};
+            }
         } else {
             if ( ref( my $object = delete $i->{$thing} ) ) {
-                if ( my $ent = delete $o->{$object} ) {
-                    $ent->{guard}->dismiss;
-                }
+                delete $o->{$object};
             }
 
             if ( my $entry = $ei->{$thing} ) {
-                delete($eo->{$entry})->dismiss;
+                delete($eo->{$entry});
             }
         }
     }

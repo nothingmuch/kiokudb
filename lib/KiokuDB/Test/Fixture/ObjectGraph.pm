@@ -243,6 +243,10 @@ sub verify {
         is( $putin->job, "DFL", "updated in storage" );
 
         $self->delete_ok($putin);
+
+        $self->deleted_ok($self->putin);
+
+        is( $self->lookup($self->putin), undef, "lookup no longer returns object" );
     });
 
     $self->no_live_objects;

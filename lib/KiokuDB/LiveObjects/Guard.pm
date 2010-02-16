@@ -1,5 +1,8 @@
 package KiokuDB::LiveObjects::Guard;
 
+use strict;
+use warnings;
+
 use Scalar::Util qw(weaken);
 
 use namespace::clean -except => 'meta';
@@ -13,7 +16,7 @@ sub new {
 
 sub DESTROY {
     my $self = shift;
-    my ( $hash, $key ) = @$self;
+    my ( $hash, $key ) = splice @$self;
     delete $hash->{$key} if $hash;
 }
 

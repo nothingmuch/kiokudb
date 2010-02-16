@@ -614,14 +614,8 @@ no_live_objects;
 
     $dir->delete($foo, $bar);
 
-    my @del_entries = $dir->live_objects->objects_to_entries($foo, $bar);
-
-    is( scalar(@del_entries), 2, "two deletion entries" );
-
-    for ( 0 .. 1 ) {
-        ok( $del_entries[$_]->deleted, "entry updated in live objects" );
-        is( $del_entries[$_]->prev, $entries[$_], "prev entry" )
-    }
+    is( $dir->live_objects->object_to_entry($foo), undef, "no entry object" );
+    is( $dir->live_objects->object_to_entry($bar), undef, "no entry object" );
 };
 
 no_live_objects;

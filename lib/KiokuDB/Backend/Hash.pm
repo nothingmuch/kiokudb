@@ -64,7 +64,7 @@ sub commit_entries {
     }
 }
 
-sub exists {
+sub exists_in_storage {
     my ( $self, @uids ) = @_;
 
     map { exists $self->storage->{$_} } @uids;

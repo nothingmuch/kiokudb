@@ -555,7 +555,7 @@ sub delete {
         push @entries, @new_entries;
     }
 
-    $l->update_entries(@entries);
+    $l->remove(@ids_or_objects);
 }
 
 sub txn_do {

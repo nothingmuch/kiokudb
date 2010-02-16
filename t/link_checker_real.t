@@ -41,9 +41,11 @@ my $deleted_id = do {
 
     my $delete = $dubya->friends->[-1];
 
+    my $id = $dir->object_to_id($delete);
+
     $dir->delete($delete);
 
-    $dir->object_to_id($delete);
+    $id;
 };
 
 {
