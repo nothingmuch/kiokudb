@@ -1,3 +1,8 @@
+0.36
+    - Resolve a bug when deleting objects that are still live,
+      lookup($dead_object_id) would still return the object even though it's
+      not actually in storage.
+
 0.35
     - bump dependency version for MooseX::YAML to prevent bad interaction with
       MooseX::Blessed::Reconstruct
