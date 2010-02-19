@@ -5,6 +5,8 @@ use Moose::Role;
 
 use Carp qw(croak);
 
+use KiokuDB::Util qw(deprecate);
+
 with qw(KiokuDB::Backend::Role::TXN);
 
 use namespace::clean -except => 'meta';
@@ -14,6 +16,8 @@ requires qw(commit_entries get_from_storage);
 # extremely slow/shitty fallback method, will be deprecated eventually
 sub exists_in_storage {
     my ( $self, @uuids ) = @_;
+
+    deprecate('0.37', 'exists_in_storage should be implemented in TXN::Memory using backends');
 
     map { $self->get_from_storage($_) ? 1 : '' } @uuids;
 }
@@ -187,6 +191,27 @@ concurrency and atomicity are still the responsibility of the backend.
 Insert, update or delete entries as specified.
 
 This operation should either fail or succeed atomically.
+
+Entries with C<deleted> should be removed from the database, entries with a
+C<prev> entry should be inserted, and all other entries should be updated.
+
+Multiple entries may be given for a single object, for instance an object that
+was first inserted and then modified will have an insert entry and an update
+entry.
+
+=item get_from_storage
+
+Should be the same as L<KiokuDB::Backend/get>.
+
+When no memory buffered entries are available for the object one is fetched
+from the backend.
+
+=item exists_in_storage
+
+Required as of L<KiokuDB> version 0.37.
+
+A fallback implementation is provided, but should not be used and will issue a
+deprecation warning.
 
 =back
 
