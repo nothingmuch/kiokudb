@@ -26,6 +26,28 @@ around populate => sub {
 sub verify {
     my $self = shift;
 
+    $self->txn_lives(sub {
+        my $root = $self->root_set;
+
+        does_ok( $root, "Data::Stream::Bulk" );
+
+        my @objs = $root->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
+        is_deeply(
+            [ sort map { $_->name } @objs ],
+            [ sort qw(foo bar gorch) ],
+            "root set",
+        );
+
+        is_deeply(
+            [ sort $self->backend->root_entry_ids->all ],
+            [ sort @ids ],
+            "root set IDs",
+        );
+    });
+
     throws_ok {
         $self->txn_do(scope => 1, body => sub {
             $self->insert_ok( KiokuDB::Test::Person->new( name => "another" ) );
@@ -151,6 +173,92 @@ sub verify {
             [ sort $self->backend->root_entry_ids->all ],
             [ sort @ids ],
             "ids are the same",
+        );
+    });
+
+    $self->txn_lives(sub {
+        my @objs = $self->all_objects->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
+        is_deeply(
+            [ sort map { $_->name } @objs ],
+            [ sort qw(foo bar gorch quxx) ],
+            "all entries",
+        );
+
+        is_deeply(
+            [ sort $self->backend->all_entry_ids->all ],
+            [ sort @ids ],
+            "all IDs",
+        );
+    });
+
+    throws_ok {
+        $self->txn_do(scope => 1, body => sub {
+            $self->backend->clear;
+
+            is_deeply(
+                [ $self->all_objects->all ],
+                [ ],
+                "no enrtries (db cleared)",
+            );
+
+            $self->insert_ok( KiokuDB::Test::Person->new( name => "very new" ) );
+
+            is_deeply(
+                [ map { $_->name } $self->all_objects->all ],
+                [ "very new" ],
+                "one entry",
+            );
+
+            $self->txn_lives(sub {
+                $self->backend->clear;
+
+                is_deeply(
+                    [ $self->all_objects->all ],
+                    [ ],
+                    "no enrtries (db cleared)",
+                );
+            });
+
+            is_deeply(
+                [ $self->all_objects->all ],
+                [ ],
+                "no enrtries (db cleared)",
+            );
+
+            die "rollback";
+        });
+    } qr/rollback/, "rolled back";
+
+    $self->txn_lives(sub {
+        my @objs = $self->all_objects->all;
+
+        my @ids = $self->objects_to_ids(@objs);
+
+        is_deeply(
+            [ sort map { $_->name } @objs ],
+            [ sort qw(foo bar gorch quxx) ],
+            "all entries restored",
+        );
+
+        is_deeply(
+            [ sort $self->backend->all_entry_ids->all ],
+            [ sort @ids ],
+            "all IDs",
+        );
+    });
+
+    $self->txn_lives(sub {
+        $self->backend->clear;
+    });
+
+    $self->txn_lives(sub {
+        is_deeply(
+            [ $self->all_objects->all ],
+            [ ],
+            "no enrtries (db cleared)",
         );
     });
 }

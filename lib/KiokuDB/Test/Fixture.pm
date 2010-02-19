@@ -143,6 +143,7 @@ has directory => (
         set_root
         unset_root
 
+        all_objects
         root_set
         scan
         grep

@@ -28,13 +28,18 @@ has _txn_stack => (
     default => sub { [] },
 );
 
+sub _new_frame {
+    return {
+        'live'     => {},
+        'log'      => [],
+        'cleared'  => !1,
+    };
+}
+
 sub txn_begin {
     my $self = shift;
 
-    push @{ $self->_txn_stack }, {
-        modified => {},
-        read => [],
-    };
+    push @{ $self->_txn_stack }, $self->_new_frame;
 }
 
 sub txn_rollback {
@@ -46,26 +51,50 @@ sub txn_rollback {
 sub txn_commit {
     my $self = shift;
 
-    my $txn = pop @{ $self->_txn_stack } || croak "no open transaction";
-    my $modified = $txn->{modified};
+    my $stack = $self->_txn_stack;
+
+    my $txn = pop @$stack || croak "no open transaction";
 
     if ( @{ $self->_txn_stack } ) {
-        my $head = $self->_txn_stack->[-1]{modified};
-        @{ $head }{keys %$modified} = values %$modified;
+        $stack->[-1] = $self->_collapse_txn_frames($txn, $stack->[-1]);
     } else {
-        $self->commit_entries(values %$modified);
+        $self->clear_storage if $txn->{cleared};
+        $self->commit_entries(@{ $txn->{log} });
     }
 }
 
-sub txn_loaded_entries {
-    my ( $self, @entries ) = @_;
+sub _collapsed_txn_stack {
+    my $self = shift;
 
-    if ( @{ $self->_txn_stack } ) {
-        my $txn = $self->_txn_stack->[-1];
-        push @{ $txn->{read} }, @entries;
+    $self->_collapse_txn_frames(reverse @{ $self->_txn_stack });
+}
+
+sub _collapse_txn_frames {
+    my ( $self, $head, @tail ) = @_;
+
+    return $self->_new_frame unless $head;
+
+    return $head unless @tail;
+
+    my $next = shift @tail;
+
+    if ( $head->{cleared} ) {
+        return $head;
+    } else {
+        my $merged = {
+            cleared => $next->{cleared},
+            log => [
+                @{ $next->{log} },
+                @{ $head->{log} },
+            ],
+            live => {
+                %{ $next->{live} },
+                %{ $head->{live} },
+            },
+        };
+
+        return $self->_collapse_txn_frames( $merged, @tail );
     }
-
-    @entries;
 }
 
 # FIXME remove duplication between get/exists
@@ -75,9 +104,12 @@ sub get {
     my %entries;
     my %remaining = map { $_ => undef } @uuids;
 
-    foreach my $frame ( @{ $self->_txn_stack } ) {
+    my $stack = $self->_txn_stack;
+
+    foreach my $frame ( @$stack ) {
+        # try to find a modified entry for every remaining key
         foreach my $id ( keys %remaining ) {
-            if ( my $entry = $frame->{modified}{$id} ) {
+            if ( my $entry = $frame->{live}{$id} ) {
                 if ( $entry->deleted ) {
                     return ();
                 }
@@ -86,11 +118,24 @@ sub get {
             }
         }
 
+        # if there are no more remaining keys, we can stop examining the
+        # transaction frames
         last unless keys %remaining;
+
+        # if the current frame has cleared the DB and there are still remaining
+        # keys, they are supposed to fail the lookup
+        return () if $frame->{cleared};
     }
 
     if ( keys %remaining ) {
-        @entries{keys %remaining} = $self->get_from_storage(keys %remaining);
+        my @remaining = $self->get_from_storage(keys %remaining);
+
+        if ( @remaining ) {
+            @entries{keys %remaining} = @remaining;
+            @{ $stack->[-1]{live} }{keys %remaining} = @remaining if @$stack;
+        } else {
+            return ();
+        }
     }
 
     return @entries{@uuids};
@@ -105,13 +150,18 @@ sub exists {
 
     foreach my $frame ( @{ $self->_txn_stack } ) {
         foreach my $id ( keys %remaining ) {
-            if ( my $entry = $frame->{modified}{$id} ) {
+            if ( my $entry = $frame->{live}{$id} ) {
                 $exists{$id} = not $entry->deleted;
                 delete $remaining{$id};
             }
         }
 
         last unless keys %remaining;
+
+        if ( $frame->{cleared} ) {
+            @exists{keys %remaining} = ('') x keys %remaining;
+            return @exists{@uuids};
+        }
     }
 
     if ( keys %remaining ) {
@@ -139,8 +189,9 @@ sub insert {
     my ( $self, @entries ) = @_;
 
     if ( @{ $self->_txn_stack } ) {
-        my $head = $self->_txn_stack->[-1]{modified};
-        @{$head}{map { $_->id } @entries} = @entries;
+        my $head = $self->_txn_stack->[-1];
+        push @{ $head->{log} }, @entries;
+        @{$head->{live}}{map { $_->id } @entries} = @entries;
     } else {
         $self->commit_entries(@entries);
     }

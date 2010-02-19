@@ -13,9 +13,7 @@ with (
     'KiokuDB::Backend::Serialize::Delegate',
     'KiokuDB::Backend',
     'KiokuDB::Backend::Role::Query::Simple::Linear',
-    'KiokuDB::Backend::Role::Scan' => { excludes => 'all_entry_ids' },
-    'KiokuDB::Backend::Role::Clear',
-    'KiokuDB::Backend::Role::TXN::Memory',
+    'KiokuDB::Backend::Role::TXN::Memory::Scan',
 );
 
 has storage => (
@@ -24,7 +22,7 @@ has storage => (
     default => sub { {} },
 );
 
-sub clear {
+sub clear_storage {
     my $self = shift;
     %{ $self->storage } = ();
 }
@@ -70,14 +68,9 @@ sub exists_in_storage {
     map { exists $self->storage->{$_} } @uids;
 }
 
-sub all_entries {
+sub all_storage_entries {
     my $self = shift;
     return bulk(map { $self->deserialize($_) } values %{ $self->storage });
-}
-
-sub all_entry_ids {
-    my $self = shift;
-    return bulk(keys %{ $self->storage });
 }
 
 __PACKAGE__->meta->make_immutable;

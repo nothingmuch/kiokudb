@@ -50,6 +50,7 @@ sub verify {
         is_deeply(
             [ sort $self->backend->root_entry_ids->all ],
             [ sort @ids ],
+            "root set IDs",
         );
     });
 
@@ -66,12 +67,13 @@ sub verify {
         is_deeply(
             [ sort map { $_->name } @objs ],
             [ sort qw(quxx) ],
-            "child entries",
+            "nonroot entries",
         );
 
         is_deeply(
             [ sort $self->backend->child_entry_ids->all ],
             [ sort @ids ],
+            "nonroot IDs",
         );
     });
 
@@ -95,6 +97,7 @@ sub verify {
         is_deeply(
             [ sort $self->backend->all_entry_ids->all ],
             [ sort @ids ],
+            "all IDs",
         );
     });
 }
