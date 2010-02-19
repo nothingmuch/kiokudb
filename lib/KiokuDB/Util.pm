@@ -13,7 +13,7 @@ use Scalar::Util qw(blessed);
 use namespace::clean;
 
 use Sub::Exporter -setup => {
-    exports => [qw(set weak_set dsn_to_backend import_yaml)],
+    exports => [qw(set weak_set dsn_to_backend import_yaml deprecate)],
 };
 
 sub weak_set {
@@ -142,6 +142,43 @@ sub load_yaml_files {
     }
 
     return @objects;
+}
+
+my %seen_deprecation;
+
+use constant HARNESS_ACTIVE => not not $ENV{HARNESS_ACTIVE};
+
+sub deprecate ($$) {
+    if ( HARNESS_ACTIVE ) {
+        my ( $version, $reason ) = @_;
+
+        # parts stolen from Devel::Deprecate, but we're doing version based
+        # deprecation, not date based deprecation
+
+        require KiokuDB;
+
+        if ( $KiokuDB::VERSION >= $version ) {
+            my ( $package, $filename, $line ) = caller(1);
+            my ( undef, undef, undef, $subroutine ) = caller(2);
+
+            return if $seen_deprecation{"${filename}:$line"}++; # no need to warn more than once
+
+            $subroutine ||= 'n/a';
+            my $padding = ' ' x 18;
+            $reason =~ s/\n/\n#$padding/g;
+
+            Carp::cluck(<<"END");
+# DEPRECATION WARNING
+#
+#     Package:     $package
+#     File:        $filename
+#     Line:        $line
+#     Subroutine:  $subroutine
+#
+#     Reason:      $reason
+END
+        }
+    }
 }
 
 __PACKAGE__
