@@ -1,7 +1,16 @@
+0.37
+    - Resolve long standing issues with TXN::Memory
+        - TXN::Memory::Scan role now implements proper enumeration
+        - Fixture::TXN::Scan verifies transactional semantics of enumeration
+          for all transactional backends
+
 0.36
     - Resolve a bug when deleting objects that are still live,
       lookup($dead_object_id) would still return the object even though it's
       not actually in storage.
+    - Don't call $backend->exists with no arguments in FSCK
+    - various API methods now just return; when invoked with no arguments,
+      instead of potentially erroring at the backend level
 
 0.35
     - bump dependency version for MooseX::YAML to prevent bad interaction with
