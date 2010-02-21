@@ -96,7 +96,7 @@ sub expand_object {
 sub queue_ref {
     my ( $self, $ref, $into ) = @_;
 
-    if ( 0 and $self->queue ) {
+    if ( $self->queue ) {
 
         #my $b = $self->backend;
 

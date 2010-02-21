@@ -110,7 +110,7 @@ sub compile_expand {
             my $inflated_pad;
             $linker->inflate_data( $pad, \$inflated_pad );
 
-            my $sub = $self->_eval_body( $body, $inflated_pad );
+            my $sub = $self->_eval_body( $linker, $body, $inflated_pad );
 
             $linker->register_object( $entry => $sub );
 
@@ -149,7 +149,7 @@ sub compile_refresh {
 }
 
 sub _eval_body {
-    my ( $self, $body, $pad ) = @_;
+    my ( $self, $linker, $body, $pad ) = @_;
 
     my ( $sub, $e ) = do {
         local $@;
@@ -157,6 +157,7 @@ sub _eval_body {
         if ( my @vars = keys %$pad ) {
             my $vars = join ", ", @vars;
 
+            # FIXME Parse::Perl
             my $sub = eval "
                 my ( $vars );
                 sub $body;
@@ -164,7 +165,9 @@ sub _eval_body {
 
             my $e = $@;
 
-            PadWalker::set_closed_over($sub, $pad) if $sub;
+            $linker->queue_finalizer(sub {
+                PadWalker::set_closed_over($sub, $pad);
+            }) if $sub;
 
             ( $sub, $e );
         } else {
