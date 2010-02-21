@@ -3,6 +3,7 @@
 package KiokuDB::TypeMap::Entry::MOP;
 use Moose;
 
+use Scalar::Util qw(refaddr);
 use Carp qw(croak);
 
 use KiokuDB::Thunk;
@@ -22,6 +23,18 @@ with (
     'KiokuDB::TypeMap::Entry::Std::Expand' => {
         alias => { compile_expand => 'compile_expand_body' },
     }
+);
+
+has [qw(class_version_table version_table)] => (
+    isa => "HashRef",
+    is  => "ro",
+    default => sub { return {} },
+);
+
+has write_upgrades => (
+    isa => "Bool",
+    is  => "ro",
+    default => 0,
 );
 
 # FIXME collapser and expaner should both be methods in Class::MOP::Class,
@@ -104,6 +117,12 @@ sub compile_collapse_body {
     my $immutable  = does_role($meta, "KiokuDB::Role::Immutable");
     my $content_id = does_role($meta, "KiokuDB::Role::ID::Content");
 
+    my @extra_args;
+
+    if ( defined( my $version = $meta->version ) ) {
+        push @extra_args, class_version => $version;
+    }
+
     return (
         sub {
             my ( $self, %args ) = @_;
@@ -141,6 +160,7 @@ sub compile_collapse_body {
             }
 
             return $self->make_entry(
+                @extra_args,
                 %args,
                 data => \%collapsed,
             );
@@ -159,6 +179,8 @@ sub compile_expand {
     my $anon = $meta->is_anon_class;
 
     my $inner = $self->compile_expand_body($class, $resolver, @args);
+
+    my $version = $meta->version;
 
     return sub {
         my ( $linker, $entry, @args ) = @_;
@@ -179,8 +201,83 @@ sub compile_expand {
             return $linker->$method($entry, @args);
         }
 
-        $linker->$inner($entry, @args);
+        if ( $self->is_version_up_to_date($meta, $version, $entry->class_version) ) {
+            $linker->$inner($entry, @args);
+        } else {
+            my $upgraded = $self->upgrade_entry( linker => $linker, meta => $meta, entry => $entry, expand_args => \@args);
+
+            if ( $self->write_upgrades ) {
+                croak "Upgraded entry can't be updated (mismatch in 'prev' chain)"
+                    unless refaddr($entry) == refaddr($upgraded->root_prev);
+
+                $linker->backend->insert($upgraded);
+            }
+
+            $linker->$inner($upgraded, @args);
+        }
     }
+}
+
+sub is_version_up_to_date {
+    my ( $self, $meta, $version, $entry_version ) = @_;
+
+    # no clever stuff, only if they are the same string they are the same version
+
+    no warnings 'uninitialized'; # undef $VERSION is allowed
+    return 1 if $version eq $entry_version;
+
+    # check the version table for equivalent versions (recursively)
+    # ref handlers are upgrade hooks
+    foreach my $handler ( $self->find_version_handlers($meta, $entry_version) ) {
+        return $self->is_version_up_to_date( $meta, $version, $handler ) if not ref $handler;
+    }
+
+    return;
+}
+
+sub find_version_handlers {
+    my ( $self, $meta, $version ) = @_;
+
+    no warnings 'uninitialized'; # undef $VERSION is allowed
+
+    grep { defined } map { $_->{$version} } $self->class_version_table->{$meta->name}, $self->version_table;
+}
+
+
+sub upgrade_entry {
+    my ( $self, %args ) = @_;
+    $self->upgrade_entry_from_version( %args, from_version => $args{entry}->class_version );
+}
+
+sub upgrade_entry_from_version {
+    my ( $self, %args ) = @_;
+
+    my ( $meta, $from_version, $entry ) = @args{qw(meta from_version entry)};
+
+    no warnings 'uninitialized'; # undef $VERSION is allowed
+
+    foreach my $handler ( $self->find_version_handlers($meta, $from_version) ) {
+        if ( ref $handler ) {
+            # apply handler
+            my $converted = $self->$handler(%args);
+
+            if ( $self->is_version_up_to_date( $meta, $meta->version, $converted->class_version ) ) {
+                return $converted;
+            } else {
+                # more error context
+                return try {
+                    $self->upgrade_entry_from_version(%args, entry => $converted, from_version => $converted->class_version);
+                } catch {
+                    croak "$_\n... when upgrading from $from_version";
+                };
+            }
+        } else {
+            # nonref is equivalent version, recursively search for handlers for that version
+            return $self->upgrade_entry_from_version( %args, from_version => $handler );
+        }
+    }
+
+    croak "No handler found for " . $meta->name . " version $from_version" . ( $entry->class_version ne $from_version ? "(entry version is " . $entry->class_version . ")" : "" );
 }
 
 sub compile_create {

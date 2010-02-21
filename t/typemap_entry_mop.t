@@ -7,6 +7,7 @@ use Test::More;
 use Test::Moose;
 
 use Scalar::Util qw(refaddr reftype blessed);
+use Try::Tiny;
 
 use ok 'KiokuDB::TypeMap::Entry::MOP';
 use ok 'KiokuDB::TypeMap::Resolver';
@@ -16,13 +17,15 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Backend::Hash';
 use ok 'KiokuDB::Role::ID';
 
-use constant HAVE_MX_STORAGE => eval { require MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize };
+use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::Trait::DoNotSerialize };
 
 # FIXME lazy trait
 
 {
     package Foo;
     use Moose;
+
+    our $VERSION = "0.03";
 
     has foo => ( is => "rw" );
 
@@ -85,7 +88,18 @@ my $obj_with_value = Foo->new( foo => Value->new( name => "fairly" ) );
 my $once = Once->new( name => "blah" );
 
 foreach my $intrinsic ( 1, 0 ) {
-    my $foo_entry = KiokuDB::TypeMap::Entry::MOP->new();
+    my $foo_entry = KiokuDB::TypeMap::Entry::MOP->new(
+        write_upgrades => 1,
+        version_table => {
+            ""     => "0.01", # equivalent
+            "0.01" => sub {
+                my ( $self, %args ) = @_;
+
+                return $args{entry}->clone( class_version => "0.02", prev => $args{entry} );
+            },
+            "0.02" => "0.03",
+        },
+    );
     my $bar_entry = KiokuDB::TypeMap::Entry::MOP->new( $intrinsic ? ( intrinsic => 1 ) : () );
 
     my $tr = KiokuDB::TypeMap::Resolver->new(
@@ -185,7 +199,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         $l->live_objects->insert_entries( values %$entries );
 
-        my $expanded = eval { $l->expand_object($entry) };
+        my $expanded = try { $l->expand_object($entry) };
 
         isa_ok( $expanded, "Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($deep), "refaddr doesn't equal" );
@@ -243,7 +257,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         $l->live_objects->insert_entries( values %$entries );
 
-        my $expanded = eval { $l->expand_object($entry) };
+        my $expanded = try { $l->expand_object($entry) };
 
         isa_ok( $expanded, "Foo", "expanded object" );
         isa_ok( $expanded->bar, "Bar", "inner obeject" );
@@ -285,7 +299,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         $l->live_objects->insert_entries( values %$entries );
 
-        my $expanded = eval { $l->expand_object($entry) };
+        my $expanded = try { $l->expand_object($entry) };
 
         isa_ok( $expanded, "Foo", "expanded object" );
         isa_ok( $expanded->foo, "Value", "inner obeject" );
@@ -336,7 +350,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         $l->backend->insert( values %$entries );
 
-        my $expanded = eval { $l->expand_object($entry) };
+        my $expanded = try { $l->expand_object($entry) };
 
         isa_ok( $expanded, "Foo", "expanded object" );
 
@@ -358,6 +372,37 @@ foreach my $intrinsic ( 1, 0 ) {
         } else {
             is( refaddr($expanded->bar), $bar_addr, "bar left in place" );
         }
+    }
+
+    {
+        my $id = $v->generate_uuid;
+
+        {
+            # no class_version
+            my $entry = KiokuDB::Entry->new(
+                class         => 'Foo',
+                data          => { foo => 'test', },
+                id            => $id,
+            );
+
+            $l->backend->insert($entry);
+        }
+
+        my $s = $l->live_objects->new_scope;
+
+        my $expanded = try {
+            $l->get_or_load_object($id)
+        } catch {
+            fail "error: $_";
+        };
+
+        isa_ok( $expanded, "Foo", "expanded object upgraded" );
+
+        my $upgraded = $l->backend->get($id);
+
+        isa_ok( $upgraded, "KiokuDB::Entry", "upgraded entry written back" );
+
+        is( $upgraded->class_version, '0.02', "correct class version" );
     }
 }
 
