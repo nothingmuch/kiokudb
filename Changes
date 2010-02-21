@@ -3,6 +3,7 @@
         - TXN::Memory::Scan role now implements proper enumeration
         - Fixture::TXN::Scan verifies transactional semantics of enumeration
           for all transactional backends
+    - Re-enable $linker->queue (fixed coderef failure case)
 
 0.36
     - Resolve a bug when deleting objects that are still live,
