@@ -447,4 +447,82 @@ better, so make use of L<Moose::Meta::Class/make_immutable>.
 
 If true the object will be collapsed as part of its parent, without an ID.
 
+=item version_table
+
+=item class_version_table
+
+Tables of handlers.
+
+The first is a global version table (useful when the typemap entry is only
+handling one class) and the second is a table of tables keyed by the class name.
+
+The tables are keyed by version number (as a string, C<undef> and C<""> are
+considered the same), and the value can be either a code reference that
+processes the entry to bring it up to date, or a string denoting a version
+number that this version is equivalent to.
+
+Version numbers have no actual ordinal meaning, they are taken as simple string
+identifiers.
+
+If we had 3 versions, C<1.0>, C<1.1> and C<2.0>, where C<1.1> is a minor update
+to the class that requires no structural changes from C<1.0>, our table could
+be written like this:
+
+    {
+        '1.0' => '1.1', # upgrading the data from 1.0 to 1.1 is a noop
+        '1.1' => sub {
+            my ( $self, %args ) = @_;
+
+            # manually convert the entry data
+            return $entry->clone(
+                class_version => '2.0',
+                prev => $entry,
+                data => ...,
+            ),
+        },
+    }
+
+When an object that was stored as version C<1.0> is retrieved from the
+database, and the current definition of the class has C<$VERSION> C<2.0>,
+table declares C<1.0> is the same as C<1.1>, so we search for the handler for
+C<1.1> and apply it.
+
+The resulting class has the version C<2.0> which is the same as what we have
+now, so this object can be thawed.
+
+The callback is invoked with the following arguments:
+
+=over 4
+
+=item entry
+
+The entry to upgrade.
+
+=item from_version
+
+The key under which the handler was found (not necessarily the same as
+C<< $entry->class_version >>).
+
+=item meta
+
+The L<Class::MOP::Class> of the entry's class.
+
+=item linker
+
+The L<KiokuDB::Linker> instance that is inflating this object.
+
+Can be used to retrieve additional required objects (cycles are not a problem
+but be aware that the objects might not be usable yet at the time of the
+callback's invocation).
+
+=back
+
+=item write_upgrades
+
+If true, after applying version upgrade handlers, the updated entry will be
+written back to the database.
+
+Defaults to false but might default to true in future versions (unless the
+database is in readonly mode).
+
 =back
