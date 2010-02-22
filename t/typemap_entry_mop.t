@@ -95,7 +95,7 @@ foreach my $intrinsic ( 1, 0 ) {
             "0.01" => sub {
                 my ( $self, %args ) = @_;
 
-                return $args{entry}->clone( class_version => "0.02", prev => $args{entry} );
+                return $args{entry}->derive( class_version => "0.02" );
             },
             "0.02" => "0.03",
         },
@@ -356,8 +356,12 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $bar_addr = refaddr($expanded->bar);
 
-        my $clone = $entry->clone( prev => $entry );
-        $clone->data->{foo} = "henry";
+        my $clone = $entry->derive(
+            data => {
+                %{ $entry->{data} },
+                foo => "henry",
+            },
+        );
 
         $l->backend->insert($clone);
 

@@ -117,6 +117,15 @@ sub deletion_entry {
     );
 }
 
+sub derive {
+    my ( $self, @args ) = @_;
+
+    $self->clone(
+        prev => $self,
+        @args,
+    );
+}
+
 has _references => (
     traits => [qw(NoClone)],
     isa => "ArrayRef",
