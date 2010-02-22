@@ -263,6 +263,8 @@ sub upgrade_entry_from_version {
 
             if ( $self->is_version_up_to_date( $meta, $meta->version, $converted->class_version ) ) {
                 return $converted;
+            } elsif ( $entry->class_version eq $converted->class_version ) {
+                croak "Upgrade from " . $entry->class_version . " did change 'class_version' field";
             } else {
                 # more error context
                 return try {
