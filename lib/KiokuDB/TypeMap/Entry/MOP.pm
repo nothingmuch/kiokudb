@@ -25,8 +25,20 @@ with (
     }
 );
 
-has [qw(class_version_table version_table)] => (
-    isa => "HashRef",
+has check_class_versions => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
+has version_table => (
+    isa => "HashRef[Str|CodeRef|HashRef]",
+    is  => "ro",
+    default => sub { return {} },
+);
+
+has class_version_table  => (
+    isa => "HashRef[HashRef[Str|CodeRef|HashRef]]",
     is  => "ro",
     default => sub { return {} },
 );
@@ -201,7 +213,7 @@ sub compile_expand {
             return $linker->$method($entry, @args);
         }
 
-        if ( $self->is_version_up_to_date($meta, $version, $entry->class_version) ) {
+        if ( !$self->check_class_versions or $self->is_version_up_to_date($meta, $version, $entry->class_version) ) {
             $linker->$inner($entry, @args);
         } else {
             my $upgraded = $self->upgrade_entry( linker => $linker, meta => $meta, entry => $entry, expand_args => \@args);
@@ -258,8 +270,11 @@ sub upgrade_entry_from_version {
 
     foreach my $handler ( $self->find_version_handlers($meta, $from_version) ) {
         if ( ref $handler ) {
+
+            my $cb = $self->_process_upgrade_handler($handler);
+
             # apply handler
-            my $converted = $self->$handler(%args);
+            my $converted = $self->$cb(%args);
 
             if ( $self->is_version_up_to_date( $meta, $meta->version, $converted->class_version ) ) {
                 return $converted;
@@ -280,6 +295,37 @@ sub upgrade_entry_from_version {
     }
 
     croak "No handler found for " . $meta->name . " version $from_version" . ( $entry->class_version ne $from_version ? "(entry version is " . $entry->class_version . ")" : "" );
+}
+
+sub _process_upgrade_handler {
+    my ( $self, $handler ) = @_;
+
+    if ( ref $handler eq 'HASH' ) {
+        croak "Data provided in upgrade handler must be a hash"
+            if ref $handler->{data} and ref $handler->{data} ne 'HASH';
+
+        croak "No class_version provided in upgrade handler"
+            unless defined $handler->{class_version};
+
+        return sub {
+            my ( $self, %args ) = @_;
+
+            my $entry = $args{entry};
+
+            croak "Entry data not a hash reference"
+                unless ref $entry->data eq 'HASH';
+
+            $entry->derive(
+                %$handler,
+                data => {
+                    %{ $entry->data },
+                    %{ $handler->{data} || {} },
+                },
+            );
+        };
+    }
+
+    return $handler;
 }
 
 sub compile_create {
@@ -449,6 +495,13 @@ better, so make use of L<Moose::Meta::Class/make_immutable>.
 
 If true the object will be collapsed as part of its parent, without an ID.
 
+=item check_class_versions
+
+If true (the default) then class versions will be checked on load and if there
+is a mismatch between the stored version number and the current version number,
+the version upgrade handler tables will be used to convert the out of date
+entry.
+
 =item version_table
 
 =item class_version_table
@@ -460,8 +513,9 @@ handling one class) and the second is a table of tables keyed by the class name.
 
 The tables are keyed by version number (as a string, C<undef> and C<""> are
 considered the same), and the value can be either a code reference that
-processes the entry to bring it up to date, or a string denoting a version
-number that this version is equivalent to.
+processes the entry to bring it up to date, a hash reference of overridden
+fields, or a string denoting a version number that this version is equivalent
+to.
 
 Version numbers have no actual ordinal meaning, they are taken as simple string
 identifiers.
@@ -518,6 +572,32 @@ but be aware that the objects might not be usable yet at the time of the
 callback's invocation).
 
 =back
+
+When a hash is provided as a handler it'll be used to create an entry like
+this:
+
+    $entry->derive(
+        %$handler,
+        data => {
+            %{ $entry->data },
+            %{ $handler->{data} || {} },
+        },
+    );
+
+The field C<class_version> is required, and C<data> must contain a hash:
+
+    KiokuDB->connect(
+        class_version_table => {
+            Foo => {
+                "0.02" => {
+                    class_version => "0.03", # upgrade 0.02 to 0.03
+                    data => {
+                        a_new_field => "default_value",
+                    },
+                },
+            },
+        },
+    );
 
 =item write_upgrades
 

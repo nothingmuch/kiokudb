@@ -16,6 +16,14 @@ use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
 my $dir = KiokuDB->new(
+    class_version_table => {
+        Foo => {
+            "0.01" => {
+                class_version => "0.02",
+                data          => { foo => "upgraded" },
+            },
+        },
+    },
     backend => KiokuDB::Backend::Hash->new,
     #backend => KiokuDB::Backend::JSPON->new(
     #    dir    => temp_root,
@@ -36,6 +44,8 @@ sub no_live_objects {
 {
     package Foo;
     use Moose;
+
+    our $VERSION = "0.02";
 
     has foo => (
         isa => "Str",
@@ -656,5 +666,33 @@ no_live_objects;
 
 no_live_objects;
 
+{
+    {
+        my $s = $dir->new_scope;
+
+        my $id = $dir->insert( Foo->new( foo => "blah blah" ) );
+
+        my ( $entry ) = $dir->backend->get($id);
+
+        my $old_entry = $entry->clone(
+            class_version => "0.01",
+            id            => "old_object",
+        );
+
+        $dir->backend->insert($old_entry);
+    }
+
+    {
+        my $s = $dir->new_scope;
+
+        my $obj = $dir->lookup("old_object");
+
+        isa_ok( $obj, "Foo" );
+
+        is( $obj->foo, "upgraded", "field upgraded" );
+    }
+};
+
+no_live_objects;
 
 done_testing;

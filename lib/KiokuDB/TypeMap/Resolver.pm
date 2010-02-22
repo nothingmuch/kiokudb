@@ -21,6 +21,12 @@ has _compiled => (
     default => sub { return {} },
 );
 
+has fallback_entry => (
+    does => "KiokuDB::TypeMap::Entry",
+    is   => "ro",
+    default => sub { KiokuDB::TypeMap::Entry::MOP->new },
+);
+
 sub resolved {
     my ( $self, $class ) = @_;
 
@@ -93,7 +99,7 @@ sub resolve_fallback_with_meta {
     my ( $self, $class, $meta ) = @_;
 
     # FIXME only allow with Storage?
-    return $self->compile_entry( $class => KiokuDB::TypeMap::Entry::MOP->new );
+    return $self->compile_entry( $class => $self->fallback_entry );
 }
 
 sub resolve_fallback_without_meta {

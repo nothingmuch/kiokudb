@@ -137,6 +137,18 @@ sub _build_merged_typemap {
     }
 }
 
+has check_class_versions => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
+has class_version_table => (
+    isa => "HashRef[HashRef[Str|CodeRef|HashRef]]",
+    is  => "ro",
+    default => sub { return {} },
+);
+
 has typemap_resolver => (
     isa => "KiokuDB::TypeMap::Resolver",
     is  => "ro",
@@ -147,7 +159,11 @@ sub _build_typemap_resolver {
     my $self = shift;
 
     KiokuDB::TypeMap::Resolver->new(
-        typemap => $self->merged_typemap,
+        typemap        => $self->merged_typemap,
+        fallback_entry => KiokuDB::TypeMap::Entry::MOP->new(
+            class_version_table => $self->class_version_table,
+            check_class_versions => $self->check_class_versions,
+        ),
     );
 }
 
@@ -827,6 +843,22 @@ If true adds L<KiokuDB::TypeMap::ClassBuilders> to the merged typemap.
 
 It's possible to provide a hash reference of options to give to
 L<KiokuDB::TypeMap::ClassBuilders/new>.
+
+=item check_class_versions
+
+Controls whether or not the class versions of objects are checked on load.
+
+Defaults to true.
+
+=item class_version_table
+
+A table of classes and versions that is passed to the default typemap entry for
+Moose/Class::MOP objects.
+
+When a class version has changed between the time that an object was stored and
+the time it's being retrieved, the data must be converted.
+
+See L<KiokuDB::TypeMap::Entry::MOP> for more details.
 
 =back
 
