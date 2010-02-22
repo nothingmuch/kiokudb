@@ -40,9 +40,17 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
     package Bar;
     use Moose;
 
-    with qw(KiokuDB::Role::ID);
+    our $VERSION = "0.03";
+
+    with qw(KiokuDB::Role::ID KiokuDB::Role::Upgrade::Data);
 
     sub kiokudb_object_id { shift->id }
+
+    sub kiokudb_upgrade_data {
+        my ( $class, %args ) = @_;
+
+        return $args{entry}->derive( class_version => $VERSION );
+    }
 
     has id => ( is => "ro" );
 
@@ -62,6 +70,18 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
 
     package Once;
     use Moose;
+
+    our $VERSION = "0.03";
+
+    with qw(KiokuDB::Role::Upgrade::Handlers::Table);
+
+    use constant kiokudb_upgrade_handlers_table => {
+        "0.01" => "0.02",
+        "0.02" => {
+            class_version => "0.03",
+        },
+    };
+
 
     with qw(KiokuDB::Role::Immutable);
 
@@ -100,9 +120,12 @@ foreach my $intrinsic ( 1, 0 ) {
             "0.02" => "0.03",
         },
     );
-    my $bar_entry = KiokuDB::TypeMap::Entry::MOP->new( $intrinsic ? ( intrinsic => 1 ) : () );
+    my $bar_entry = KiokuDB::TypeMap::Entry::MOP->new( $intrinsic ? ( intrinsic => 1 ) : (), write_upgrades => 1 );
 
     my $tr = KiokuDB::TypeMap::Resolver->new(
+        fallback_entry => KiokuDB::TypeMap::Entry::MOP->new(
+            write_upgrades => 1,
+        ),
         typemap => KiokuDB::TypeMap->new(
             entries => {
                 Foo => $foo_entry,
@@ -184,7 +207,7 @@ foreach my $intrinsic ( 1, 0 ) {
         if ( $intrinsic ) {
             is_deeply(
                 $entry->data,
-                {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar ) },
+                {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar, class_version => $Bar::VERSION ) },
                 "is_deeply"
             );
         } else {
@@ -407,6 +430,69 @@ foreach my $intrinsic ( 1, 0 ) {
         isa_ok( $upgraded, "KiokuDB::Entry", "upgraded entry written back" );
 
         is( $upgraded->class_version, '0.02', "correct class version" );
+    }
+
+    unless ( $intrinsic ) {
+        my $id = $v->generate_uuid;
+
+        {
+            # no class_version
+            my $entry = KiokuDB::Entry->new(
+                class         => 'Bar',
+                data          => { id => $id, blah => "test" },
+                id            => $id,
+            );
+
+            $l->backend->insert($entry);
+        }
+
+        my $s = $l->live_objects->new_scope;
+
+        my $expanded = try {
+            $l->get_or_load_object($id)
+        } catch {
+            fail "error: $_";
+        };
+
+        isa_ok( $expanded, "Bar", "expanded object upgraded" );
+
+        my $upgraded = $l->backend->get($id);
+
+        isa_ok( $upgraded, "KiokuDB::Entry", "upgraded entry written back" );
+
+        is( $upgraded->class_version, '0.03', "correct class version" );
+    }
+
+    {
+        my $id = $v->generate_uuid;
+
+        {
+            # no class_version
+            my $entry = KiokuDB::Entry->new(
+                class_version => "0.01",
+                class         => 'Once',
+                data          => { name => 'test', },
+                id            => $id,
+            );
+
+            $l->backend->insert($entry);
+        }
+
+        my $s = $l->live_objects->new_scope;
+
+        my $expanded = try {
+            $l->get_or_load_object($id)
+        } catch {
+            fail "error: $_";
+        };
+
+        isa_ok( $expanded, "Once", "expanded object upgraded" );
+
+        my $upgraded = $l->backend->get($id);
+
+        isa_ok( $upgraded, "KiokuDB::Entry", "upgraded entry written back" );
+
+        is( $upgraded->class_version, '0.03', "correct class version" );
     }
 }
 

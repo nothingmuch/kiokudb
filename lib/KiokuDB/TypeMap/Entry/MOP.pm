@@ -257,13 +257,23 @@ sub find_version_handlers {
 
     no warnings 'uninitialized'; # undef $VERSION is allowed
 
-    grep { defined } map { $_->{$version} } $self->class_version_table->{$meta->name}, $self->version_table;
+    if ( does_role($meta, "KiokuDB::Role::Upgrade::Handlers") ) {
+        return $meta->name->kiokudb_upgrade_handler($version);
+    } else {
+        return grep { defined } map { $_->{$version} } $self->class_version_table->{$meta->name}, $self->version_table;
+    }
 }
-
 
 sub upgrade_entry {
     my ( $self, %args ) = @_;
-    $self->upgrade_entry_from_version( %args, from_version => $args{entry}->class_version );
+
+    my ( $meta, $entry ) = @args{qw(meta entry)};
+
+    if ( does_role($meta, "KiokuDB::Role::Upgrade::Data") ) {
+        return $meta->name->kiokudb_upgrade_data(%args);
+    } else {
+        return $self->upgrade_entry_from_version( %args, from_version => $entry->class_version );
+    }
 }
 
 sub upgrade_entry_from_version {
@@ -512,6 +522,10 @@ entry.
 =item class_version_table
 
 Tables of handlers.
+
+See also L<KiokuDB::Role::Upgrade::Data> and
+L<KiokuDB::Role::Upgrade::Handlers::Table> for convenience roles that do not
+require a central table.
 
 The first is a global version table (useful when the typemap entry is only
 handling one class) and the second is a table of tables keyed by the class name.
