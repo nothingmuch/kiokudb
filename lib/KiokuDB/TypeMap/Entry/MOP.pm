@@ -230,6 +230,7 @@ sub compile_expand {
     }
 }
 
+{ my %cache;
 sub is_version_up_to_date {
     my ( $self, $meta, $version, $entry_version ) = @_;
 
@@ -238,14 +239,18 @@ sub is_version_up_to_date {
     no warnings 'uninitialized'; # undef $VERSION is allowed
     return 1 if $version eq $entry_version;
 
+    my $key = join(":", $meta->name, $entry_version); # $VERSION isn't supposed to change at runtime
+
+    return $cache{$key} if exists $cache{$key};
+
     # check the version table for equivalent versions (recursively)
     # ref handlers are upgrade hooks
     foreach my $handler ( $self->find_version_handlers($meta, $entry_version) ) {
-        return $self->is_version_up_to_date( $meta, $version, $handler ) if not ref $handler;
+        return $cache{$key} = $self->is_version_up_to_date( $meta, $version, $handler ) if not ref $handler;
     }
 
-    return;
-}
+    return $cache{$key} = undef;
+} }
 
 sub find_version_handlers {
     my ( $self, $meta, $version ) = @_;
