@@ -6,6 +6,19 @@ use ExtUtils::MakeMaker;
 
 require 5.008; # utf8 and what not
 
+if ( $] == 5.010 ) {
+        warn <<WARNING
+
+  *********************************************************
+  *                                                       *
+  *      Note: Perl 5.10.0 leaks memory in weaken(),      *
+  *      This bug has been fixed in version 5.10.1        *
+  *                                                       *
+  *********************************************************
+
+WARNING
+}
+
 
 if ( eval { require KiokuDB::Cmd; 1 } ) {
     open my $fh, "<", "lib/KiokuDB.pm" or die $!;
