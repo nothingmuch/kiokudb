@@ -55,7 +55,7 @@ sub next {
             unless $self->_no_scope;
         return [ $self->linker->register_and_expand_entries(@$entries) ];
     } else {
-        return;
+        return [];
     }
 }
 
