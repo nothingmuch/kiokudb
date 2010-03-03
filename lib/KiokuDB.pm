@@ -140,7 +140,7 @@ sub _build_merged_typemap {
 has check_class_versions => (
     isa => "Bool",
     is  => "ro",
-    default => 1,
+    default => 0,
 );
 
 has class_version_table => (

@@ -16,6 +16,7 @@ use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
 my $dir = KiokuDB->new(
+    check_class_versions => 1,
     class_version_table => {
         Foo => {
             "0.01" => {
