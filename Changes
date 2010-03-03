@@ -4,6 +4,8 @@
         - Fixture::TXN::Scan verifies transactional semantics of enumeration
           for all transactional backends
     - Re-enable $linker->queue (fixed coderef failure case)
+    - Various doc fixes
+    - Class versioning (disabled by default)
 
 0.36
     - Resolve a bug when deleting objects that are still live,
