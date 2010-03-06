@@ -1,3 +1,6 @@
+0.38
+    - Fix a bug where object streams would end prematurely (Graham Barr)
+
 0.37
     - Resolve long standing issues with TXN::Memory
         - TXN::Memory::Scan role now implements proper enumeration
