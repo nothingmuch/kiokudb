@@ -55,3 +55,4 @@ my $stream =KiokuDB::Stream::Objects ->new(
 
 is_deeply([map { $_->num } $stream->all],[1,2,3,4], "found 4 objects");
 
+done_testing;
