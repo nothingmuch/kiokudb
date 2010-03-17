@@ -230,6 +230,13 @@ sub _build_linker {
     );
 }
 
+sub BUILD {
+    my $self = shift;
+
+    my $backend = $self->backend;
+
+    $backend->register_handle($self) if $backend->can("register_handle");
+}
 
 with qw(KiokuDB::Role::API);
 
