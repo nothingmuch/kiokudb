@@ -49,7 +49,12 @@ sub compile {
             },
             expand_method => sub {
                 my ( $linker, $entry ) = @_;
-                return $entry->data;
+
+                my $obj = $entry->data;
+
+                $linker->register_object( $entry => $obj );
+
+                return $obj;
             },
             id_method => "generate_uuid",
             refresh_method => sub {

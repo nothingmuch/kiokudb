@@ -3,7 +3,7 @@
 package KiokuDB::LiveObjects;
 use Moose;
 
-use Scalar::Util qw(weaken);
+use Scalar::Util qw(weaken refaddr);
 use KiokuDB::LiveObjects::Guard;
 use Hash::Util::FieldHash::Compat qw(fieldhash);
 use Carp qw(croak);
@@ -292,9 +292,16 @@ sub insert {
 
             $s->push($object);
 
-            if ( $entry and !$ei->{$id} ) {
-                $ei->{$id} = $entry;
-                $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
+            if ( $entry ) {
+                unless ( $ei->{$id} ) {
+                    $ei->{$id} = $entry;
+                    $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
+                }
+
+                # break cycle for passthrough objects
+                if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+                    weaken($entry->{data}); # FIXME there should be a MOP way to do this
+                }
             }
 
             # note, $entry = $e->{$id} is *not* desired, it isn't necessarily
