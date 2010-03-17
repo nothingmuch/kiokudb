@@ -80,18 +80,22 @@ has merged_typemap => (
     lazy_build => 1,
 );
 
-sub _find_default_typemap {
+sub _find_default_typemaps {
     my $self = shift;
 
     my $b = $self->backend;
 
+    my @typemaps;
     if ( $b->can("default_typemap") ) {
-        return $b->default_typemap;
-    } elsif ( $b->can("serializer") and $b->serializer->can("default_typemap") ) {
-        return $b->serializer->default_typemap;
+        push @typemaps, $b->default_typemap;
     }
 
-    return;
+
+    if ( $b->can("serializer") and $b->serializer->can("default_typemap") ) {
+        push @typemaps, $b->serializer->default_typemap;
+    }
+
+    return @typemaps;
 }
 
 sub _build_merged_typemap {
@@ -124,9 +128,7 @@ sub _build_merged_typemap {
         push @typemaps, KiokuDB::TypeMap::ClassBuilders->new( ref $opts ? %$opts : () );
     }
 
-    if ( my $default_typemap = $self->_find_default_typemap ) {
-        push @typemaps, $default_typemap;
-    }
+    push @typemaps, $self->_find_default_typemaps;
 
     if ( not @typemaps ) {
         return KiokuDB::TypeMap->new;
