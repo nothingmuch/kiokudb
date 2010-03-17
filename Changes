@@ -1,3 +1,9 @@
+0.39
+    - Allow a backend to provide a default typemap in addition to the serializer one
+    - call 'register_handle' on duck-typing backends in KiokuDB::BUILD
+    - plug a leak where the live object set kept an indirect reference to
+      passthrough entries
+
 0.38
     - Fix a bug where object streams would end prematurely (Graham Barr)
 
