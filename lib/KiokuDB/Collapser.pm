@@ -440,7 +440,7 @@ The resolver consults the typemap (L<KiokuDB::TypeMap>), and caches the results
 as keyed by C<ref $object>.
 
 The typemap contains normal entries (keyed by C<ref $object eq $class>) or isa
-entries (filtered by C<$object->isa($class)>). The rationale is that a typemap
+entries (filtered by C<< $object->isa($class) >>). The rationale is that a typemap
 entry for a superclass might not support all subclasses as well.
 
 Any strategy may be collapsed as a first class object, or intrinsicly, inside
