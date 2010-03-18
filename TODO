@@ -86,25 +86,24 @@
           then updates those objects
 
 * $dir->refresh($object), $dir->deep_refresh($object)
-    * add refreshing method to typemap entries
-    * reload entry from the backend
-    * if entry data != live entry data, fire the typemap entry method
-    * if deep, recurse
-    * entry definitions:
-        * MOP entry involves just reassigning values
-        * Naive reassigns %$obj = ( @new_fields );
-        * Callback entry is a callback
-        * Storable - re-fire STORABLE_thaw on the live object?
-        * Passthrough - dies
+    * partially done
+    * allow typemaps to disable or completely take over refreshing (i.e. DBIC)
+    * provide a check that compares, if entry data != live entry data, skip
+    * add deep refresh
+    * entry todos:
+        * MOP entry needs a MOP API to clear objects, not yet in CMOP
         * Set
             * if shallow downgrade to Deferred and reload IDs assign new member IDs if shallow, downgrade to Deferred
             * if deep upgrade to Loaded and refresh members
 
 * KiokuDB::Server
-    * server side linkage
-    * return transitive closure of entries to improve latency
+    * server side scope tracking
+        * the client informs does scope open/close
+        * the server automatically follows all references for the client, to
+          reduce latency
+        * (no need to actually inflate)
     * server side filtering
-    * server side transactions on behalf of clients
+    * server side transactions
 
 * fix the set_root work on immutable/CAS objects bug (the 'root' flag is not
   written because the object is skipped)
