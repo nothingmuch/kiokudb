@@ -36,6 +36,13 @@ my %monikers = (
     "couchdb" => "CouchDB",
 );
 
+sub _try_json {
+    my $json = shift;
+
+    require JSON;
+    JSON->new->decode($json);
+}
+
 sub dsn_to_backend {
     my ( $dsn, @args ) = @_;
 
@@ -45,9 +52,20 @@ sub dsn_to_backend {
 
         Class::MOP::load_class($class);
         return $class->new_from_dsn($rest, @args);
-    } else {
-        croak "Malformed DSN: $dsn";
+    } elsif ( my $args = _try_json($dsn) ) {
+        my $dsn;
+
+        if ( ref $args eq 'ARRAY' ) {
+            ( $dsn, $args ) = @$args;
+        }
+
+        if ( ref $args eq 'HASH' ) {
+            $dsn ||= delete $args->{dsn};
+            return dsn_to_backend($dsn, %$args, @args);
+        }
     }
+
+    croak "Malformed DSN: $dsn";
 }
 
 sub load_config {
@@ -206,6 +224,12 @@ This module provides various helper functions for working with L<KiokuDB>.
 =head1 EXPORTS
 
 =over 4
+
+=item dsn_to_backend $dsn, %args
+
+Tries to parse C<$dsn>, load the backend and invoke C<new> on it.
+
+Used by L<KiokuDB/connect> and the various command line interfaces.
 
 =item set
 

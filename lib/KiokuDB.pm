@@ -891,7 +891,8 @@ L<KiokuDB::Backend>.
 
 Typically DSN arguments are separated by C<;>, with C<=> separating keys and
 values. Arguments with no value are assumed to denote boolean truth (e.g.
-C<jspon:dir=foo;pretty> means C<< dir => "foo", pretty => 1 >>).
+C<jspon:dir=foo;pretty> means C<< dir => "foo", pretty => 1 >>). However, a
+backend may override the default parsing, so this is not guaranteed.
 
 Extra arguments are passed both to the backend constructor, and the C<KiokuDB>
 constructor.
@@ -899,6 +900,17 @@ constructor.
 Note that if you need a typemap you still need to pass it in:
 
     KiokuDB->connect( $dsn, typemap => $typemap );
+
+The DSN can also be a valid L<JSON> string taking one of the following forms:
+
+    dsn => '["dbi:SQLite:foo",{"schema":"MyApp::DB"}]'
+
+    dsn => '{"dsn":"dbi:SQLite:foo","schema":"MyApp::DB"}'
+
+This allows more complicated arguments to be specified accurately, or arbitrary
+options to be specified when the backend has nonstandard DSN parsing (for
+instance L<KiokuDB::Backend::DBI> simply passes the string to L<DBI>, so this
+is necessary in order to specify options on the command line).
 
 =item configure $config_file, %args
 
