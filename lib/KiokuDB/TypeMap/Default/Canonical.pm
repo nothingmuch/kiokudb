@@ -57,6 +57,10 @@ sub _build_datetime_typemap {
                 },
                 intrinsic => 1,
             },
+            'DateTime::Duration' => => {
+                type      => 'KiokuDB::TypeMap::Entry::Naive',
+                intrinsic => 1,
+            },
         },
     );
 }

@@ -7,7 +7,7 @@ use Test::More;
 
 use Set::Object;
 use constant HAVE_URI        => eval { require URI };
-use constant HAVE_DATETIME   => eval { require DateTime };
+use constant HAVE_DATETIME   => eval { require DateTime; require DateTime::Duration };
 use constant HAVE_PATH_CLASS => eval { require Path::Class };
 
 use ok "KiokuDB::TypeMap::Entry::Callback";
@@ -30,6 +30,23 @@ use ok "KiokuDB";
             isa => "DateTime",
             is  => "ro",
             default => sub { DateTime->now },
+        );
+
+        has duration => (
+            isa => "DateTime::Duration",
+            is  => "ro",
+            default => sub {
+                DateTime::Duration->new(
+                    years   => 3,
+                    months  => 5,
+                    weeks   => 1,
+                    days    => 1,
+                    hours   => 6,
+                    minutes => 15,
+                    seconds => 45,
+                    nanoseconds => 12000,
+                );
+            },
         );
     }
 
@@ -110,6 +127,7 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
 
         if ( HAVE_DATETIME ) {
             isa_ok( $foo->date, "DateTime" );
+            isa_ok( $foo->duration, "DateTime::Duration" );
         }
 
         if ( HAVE_URI ) {

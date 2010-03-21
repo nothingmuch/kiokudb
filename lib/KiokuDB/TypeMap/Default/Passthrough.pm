@@ -16,6 +16,10 @@ sub _build_datetime_typemap {
                 type      => 'KiokuDB::TypeMap::Entry::Passthrough',
                 intrinsic => 1,
             },
+            'DateTime::Duration' => => {
+                type      => 'KiokuDB::TypeMap::Entry::Passthrough',
+                intrinsic => 1,
+            },
         },
     );
 }
