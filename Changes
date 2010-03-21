@@ -1,3 +1,8 @@
+0.40
+    - Allow using a JSON string as a DSN, e.g.
+      '{"dsn":"dbi:SQLite:foo","schema":"MyApp::DB"}'
+    - Added DateTime::Duration to the default typemap
+
 0.39
     - Allow a backend to provide a default typemap in addition to the serializer one
     - call 'register_handle' on duck-typing backends in KiokuDB::BUILD
