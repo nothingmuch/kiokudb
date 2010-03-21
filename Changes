@@ -1,3 +1,6 @@
+0.41
+    - Re-release without extra crap in the tarball.
+
 0.40
     - Allow using a JSON string as a DSN, e.g.
       '{"dsn":"dbi:SQLite:foo","schema":"MyApp::DB"}'
