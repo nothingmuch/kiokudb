@@ -6,7 +6,7 @@ KiokuDB::Tutorial - Getting started with L<KiokuDB>
 
 =head1 INSTALLATION
 
-The easiest way to install L<KiokuDB> and a number of backends is
+The easiest way to install L<KiokuDB> along with a number of backends is
 L<Task::KiokuDB>.
 
 L<KiokuDB> depends on L<Moose> and a few other modules out of the box, but no
@@ -16,17 +16,16 @@ L<KiokuDB> is a frontend to several backends, much like L<DBI> uses DBDs to
 connect to actual databases.
 
 For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
-which is an in memory store, but for production L<KiokuDB::Backend::BDB> or
-L<KiokuDB::Backend::DBI> are the recommended backends.
+which is an in memory store, but for production use L<KiokuDB::Backend::DBI> or
+L<KiokuDB::Backend::BDB> are the recommended backends.
 
 See below for instructions on getting L<KiokuDB::Backend::BDB> installed.
 
-=head1 CREATING A DIRECTORY
+=head1 CREATING A DIRECTORY HANDLE
 
-A KiokuDB directory is the object that contains all the common functionality
-regardless of the backend.
+A KiokuDB directory is the main object through which all work is done.
 
-The simplest directory ready for use can be created like this:
+The simplest directory that is ready for use can be created like this:
 
     my $dir = KiokuDB->new(
         backend => KiokuDB::Backend::Hash->new
@@ -43,13 +42,14 @@ You can also use DSN strings to connect to the various backends:
 
     KiokuDB->connect("bdb:dir=foo", create => 1);
 
-Or use a configuration file
+You can also use a configuration file:
 
     KiokuDB->connect("/path/to/my_db.yml");
-    KiokuDB->connect("/path/to/dir");
 
-With a configuration file like this:
+Which is just a YAML file:
 
+    ---
+    # these are basically the arguments for 'new'
     backend:
       class: KiokuDB::Backend::DBI
       dsn: dbi:SQLite:dbname=/tmp/test.db
@@ -58,21 +58,20 @@ With a configuration file like this:
 =head1 USING THE DBI BACKEND
 
 During this tutorial we will be using the DBI backend for two reasons. The
-first is L<DBI>'s ubiquity - almost everyone has used and knows how to install
-and use it. The second is the possibility of easily looking behind the scenes,
-to more clearly demonstrate what L<KiokuDB> is doing.
+first is L<DBI>'s ubiquity. The second is the possibility of easily looking
+behind the scenes, to more clearly demonstrate what L<KiokuDB> is doing.
 
 That said, the examples will work with all backends exactly the same.
 
-The C<$dir> variable used below is created like this:
+First we create C<$dir>:
 
     my $dir = KiokuDB->connect(
         "dbi:SQLite:dbname=kiokudb_tutorial.db",
-        create => 1,
+        create => 1, # this causes the tables to be created
     );
 
-Note that if you are connecting with a username and password you must specify
-these as named arguments:
+Note that if you are connecting with a username and password you need to
+specify these as named arguments:
 
     my $dir = KiokuDB->connect(
         $dsn,
@@ -105,22 +104,22 @@ and insert the object to the database as follows:
 This is very trivial use of L<KiokuDB>, but it illustrates a few important
 things.
 
-First, no schema is necessary. L<KiokuDB> can use L<Moose> to introspect your
+First, no schema is necessary. L<KiokuDB> uses L<Moose> to introspect your
 object without needing to predefine anything like tables.
 
 Second, every object in the database has an ID. If you don't choose an ID for
-an object, L<KiokuDB> will assign a UUID instead. The ID is like a primary key
-in a relational database. If you want to choose an ID for your object, you can
-do something like:
+an object, L<KiokuDB> will assign a UUID instead.
+
+This ID is like a primary key in a relational database.
+
+You can also specify an ID instead of letting one be generated:
 
     $dir->store( homer => $obj );
 
-and C<$obj>'s ID will be C<homer>. If you don't provide an ID a UUID will be
-assigned automatically.
-
 Third, all L<KiokuDB> operations need to be performed within a B<scope>. The
-scope does not apply to a simple example like the above, but becomes necessary
-once weak references are used. We will look into that in more detail later.
+scope is not really doing anything important in this simple example, but
+becomes necessary when cycles and weak references are in use. We will look into
+that in more detail later.
 
 =head1 LOADING OBJECTS
 
@@ -130,27 +129,20 @@ there using the ID we got from C<store>.
     my $homer = $dir->lookup($homer_id);
 
 Assuming that C<$scope> and C<$obj> are still in scope, C<$homer> and C<$obj>
-will actually be the same reference:
+will actually be the same object:
 
+    # this is true:
     refaddr($homer) == refaddr($obj)
 
 This is because L<KiokuDB> tracks which objects are "live" in the
 B<live object set> (L<KiokuDB::LiveObjects>).
 
-If C<$obj> and C<$scope> are no longer in scope you'd need to create a new
-scope, and then fetch the object from the database again:
-
-    my $scope = $dir->new_scope;
-
-    my $homer = $dir->lookup($homer_id);
-
-In this case since the original instance of Homer is no longer live, but has
-been garbage collected by Perl, L<KiokuDB> will fetch it from the backend.
+If the object wasn't already in memory then L<KiokuDB> would have fetched it
+from the backend instead.
 
 =head1 WHAT WAS STORED
 
-Let's peek into the database momentarily. Launch the SQL command line tool to
-your database:
+Let's peek into the database:
 
     % sqlite3 kiokudb_tutorial.db
     SQLite version 3.4.0
@@ -165,7 +157,7 @@ The database schema has two tables, C<entries> and C<gin_index>:
 C<gin_index> is used for more complex queries, and we'll get back to it at the
 end of the tutorial.
 
-Let's have a closer look at C<entries>:
+For now let's just have a closer look at C<entries>:
 
     sqlite> .schema entries
     CREATE TABLE entries (
@@ -181,9 +173,10 @@ The main columns are C<id> and C<data>. In L<KiokuDB> every object has an ID
 which serves as a primary key and a BLOB of data associated with it.
 
 Since the default serializer for the DBI backend is
-L<KiokuDB::Serializer::JSON>, we can peek at the data.
+L<KiokuDB::Serializer::JSON>, we examine the data.
 
-First we'll set C<sqlite>'s output mode to C<line>. This is easier to read with large columns:
+First let's set C<sqlite>'s output mode to C<line>. This is easier to read with
+large columns:
 
     sqlite> .mode line
 
@@ -198,11 +191,11 @@ blob, as is the object's class.
 
 The C<data> column contains all of the data necessary to recreate the object.
 
-All the other columns are used solely for lookups. Later on we'll show how to
-create more search columns.
+All the other columns are only for searches. Later on you'll also see how to
+create user defined columns.
 
-When using L<KiokuDB::Backend::BDB> the on-disk format is actually a hash of
-C<id> to C<data>.
+When using L<KiokuDB::Backend::BDB> the on-disk format is just a hash of C<id>
+to C<data> with no additional columns.
 
 =head1 OBJECT RELATIONSHIPS
 
@@ -283,8 +276,26 @@ If this was not done, by the time C<$homer> was returned from C<lookup> his
 C<spouse> attribute would have been cleared because there is no other reference
 to Marge.
 
-If, on the other hand the circular structure was not weak, it would have to be
-broken manually, which is very error prone.
+This demonstrates why:
+
+    sub get_homer {
+        my $homer = Person->new( name => "Homer Simpson" );
+        my $marge = Person->new( name => "Marge Simpson" ); 
+
+        $homer->spouse($marge);
+        $marge->spouse($homer);
+
+        return $homer;
+
+        # at this point $homer and $marge go out of scope
+        # $homer has a refcount of 1 because it's the return value
+        # $marge has a refcount of 0, and gets destroyed
+        # the weak reference in $homer->spouse is cleared
+    }
+
+    my $homer = get_homer();
+
+    $homer->spouse; # this returns undef
 
 By using this idiom:
 
@@ -296,14 +307,8 @@ By using this idiom:
 
 You are ensuring that the objects live at least as long as is necessary.
 
-In a web application context usually you create one new scope per request.
-
-While scopes can nest, this is not a requirement.
-
-You are free to create as many or as few scopes as you like, as long as there
-is at least one, but note that child scopes refer to their parents to ensure
-that all objects that were already live at the time that a scope is created are
-still alive.
+In a web application context you usually create one new scope per request. In
+fact, L<Catalyst::Model::KiokuDB> does this automatically.
 
 =head1 REFERENCES IN THE DATABASE
 
@@ -331,7 +336,7 @@ storable hooks instead.
 
 =head1 OBJECT SETS
 
-More complex relationships (not necessarily 1 to 1) are fairly easy to model
+More complex relationships (not necessarily 1 to 1) are usually easy to model
 with L<Set::Object>.
 
 Let's extend the C<Person> class to add such a relationship:
@@ -356,7 +361,8 @@ L<KiokuDB::Set> objects are L<KiokuDB> specific wrappers for L<Set::Object>.
     $dir->store($homer);
 
 The C<set> convenience function creates a new L<KiokuDB::Set::Transient>
-object. A transient set is one which started its life in memory space.
+object. A transient set is one which started its life in memory space (as
+opposed to a set that was loaded from the database).
 
 The C<weak_set> convenience function also exists, creating a transient set with
 L<Set::Object::Weak> used internally to help avoid circular structures (for
@@ -392,11 +398,12 @@ During retrieval of objects the same typemap is used to reinflate objects back
 into working objects.
 
 Trying to store an object that is not in the typemap is an error. The reason
-behind this is that many objects depend on runtime states (for instance C<DBI>
-handles need a socket, objects based on XS modules have an internal pointer as
-an integer), and even though the majority of objects are safe to serialize,
-even a small bit of unreported fragility is usually enough to create large,
-hard to debug problems.
+behind this is that it doesn't make sense to store every type of object (for
+instance C<DBI> handles need a socket, objects based on XS modules have an
+internal pointer as an integer, whose address won't be valid the next time it's
+loaded), and even though the majority of objects are safe to serialize, even a
+small bit of unreported fragility is usually enough to create large, hard to
+debug problems.
 
 An exception to this rule is L<Moose> based objects, because they have
 sufficient meta information available through L<Moose>'s powerful reflection
@@ -408,6 +415,13 @@ custom typemap you pass to L<KiokuDB>.
 
 So, in order to actually get L<KiokuDB> to store things like L<Class::Accessor>
 based objects, you can do something like this:
+
+    KiokuDB->new(
+        backend => $backend,
+        allow_classes => [qw(My::Object)],
+    );
+
+Which is shorthand for:
 
     my $dir = KiokuDB->new(
         backend => $backend,
