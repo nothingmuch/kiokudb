@@ -1016,6 +1016,9 @@ Transactions may be nested.
 If the C<scope> argument is true an implicit call to C<new_scope> will be made,
 keeping the scope for the duration of the transaction.
 
+The return value is propagated from the code block, with handling of
+list/scalar/void context.
+
 =item search \%proto
 
 =item search @args
@@ -1028,6 +1031,8 @@ simple but consistent way of looking up objects by attributes.
 The second form is backend specific querying, for instance
 L<Search::GIN::Query> objects passed to L<KiokuDB::Backend::BDB::GIN> or
 the generic GIN backend wrapper L<KiokuDB::GIN>.
+
+Returns a L<Data::Stream::Bulk> of the results.
 
 =item root_set
 
