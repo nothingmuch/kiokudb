@@ -155,6 +155,8 @@ sub compact_data {
         ref && $self->compact_data($_, $flatten) for @$data;
     } elsif ( ref($data) eq 'HASH' ) {
         ref && $self->compact_data($_, $flatten) for values %$data;
+    } elsif ( ref($data) eq 'SCALAR' || ref($data) eq 'REF' ) {
+        $self->compact_data($$data, $flatten);
     } elsif ( ref($data) eq 'KiokuDB::Entry' ) {
         $self->compact_entry($data, $flatten);
     } else {

@@ -24,6 +24,7 @@ sub reftype_entries {
     return (
         $self->KiokuDB::TypeMap::Default::Canonical::reftype_entries,
         SCALAR => "KiokuDB::TypeMap::Entry::JSON::Scalar",
+        REF    => "KiokuDB::TypeMap::Entry::JSON::Scalar",
     );
 }
 

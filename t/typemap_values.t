@@ -25,6 +25,16 @@ use ok "KiokuDB";
         is  => "ro",
     );
 
+    has scalar_ref => (
+        is  => "ro",
+        default => sub { my $x = "foo"; \$x },
+    );
+
+    has scalar_ref_ref => (
+        is  => "ro",
+        default => sub { my $x = "foo"; my $y = \$x; \$y },
+    );
+
     if ( ::HAVE_DATETIME ) {
         has date => (
             isa => "DateTime",
@@ -124,6 +134,15 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
         my $foo = $k->lookup($id);
 
         isa_ok( $foo, "Foo" );
+
+        is( ref($foo->scalar_ref), "SCALAR", "scalar ref" );
+        is_deeply( $foo->scalar_ref, \"foo", "value" );
+
+        {
+            local $TODO = $format eq 'yaml' && "YAML incorrectly thinks scalar refs with weaken backref magic are objects";
+            is( ref($foo->scalar_ref_ref), "REF", "scalar ref (REF reftype)" );
+            is_deeply( $foo->scalar_ref_ref, \\"foo", "value" );
+        }
 
         if ( HAVE_DATETIME ) {
             isa_ok( $foo->date, "DateTime" );
