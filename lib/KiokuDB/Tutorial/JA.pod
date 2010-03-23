@@ -4,8 +4,6 @@
 
 =head1 NAME
 
-(名前)
-
 =begin original
 
 KiokuDB::Tutorial - Getting started with L<KiokuDB>
@@ -20,12 +18,12 @@ KiokuDB::Tutorial - L<KiokuDB>を始めよう
 
 =begin original
 
-The easiest way to install L<KiokuDB> and a number of backends is
+The easiest way to install L<KiokuDB> along with a number of backends is
 L<Task::KiokuDB>.
 
 =end original
 
-L<KiokuDB>とバックエンドを一緒にインストールするには、L<Task::KiokuDB>をインストールするのが一番簡単です。
+L<KiokuDB>とバックエンドと一緒にインストールするには、L<Task::KiokuDB>をインストールするのが一番簡単です。
 
 =begin original
 
@@ -50,13 +48,14 @@ L<DBI>が実際のデータベースへの接続にDBDを使っているのに�
 =begin original
 
 For development and testing you can use the L<KiokuDB::Backend::Hash> backend,
-which is an in memory store, but for production L<KiokuDB::Backend::BDB> or
-L<KiokuDB::Backend::DBI> are the recommended backends.
+which is an in memory store, but for production use L<KiokuDB::Backend::DBI> or
+L<KiokuDB::Backend::BDB> are the recommended backends.
 
 =end original
 
 開発用やテストとして、メモリに保存するL<KiokuDB::Backend::Hash>バックエンドを使うことができます。
-プロダクションには、L<KiokuDB::Backend::DBD>かL<KiokuDB::Backend::DBI>をバックエンドとして推奨します。
+プロダクションには、L<KiokuDB::Backend::DBD>かL<KiokuDB::Backend::DBI>かL<KiokuDB::Backend::BDB>
+をバックエンドとして推奨します。
 
 =begin original
 
@@ -66,22 +65,21 @@ See below for instructions on getting L<KiokuDB::Backend::BDB> installed.
 
 L<KiokuDB::Backend::DBD>をインストールして、以下のインストラクションを見てください。
 
-=head1 CREATING A DIRECTORY
+=head1 CREATING A DIRECTORY HANDLE
 
-(ディレクトリの作成)
+(ディレクトリハンドルの作成)
 
 =begin original
 
-A KiokuDB directory is the object that contains all the common functionality
-regardless of the backend.
+A KiokuDB directory is the main object through which all work is done.
 
 =end original
 
-KiokuDBディレクトリはオブジェクトで、バックエンド以外のすべての共通の機能を含みます。
+KiokuDBディレクトリは、すべての仕事がされるメインのオブジェクトです。
 
 =begin original
 
-The simplest directory ready for use can be created like this:
+The simplest directory that is ready for use can be created like this:
 
 =end original
 
@@ -117,23 +115,24 @@ You can also use DSN strings to connect to the various backends:
 
 =begin original
 
-Or use a configuration file
+You can also use a configuration file:
 
 =end original
 
-または、設定ファイルでも
+設定ファイルを使うこともできます。
 
     KiokuDB->connect("/path/to/my_db.yml");
-    KiokuDB->connect("/path/to/dir");
 
 =begin original
 
-With a configuration file like this:
+Which is just a YAML file:
 
 =end original
 
-設定ファイルは次のようになります:
+設定YAMLファイルです:
 
+    ---
+    # these are basically the arguments for 'new'
     backend:
       class: KiokuDB::Backend::DBI
       dsn: dbi:SQLite:dbname=/tmp/test.db
@@ -146,15 +145,14 @@ With a configuration file like this:
 =begin original
 
 During this tutorial we will be using the DBI backend for two reasons. The
-first is L<DBI>'s ubiquity - almost everyone has used and knows how to install
-and use it. The second the possibility of easily looking behind the scenes, to
-more clearly demonstrate what L<KiokuDB> is doing.
+first is L<DBI>'s ubiquity. The second is the possibility of easily looking
+behind the scenes, to more clearly demonstrate what L<KiokuDB> is doing.
 
 =end original
 
 2つの理由で、このチュートリアルではDBIバックエンドを使います。
-1つ目の理由は、L<DBI>がどこにでもあるからです - ほとんどすべての人がインストール方法も
-使い方も知っています。2つ目の理由は、簡単に裏舞台を見ることが出来るからです。
+1つ目の理由は、L<DBI>がどこにでもあるからです。
+2つ目の理由は、簡単に裏舞台を見ることが出来るからです。
 L<KiokuDB>が何をしているかをよりわかりやすくデモンストレーションできるからです。
 
 =begin original
@@ -175,13 +173,13 @@ The C<$dir> variable used below is created like this:
 
     my $dir = KiokuDB->connect(
         "dbi:SQLite:dbname=kiokudb_tutorial.db",
-        create => 1,
+        create => 1, # this causes the tables to be created
     );
 
 =begin original
 
-Note that if you are connecting with a username and password you must specify
-these as named arguments:
+Note that if you are connecting with a username and password you need to
+specify these as named arguments:
 
 =end original
 
@@ -246,7 +244,7 @@ things.
 
 =begin original
 
-First, no schema is necessary. L<KiokuDB> can use L<Moose> to introspect your
+First, no schema is necessary. L<KiokuDB> uses L<Moose> to introspect your
 object without needing to predefine anything like tables.
 
 =end original
@@ -257,39 +255,40 @@ object without needing to predefine anything like tables.
 =begin original
 
 Second, every object in the database has an ID. If you don't choose an ID for
-an object, L<KiokuDB> will assign a UUID instead. The ID is like a primary key
-in a relational database. If you want to choose an ID for your object, you can
-do something like:
+an object, L<KiokuDB> will assign a UUID instead.
 
 =end original
 
 2番目に、データベースに入っているすべてのオブジェクトにはIDがあります。
 オブジェクトにIDを選ばなけれあば、L<KiokuDB>が代わりにUUIDを割り当てます。
+
+=begin original
+
+This ID is like a primary key in a relational database.
+
+You can also specify an ID instead of letting one be generated:
+
+=end original
+
 IDはリレーショナルデータベースのプライマリーキーのようなものです。
+
 自分でオブジェクトにIDを振りたければ、次のようにすることができます:
 
     $dir->store( homer => $obj );
 
 =begin original
 
-and C<$obj>'s ID will be C<homer>. If you don't provide an ID a UUID will be
-assigned automatically.
-
-=end original
-
-これで、C<$obj>のIDはC<homer>になります。IDを与えなければ、UUIDが自動的にふられます。
-
-=begin original
-
 Third, all L<KiokuDB> operations need to be performed within a B<scope>. The
-scope does not apply to a simple example like the above, but becomes necessary
-once weak references are used. We will look into that in more detail later.
+scope is not really doing anything important in this simple example, but
+becomes necessary when cycles and weak references are in use. We will look into
+that in more detail later.
 
 =end original
 
 3番目に、すべてのL<KiokuDB>操作はB<scope>内で行う必要があります。
-スコープは上のような簡単な例には適しませんが、weakリファレンスが使われるようになると、
-必要になります。後でより詳細に見ていきます。
+スコープは上のような簡単な例では大して重要ではありませんが、
+循環参照やweakリファレンスが使われるようになると、必要になります。
+後でより詳細に見ていきます。
 
 =head1 LOADING OBJECTS
 
@@ -309,12 +308,13 @@ there using the ID we got from C<store>.
 =begin original
 
 Assuming that C<$scope> and C<$obj> are still in scope, C<$homer> and C<$obj>
-will actually be the same reference:
+will actually be the same object:
 
 =end original
 
-C<$scope>とC<$obj>は、スコープ内にあるとします。C<$homer>とC<$obj>は実際に、同じリファレンスになります。
+C<$scope>とC<$obj>は、スコープ内にあるとします。C<$homer>とC<$obj>は実際に、同じオブジェクトになります。
 
+    # this is true:
     refaddr($homer) == refaddr($obj)
 
 =begin original
@@ -329,28 +329,13 @@ B<生存しているオブジェクトセット> (L<KiokuDB::LiveObjects>)内の
 
 =begin original
 
-If C<$obj> and C<$scope> are no longer in scope you'd need to create a new
-scope, and then fetch the object from the database again:
+If the object wasn't already in memory then L<KiokuDB> would have fetched it
+from the backend instead.
 
 =end original
 
-C<$obj>とC<$scope>が、もうスコープにいなければ、新しいスコープを作らなければいけません。
-それから、再びデータベースからオブジェクトを取り出します:
-
-    my $scope = $dir->new_scope;
-
-    my $homer = $dir->lookup($homer_id);
-
-=begin original
-
-In this case since the original instance of Homer is no longer live, but has
-been garbage collected by Perl, L<KiokuDB> will fetch it from the backend.
-
-=end original
-
-このケースではHomerのオリジナルのインスタンスはもはや生きておらず、
-Perlによりガベージコレクトされています。
-L<KiokuDB>はインスタンスをバックエンドから取得します。
+オブジェクト既にメモリにあるなら、L<KiokuDB>はインスタンスを
+バックエンドから取得します。
 
 =head1 WHAT WAS STORED
 
@@ -358,12 +343,11 @@ L<KiokuDB>はインスタンスをバックエンドから取得します。
 
 =begin original
 
-Let's peek into the database momentarily. Launch the SQL command line tool to
-your database:
+Let's peek into the database:
 
 =end original
 
-すぐにデータベースを覗いてみましょう。SQLコマンドラインツールを起動しましょう:
+データベースを覗いてみましょう:
 
     % sqlite3 kiokudb_tutorial.db
     SQLite version 3.4.0
@@ -392,11 +376,11 @@ C<gin_index>はより複雑なクエリに使われます。チュートリア�
 
 =begin original
 
-Let's have a closer look at C<entries>:
+For now let's just have a closer look at C<entries>:
 
 =end original
 
-C<entries>をよく見ましょう:
+さて、C<entries>に近付いてよく見ましょう:
 
     sqlite> .schema entries
     CREATE TABLE entries (
@@ -421,20 +405,22 @@ which serves as a primary key and a BLOB of data associated with it.
 =begin original
 
 Since the default serializer for the DBI backend is
-L<KiokuDB::Serializer::JSON>, we can peek at the data.
+L<KiokuDB::Serializer::JSON>, we examine the data.
 
 =end original
 
 DBIバックエンドのデフォルトのシリアライザーはL<KiokuDB::Serializer::JSON>ですので、
-データを覗き見ることができます。
+データを調査できます。
 
 =begin original
 
-First we'll set C<sqlite>'s output mode to C<line>. This is easier to read with large columns:
+First let's set C<sqlite>'s output mode to C<line>. This is easier to read with
+large columns:
 
 =end original
 
-最初に、C<sqlite>の出力モードをC<line>にセットしてください。大きいカラムでも見やすくなります:
+最初に、C<sqlite>の出力モードをC<line>にセットしましょう。大きいカラムでも
+見やすくなります:
 
     sqlite> .mode line
 
@@ -469,21 +455,23 @@ C<data>カラムはオブジェクトを再作成するのに必要なすべて�
 
 =begin original
 
-All the other columns are used solely for lookups. Later on we'll show how to
-create more search columns.
+All the other columns are only for searches. Later on you'll also see how to
+create user defined columns.
 
 =end original
 
-他のすべてのカラムは単に検索のために使われます。後で、どのように検索用のカラムを作るのかを見せます。
+他のすべてのカラムは検索のためだけに使われます。後で、どのようにユーザー定義のカラムを
+作るのかを見せます。
 
 =begin original
 
-When using L<KiokuDB::Backend::BDB> the on-disk format is actually a hash of
-C<id> to C<data>.
+When using L<KiokuDB::Backend::BDB> the on-disk format is just a hash of C<id>
+to C<data> with no additional columns.
 
 =end original
 
-L<KiokuDB::Backend::DBD>を使った場合は、ディスク上のフォーマットは、実際には、C<id>からC<data>のハッシュになります。
+L<KiokuDB::Backend::DBD>を使った場合は、ディスク上のフォーマットは、C<id>からC<data>のハッシュになり、
+他の追加のカラムはありません。
 
 =head1 OBJECT RELATIONSHIPS
 
@@ -642,13 +630,30 @@ C<spouse>属性がクリアされます。マージする他のリファレン�
 
 =begin original
 
-If, on the other hand the circular structure was not weak, it would have to be
-broken manually, which is very error prone.
+This demonstrates why:
 
 =end original
 
-もし、一方で、循環構造がweakでなければ、手で壊さなければいけません。
-これは、とてもエラーになりやすいです。
+次のコードが理由をデモンストレートします:
+
+    sub get_homer {
+        my $homer = Person->new( name => "Homer Simpson" );
+        my $marge = Person->new( name => "Marge Simpson" ); 
+
+        $homer->spouse($marge);
+        $marge->spouse($homer);
+
+        return $homer;
+
+        # at this point $homer and $marge go out of scope
+        # $homer has a refcount of 1 because it's the return value
+        # $marge has a refcount of 0, and gets destroyed
+        # the weak reference in $homer->spouse is cleared
+    }
+
+    my $homer = get_homer();
+
+    $homer->spouse; # this returns undef
 
 =begin original
 
@@ -674,31 +679,13 @@ You are ensuring that the objects live at least as long as is necessary.
 
 =begin original
 
-In a web application context usually you create one new scope per request.
+In a web application context you usually create one new scope per request. In
+fact, L<Catalyst::Model::KiokuDB> does this automatically.
 
 =end original
 
 Webアプリケーションのコンテキストでは、普通リクエストごとに新しいスコープを作ります。
-
-=begin original
-
-While scopes can nest, this is not a requirement.
-
-=end original
-
-スコープがネストできるなら、必須ではありません。
-
-=begin original
-
-You are free to create as many or as few scopes as you like, as long as there
-is at least one, but note that child scopes refer to their parents to ensure
-that all objects that were already live at the time that a scope is created are
-still alive.
-
-=end original
-
-少なくとも一つのスコープがあれば、好きなだけ多くの、または、少ないスコープを作ることができます。
-その時に作られたスコープにすでにあるすべてのオブジェクトを確実にする親を参照している子供のスコープもまだ生きています。
+実際、L<Catalyst::Model::KiokuDB>は、自動的にそうしています。
 
 =head1 REFERENCES IN THE DATABASE
 
@@ -761,12 +748,12 @@ L<KiokuDB::Backend::Storable>を使うと、L<KiokuDB::Entry>とL<KiokuDB::Refer
 
 =begin original
 
-More complex relationships (not necessarily 1 to 1) are fairly easy to model
+More complex relationships (not necessarily 1 to 1) are usually easy to model
 with L<Set::Object>.
 
 =end original
 
-より複雑なリレーションシップ(1対1に限らない)は、L<Set::Object>でかなり簡単にモデル化できます。
+より複雑なリレーションシップ(1対1に限らない)は、L<Set::Object>でふつう簡単にモデル化できます。
 
 =begin original
 
@@ -805,12 +792,14 @@ L<KiokuDB::Set>オブジェクトは、L<Set::Object>のL<KiokuDB>用のラッ�
 =begin original
 
 The C<set> convenience function creates a new L<KiokuDB::Set::Transient>
-object. A transient set is one which started its life in memory space.
+object. A transient set is one which started its life in memory space (as
+opposed to a set that was loaded from the database).
 
 =end original
 
 C<set>という便利な関数は新しいL<KiokuDB::Set::Transient>オブジェクトを作ります。
-一時的なセットはメモリスペースに存在するものです。
+一時的なセットはメモリスペースに存在するものです
+(データベースからロードされたセットとは反対に)。
 
 =begin original
 
@@ -906,17 +895,19 @@ into working objects.
 =begin original
 
 Trying to store an object that is not in the typemap is an error. The reason
-behind this is that many objects depend on runtime states (for instance C<DBI>
-handles need a socket, objects based on XS modules have an internal pointer as
-an integer), and even though the majority of objects are safe to serialize,
-even a small bit of unreported fragility is usually enough to create large,
-hard to debug problems.
+behind this is that it doesn't make sense to store every type of object (for
+instance C<DBI> handles need a socket, objects based on XS modules have an
+internal pointer as an integer, whose address won't be valid the next time it's
+loaded), and even though the majority of objects are safe to serialize, even a
+small bit of unreported fragility is usually enough to create large, hard to
+debug problems.
 
 =end original
 
-typemapにないオブジェクトを保存しようとするとエラーになります。
-ランタイムの状態に依存する多くのオブジェクトがあるためです(例えば、C<DBI>はソケット、オブジェクト。
-XSベースのモジュールは数値のような内部的なポインタを持ちます)。
+typemapにないオブジェクトを保存しようとするとエラーになります。その理由は
+すべてのタイプのオブジェクトを保存できるか分からないからです。(例えば、
+C<DBI>はソケット、オブジェクト。XSベースのモジュールは数値のような内部的な
+ポインタを持ちます。そのアドレスは次回のロード時には正しくなくなっています)。
 大半のオブジェクトは安全にシリアライズできるにもかかわらず、
 わずかな報告されないもろさが、大きなデバッグの難しい問題を作るのはありがちなことです。
 
@@ -953,6 +944,19 @@ based objects, you can do something like this:
 
 それで、実際にL<KiokuDB>にL<Class::Accessor>ベースのオブジェクトのようなものを保存させるには、
 次のようにします:
+
+    KiokuDB->new(
+        backend => $backend,
+        allow_classes => [qw(My::Object)],
+    );
+
+=begin original
+
+Which is shorthand for:
+
+=end original
+
+これは次の省略形です:
 
     my $dir = KiokuDB->new(
         backend => $backend,
@@ -1229,7 +1233,7 @@ the entries and matches fields.
 =end original
 
 ほとんどのバックエンドが効率的ではないものの、便利な単純な検索があります。
-ろえは、エントリをスキャンして、フィールドにマッチさせます。
+これは、エントリをスキャンして、フィールドにマッチさせます。
 
 =begin original
 
