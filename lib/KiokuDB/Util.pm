@@ -34,6 +34,7 @@ my %monikers = (
     "jspon"   => "JSPON",
     "files"   => "Files",
     "couchdb" => "CouchDB",
+    "mongodb" => "MongoDB",
 );
 
 sub _try_json {
