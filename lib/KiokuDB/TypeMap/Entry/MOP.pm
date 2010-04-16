@@ -132,7 +132,7 @@ sub compile_collapse_body {
     my @extra_args;
 
     if ( defined( my $version = $meta->version ) ) {
-        push @extra_args, class_version => $version;
+        push @extra_args, class_version => "$version"; # force stringification for version objects
     }
 
     return (
