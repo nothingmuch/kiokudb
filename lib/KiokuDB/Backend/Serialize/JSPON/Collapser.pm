@@ -12,7 +12,7 @@ use namespace::clean -except => 'meta';
 with qw(KiokuDB::Backend::Serialize::JSPON::Converter);
 
 has reserved_key => (
-    isa => "Regexp",
+    isa => "RegexpRef",
     is  => "ro",
     lazy_build => 1,
 );
