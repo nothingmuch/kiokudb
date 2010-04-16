@@ -1,3 +1,12 @@
+0.42
+    - Update translation of tutorial (ktat)
+    - use RegexpRef type constraint instead of Regexp (Regexp look blessed but
+      not in C land) (doy)
+    - Force stringification of version objects before serialization
+    - 'mongodb' DSN moniker (omega)
+    - Typemap support for the REF reftype (just an alias for SCALAR)
+    - misc doc fixes
+
 0.41
     - Re-release without extra crap in the tarball.
 
