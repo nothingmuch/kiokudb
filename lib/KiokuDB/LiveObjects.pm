@@ -329,7 +329,12 @@ sub insert_entries {
 
     my $ei = $self->_entry_ids;
     @{ $self->_entry_objects }{@entries} = map { KiokuDB::LiveObjects::Guard->new( $ei, $_ ) } @ids;
-    weaken($_) for @{$ei}{@ids} = @entries;
+
+    {
+        no warnings;
+        weaken($_) for @{$ei}{@ids} = @entries;
+    }
+
     return;
 }
 
