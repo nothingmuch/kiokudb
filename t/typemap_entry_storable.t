@@ -96,7 +96,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer ) = $v->collapse( objects => [ $obj ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -122,7 +122,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer, $id ) = $v->collapse( objects => [ $deep ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 2, "two entries" );
 
@@ -150,7 +150,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer, $id ) = $v->collapse( objects => [ $circular ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 2, "two entries" );
 
@@ -182,7 +182,7 @@ is_deeply( [ $l->live_objects->live_objects ], [], "no live objects" );
 
     my ( $buffer ) = $v->collapse( objects => [ $attach ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 

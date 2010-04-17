@@ -64,7 +64,7 @@ SKIP: {
 
     my ( $buffer, $id ) = $c->collapse(objects => [ $obj ]);
 
-    my $entry = $buffer->entries->{$id};
+    my $entry = $buffer->id_to_entry($id);
 
     isa_ok( $entry->data->{yes}, "JSON::Boolean", "boolean passed through" );
 

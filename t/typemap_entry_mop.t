@@ -151,7 +151,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $obj ],  );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         my $entry = $entries->{$id};
 
@@ -188,7 +188,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $deep ],  );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         my $entry = $entries->{$id};
 
@@ -237,7 +237,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $anon_parent ] );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         my $entry = $entries->{$id};
 
@@ -296,7 +296,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $obj_with_value ] );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         my $entry = $entries->{$id};
 
@@ -333,7 +333,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $once ] );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         is( scalar(keys %$entries), 1, "one entry" );
 
@@ -365,7 +365,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my ( $buffer, $id ) = $v->collapse( objects => [ $deep ],  );
 
-        my $entries = $buffer->entries;
+        my $entries = $buffer->_entries;
 
         my $entry = $entries->{$id};
 

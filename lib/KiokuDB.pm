@@ -538,8 +538,6 @@ sub store_objects {
 
     my ( $buffer, @ids ) = $self->collapser->collapse(%args);
 
-    my $entries = $buffer->entries;
-
     $buffer->imply_root(@ids) if $args{root_set};
 
     $buffer->insert_to_backend($self->backend);

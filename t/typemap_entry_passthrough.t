@@ -68,7 +68,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer ) = $v->collapse( objects => [ $foo ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -89,7 +89,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer ) = $v->collapse( objects => [ $bar ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -114,7 +114,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer ) = $v->collapse( objects => [ $bar ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 
@@ -136,7 +136,7 @@ my $l = KiokuDB::Linker->new(
 
     my ( $buffer ) = $v->collapse( objects => [ $bar ],  );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(keys %$entries), 1, "one entry" );
 

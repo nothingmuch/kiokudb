@@ -75,7 +75,7 @@ for my $i ( 0, 1 ) {
 
     my ( $buffer, @ids ) = $v->collapse( objects => [ $obj ] );
 
-    my $entries = $buffer->entries;
+    my $entries = $buffer->_entries;
 
     is( scalar(@ids), 1, "one root set ID" );
 

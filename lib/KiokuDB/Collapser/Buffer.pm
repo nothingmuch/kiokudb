@@ -48,14 +48,19 @@ sub id_to_object {
 }
 
 has entries => (
+    traits => ["Hash"],
     isa => "HashRef",
-    is  => "ro",
+    reader => "_entries",
     default  => sub { return {} },
+    handles => {
+        entries => "values",
+        ids     => "keys",
+    },
 );
 
 sub id_to_entry {
     my ( $self, $id ) = @_;
-    $self->entries->{$id};
+    $self->_entries->{$id};
 }
 
 has intrinsic => (
@@ -105,13 +110,13 @@ sub insert {
 sub insert_entry {
     my ( $self, $id, $entry ) = @_;
 
-    $self->entries->{$id} = $entry;
+    $self->_entries->{$id} = $entry;
 }
 
 sub compact_entries {
     my $self = shift;
 
-    my ( $entries, $fc, $simple, $options ) = ( $self->entries, $self->first_class, $self->simple_entries, $self->options );
+    my ( $entries, $fc, $simple, $options ) = ( $self->_entries, $self->first_class, $self->simple_entries, $self->options );
 
     # unify non shared simple references
     if ( my @flatten = grep { not $fc->includes($_) } @$simple ) {
@@ -169,7 +174,7 @@ sub compact_data {
 sub imply_root {
     my ( $self, @ids ) = @_;
 
-    my $entries = $self->entries;
+    my $entries = $self->_entries;
 
     foreach my $id ( @ids ) {
         my $entry = $entries->{$id} or next;
@@ -181,7 +186,7 @@ sub imply_root {
 sub insert_to_backend {
     my ( $self, $backend ) = @_;
 
-    my @insert = values %{ $self->entries };
+    my @insert = values %{ $self->_entries };
 
     $backend->insert(@insert);
 
@@ -193,7 +198,7 @@ sub update_entries {
 
     my $l = $self->live_objects;
    
-    $l->update_entries( values %{ $self->entries } );
+    $l->update_entries( values %{ $self->_entries } );
 }
 
 __PACKAGE__->meta->make_immutable;
