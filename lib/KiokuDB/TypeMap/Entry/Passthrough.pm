@@ -7,6 +7,8 @@ use Carp qw(croak);
 
 use KiokuDB::TypeMap::Entry::Compiled;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry);

@@ -1,6 +1,8 @@
 package KiokuDB::TypeMap::Entry::Std::Expand;
 use Moose::Role;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 requires qw(

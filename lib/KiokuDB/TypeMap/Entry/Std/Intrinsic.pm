@@ -1,6 +1,8 @@
 package KiokuDB::TypeMap::Entry::Std::Intrinsic;
 use Moose::Role;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 requires qw(compile_collapse_body);

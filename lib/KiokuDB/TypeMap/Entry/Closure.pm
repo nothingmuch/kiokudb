@@ -4,6 +4,8 @@ use Moose;
 use Carp qw(croak);
 use Scalar::Util qw(refaddr);
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);

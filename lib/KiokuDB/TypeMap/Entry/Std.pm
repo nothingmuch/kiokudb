@@ -5,8 +5,6 @@ use Moose::Role;
 
 use KiokuDB::TypeMap::Entry::Compiled;
 
-no warnings 'recursion';
-
 use namespace::clean -except => 'meta';
 
 with qw(

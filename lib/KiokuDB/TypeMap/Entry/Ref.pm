@@ -1,6 +1,8 @@
 package KiokuDB::TypeMap::Entry::Ref;
 use Moose;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 with qw(

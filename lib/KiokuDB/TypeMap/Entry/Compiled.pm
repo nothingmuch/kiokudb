@@ -1,6 +1,8 @@
 package KiokuDB::TypeMap::Entry::Compiled;
 use Moose;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 has [qw(expand_method collapse_method id_method refresh_method)] => (

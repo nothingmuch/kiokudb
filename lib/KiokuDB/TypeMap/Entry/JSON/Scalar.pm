@@ -1,6 +1,8 @@
 package KiokuDB::TypeMap::Entry::JSON::Scalar;
 use Moose;
 
+no warnings 'recursion';
+
 use namespace::clean -except => 'meta';
 
 with qw(KiokuDB::TypeMap::Entry::Std);
