@@ -310,9 +310,11 @@ sub lookup {
             return @objects;
         }
     } catch {
-        die $_ unless ref and $_->{missing};
+          return if blessed($_)
+                and $_->isa("KiokuDB::Error::MissingObjects")
+                and $_->missing_ids_are(@ids);
 
-        return;
+          die $_;
     };
 }
 

@@ -13,6 +13,7 @@ use KiokuDB::Entry;
 use KiokuDB::Entry::Skip;
 use KiokuDB::Reference;
 use KiokuDB::Collapser::Buffer;
+use KiokuDB::Error::UnknownObjects;
 
 use Data::Visitor 0.18;
 
@@ -168,7 +169,7 @@ sub visit_seen {
         # return a uuid ref
         return $self->make_ref( $id => $_[1] );
     } else {
-        die { unknown => $seen };
+        KiokuDB::Error::UnknownObjects->throw( objects => [ $seen ] );
     }
 }
 
@@ -208,7 +209,7 @@ sub visit_ref_fallback {
         # compacting it later.
         return $self->SUPER::visit_ref($_[1]);
     } else {
-        die { unknown => $ref };
+        KiokuDB::Error::UnknownObjects->throw( objects => [ $ref ] );
     }
 }
 
@@ -233,7 +234,7 @@ sub _ref_id {
                 # and we generate an error if we encounter this data again in visit_seen
                 return;
             } else {
-                die { unknown => $ref };
+                KiokuDB::Error::UnknownObjects->throw( objects => [ $ref ] );
             }
         } else {
             my $id = $self->generate_uuid;
@@ -312,7 +313,7 @@ sub collapse_first_class {
             if ( $prev ) {
                 return $self->make_ref( $prev->id => $_[2] );
             } else {
-                die { unknown => $object };
+                KiokuDB::Error::UnknownObjects->throw( objects => [ $object ] );
             }
         }
     }
@@ -321,7 +322,7 @@ sub collapse_first_class {
 
     unless ( $id ) {
         if ( $o->{only_known} ) {
-            die { unknown => $object };
+            KiokuDB::Error::UnknownObjects->throw( objects => [ $object ] );
         } else {
             my $id_method = $self->id_method(ref $object);
 

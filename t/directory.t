@@ -5,6 +5,7 @@ use warnings;
 
 use Test::More;
 use Test::Exception;
+use Try::Tiny;
 
 BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok { SKIP: { skip "Test::Memory::Cycle missing", 1 }}' }
 
@@ -519,15 +520,17 @@ no_live_objects;
 
         $obj->bar( $child );
 
-        eval { $dir->update($obj) };
-
-        is_deeply( $@, { unknown => $child }, "update with a partial object" );
+        $@ = "";
+        try {
+            $dir->update($obj);
+            fail("expected error");
+        } catch {
+            is_deeply( $_, KiokuDB::Error::UnknownObjects->new( objects => [ $child ] ), "update with a partial object" );
+        };
 
         $dir->insert($child);
 
-        eval { $dir->update($obj) };
-
-        ok( !$@, "no error this time" );
+        lives_ok { $dir->update($obj) } "no error this time";
     }
 
     {

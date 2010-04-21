@@ -4,6 +4,8 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Exception;
+use Try::Tiny;
 
 use Scalar::Util qw(weaken isweak);
 use Storable qw(dclone);
@@ -23,6 +25,18 @@ $_->make_mutable, $_->make_immutable for KiokuDB::Entry->meta; # recreate new
 
 
 use Tie::RefHash;
+
+sub unknown_ok (&@) {
+    my ( $block, @objects ) = @_;
+
+    local $@ = "";
+    try {
+        $block->();
+        fail("should have died");
+    } catch {
+        is_deeply( $_, KiokuDB::Error::UnknownObjects->new( objects => \@objects), "correct error" );
+    };
+}
 
 {
     package Foo;
@@ -73,37 +87,26 @@ use Tie::RefHash;
             },
         ),
     );
-
-    {
-        my ( $buffer ) = eval { $v->collapse( objects => [ $foo ], only_known => 1 ) };
-        is_deeply( $@, { unknown => $foo }, "error" );
-        is( $buffer, undef, "no entries for known obj collapse" );
-    }
+ 
+    unknown_ok { $v->collapse( objects => [ $foo ], only_known => 1 ) } $foo;
 
     {
         my $obj = Foo->new( bar => $foo->bar );
 
         $v->live_objects->insert( foo => $obj );
 
-        my ( $buffer ) = eval { $v->collapse( objects => [ $obj ], only_known => 1 ) };
-        is_deeply( $@, { unknown => $foo->bar }, "error" );
-        is( $buffer, undef, "no entries for known obj collapse" );
+        unknown_ok { $v->collapse( objects => [ $obj ], only_known => 1 ) } $foo->bar;
     }
 
     $v->live_objects->insert( bar => $foo->bar );
 
-    {
-        my ( $buffer ) = eval { $v->collapse( objects => [ $foo ], only_known => 1 ) };
-        is_deeply( $@, { unknown => $foo }, "error" );
-        is( $buffer, undef, "no entries for known obj collapse" );
-    }
+    unknown_ok { $v->collapse( objects => [ $foo ], only_known => 1 ) } $foo;
 
-    {
-        my ( $buffer ) = eval  { $v->collapse( objects => [ $foo->bar ], only_known => 1 ) };
-        is( $@, "", "no error" );
+    lives_ok {
+        my ( $buffer ) = $v->collapse( objects => [ $foo->bar ], only_known => 1 );
         isa_ok( $buffer, "KiokuDB::Collapser::Buffer" );
         is( scalar(values %{ $buffer->_entries }), 1, "one entry for known obj collapse" );
-    }
+    };
 
     my ( $buffer, $id, @rest ) = $v->collapse( objects => [ $foo ] );
 
@@ -385,9 +388,7 @@ use Tie::RefHash;
 
     $v->live_objects->insert( obj => $obj );
 
-    my ( $buffer ) = eval { $v->collapse( objects => [ $obj ], only_known => 1 ) };
-    is_deeply( $@, { unknown => $data }, "error" );
-    is( $buffer, undef, "no entries for known obj collapse with circular simple structure" );
+    unknown_ok { $v->collapse( objects => [ $obj ], only_known => 1 ) } $data;
 }
 
 {
@@ -782,8 +783,8 @@ use Tie::RefHash;
         $buffer->update_entries;
     }
 
-    {
-        my ( $buffer, @ids ) = eval { $v->collapse( objects => [ $foo_4 ], only_new => 1 ) };
+    lives_ok {
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_4 ], only_new => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -804,7 +805,7 @@ use Tie::RefHash;
             ],
             "references",
         );
-    }
+    };
 }
 
 

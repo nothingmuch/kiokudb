@@ -15,6 +15,8 @@ use Scalar::Util qw(reftype weaken);
 use Symbol qw(gensym);
 use Tie::ToObject;
 
+use KiokuDB::Error::MissingObjects;
+
 use namespace::clean -except => 'meta';
 
 has live_objects => (
@@ -292,7 +294,8 @@ sub load_entries {
         my %entries;
         @entries{@ids} = @entries;
         my @missing = grep { !$entries{$_} } @ids;
-        die { missing => \@missing };
+
+        KiokuDB::Error::MissingObjects->throw( missing => \@missing );
     }
 
     $self->live_objects->insert_entries( @entries );
@@ -347,7 +350,8 @@ sub get_or_load_entry {
 sub load_entry {
     my ( $self, $id ) = @_;
 
-    my $entry = ( $self->backend->get($id) )[0] || die { missing => [ $id ] };
+    my $entry = ( $self->backend->get($id) )[0]
+        or KiokuDB::Error::MissingObjects->throw( ids => [ $id ] );
 
     $self->live_objects->insert_entries($entry);
 
