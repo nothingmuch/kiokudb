@@ -262,8 +262,10 @@ sub verify {
         
         SKIP: {
             skip "Not possible with JSON atm", 1 if (
-                $self->directory->backend->can("serializer")
-                and $self->directory->backend->serializer->isa('KiokuDB::Serializer::JSON')
+                ( $self->directory->backend->can("serializer")
+                and $self->directory->backend->serializer->isa('KiokuDB::Serializer::JSON') )
+                or $self->directory->backend->does("KiokuDB::Backend::Serialize::JSON")
+                or $self->directory->backend->does("KiokuDB::Backend::Serialize::JSPON")
             );
             
             isa_ok( $date->formatter, "DateTime::Format::Strptime" );
