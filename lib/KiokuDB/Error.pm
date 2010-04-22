@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 with qw(Throwable);
 
-requires qw(stringify);
+requires qw(as_string);
 
 # ex: set sw=4 et:
 

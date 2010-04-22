@@ -3,7 +3,7 @@ use Moose;
 
 use namespace::clean -except => "meta"; # autoclean kills overloads
 
-use overload '""' => "stringify";
+use overload '""' => "as_string";
 
 with qw(KiokuDB::Error);
 
@@ -15,7 +15,7 @@ has ids => (
 
 sub ids { @{ shift->_ids } }
 
-sub stringify {
+sub as_string {
     my $self = shift;
 
     local $, = ", ";
