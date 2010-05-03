@@ -295,7 +295,7 @@ sub load_entries {
         @entries{@ids} = @entries;
         my @missing = grep { !$entries{$_} } @ids;
 
-        KiokuDB::Error::MissingObjects->throw( missing => \@missing );
+        KiokuDB::Error::MissingObjects->throw( ids => \@missing );
     }
 
     $self->live_objects->insert_entries( @entries );
