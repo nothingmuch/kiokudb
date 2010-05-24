@@ -1,5 +1,19 @@
 === Small ===
 
+* move live object leak reporting from Catalyst::Model into mainline
+
+* scope directory handles KiokuDB::API
+
+* scoped_txn method (txn_do( scope => 1, body => ... )
+
+* test for data migration
+    * two directories, make sure whole graphs and subgraphs can be moved between
+    * especially KiokuDB::Set and other directory aware objects
+
+* Attribute traits
+    * KiokuDB::ID (kiokudb_object_id like, but not stored in 'data')
+    * KiokuDB::Backend/KiokuDB::Directory (for directory aware objects)
+
 * Doc work
     * Doc audit
         * make a doc todo list
