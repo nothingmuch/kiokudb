@@ -44,6 +44,7 @@ sub collapse_jspon {
                 ( $data->root ? ( $self->root_field => JSON::true() ) : () ),
                 ( $data->deleted ? ( $self->deleted_field => JSON::true() ) : () ),
                 ( $data->has_tied ? ( $self->tied_field => $data->tied ) : () ),
+                ( defined $data->backend_data ? ( $self->backend_data_field => $data->tied ) : () ),
                 ( $self->inline_data
                     ? %{ $self->collapse_jspon($data->data) }
                     : ( $self->data_field => $self->collapse_jspon($data->data) )

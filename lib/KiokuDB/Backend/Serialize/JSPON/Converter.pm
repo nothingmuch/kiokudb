@@ -10,11 +10,13 @@ sub _jspon_fields {
         id
         class
         class_meta
+        class_version
         root
         deleted
         tied
         ref
         data
+        backend_data
     );
 }
 
@@ -34,6 +36,12 @@ has class_meta_field => (
     isa => "Str",
     is  => "ro",
     default => "__META__",
+);
+
+has class_version_field => (
+    isa => "Str",
+    is  => "ro",
+    default => "__VERSION__",
 );
 
 has root_field => (
@@ -64,6 +72,12 @@ has data_field => (
     isa => "Str",
     is  => "ro",
     default => "data",
+);
+
+has backend_data_field => (
+    isa => "Str",
+    is  => "ro",
+    default => "backend_data",
 );
 
 has inline_data => (

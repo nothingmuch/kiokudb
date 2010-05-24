@@ -30,8 +30,14 @@ sub _build__expander {
 
     my $expander;
 
-    my ( $ref_field, $id_field, $data_field, $class_field, $tied_field, $root_field, $deleted_field, $class_meta_field ) =
-        map { my $m = $_ . "_field"; $self->$m() } qw(ref id data class tied root deleted class_meta);
+    my (
+        $ref_field,     $id_field,         $data_field,
+        $class_field,   $tied_field,       $root_field,
+        $deleted_field, $class_meta_field, $class_version_field,
+        $backend_data_field
+      )
+      = map { my $m = $_ . "_field"; $self->$m() }
+      qw(ref id data class tied root deleted class_meta class_version backend_data);
 
     unless ( $self->inline_data ) {
         my $data_field_re = qr/\. \Q$data_field\E $/x;
@@ -53,13 +59,15 @@ sub _build__expander {
                             my ($class, $version, $authority) = (split '-' => $data->{$class_field});
                             push @attrs, class => $class;
 
-                            push @attrs, class_meta => $data->{$class_meta_field} if exists $data->{$class_meta_field};
+                            push @attrs, class_meta    => $data->{$class_meta_field} if exists $data->{$class_meta_field};
+                            push @attrs, class_version => $data->{$class_meta_field} if exists $data->{$class_version_field};
                         }
 
-                        push @attrs, id      => $data->{$id_field}                 if exists $data->{$id_field};
-                        push @attrs, tied    => substr($data->{$tied_field}, 0, 1) if exists $data->{$tied_field};
-                        push @attrs, root    => $data->{$root_field}    ? 1 : 0    if exists $data->{$root_field};
-                        push @attrs, deleted => $data->{$deleted_field} ? 1 : 0    if exists $data->{$deleted_field};
+                        push @attrs, id           => $data->{$id_field}                 if exists $data->{$id_field};
+                        push @attrs, tied         => substr($data->{$tied_field}, 0, 1) if exists $data->{$tied_field};
+                        push @attrs, root         => $data->{$root_field}    ? 1 : 0    if exists $data->{$root_field};
+                        push @attrs, deleted      => $data->{$deleted_field} ? 1 : 0    if exists $data->{$deleted_field};
+                        push @attrs, backend_data => $data->{$backend_data_field}       if exists $data->{$backend_data_field};
 
                         push @attrs, data => $expander->( $data->{$data_field} );
 
