@@ -32,6 +32,11 @@ attr _objects => (
     default  => sub { Set::Object->new },
 );
 
+sub clone {
+    my ( $self, @args ) = @_;
+    $self->_clone(@args);
+}
+
 sub _clone {
     my ( $self, %args ) = @_;
     $args{set} ||= $self->_clone_object_set;
