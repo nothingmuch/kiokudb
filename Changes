@@ -1,3 +1,11 @@
+0.43
+    - Now throws proper error objects instead of unintelligiable hash refs
+    - Fix JSON serialization (omitted keys necessary for version tracking and
+      GIN indexing)
+    - Add a 'clone' method to KiokuDB::Set
+    - Suppress additional recursion and repeated weaken() warnings
+    - Try harder to skip DateTime formatter serialization roundtripping on JSON based backends
+
 0.42
     - Update translation of tutorial (ktat)
     - use RegexpRef type constraint instead of Regexp (Regexp look blessed but
