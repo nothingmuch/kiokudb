@@ -1,7 +1,7 @@
 package KiokuDB::Error;
 use Moose::Role;
 
-use namespace::autoclean;
+use namespace::clean -except => 'meta';
 
 with qw(Throwable);
 
