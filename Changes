@@ -1,3 +1,8 @@
+0.44
+    - Remove accidental use of namespace::autoclean instead of namespace::clean
+      (doy)
+    - Proper fix for class_version this time =(
+
 0.43
     - Now throws proper error objects instead of unintelligiable hash refs
     - Fix JSON serialization (omitted keys necessary for version tracking and
