@@ -27,6 +27,12 @@ has fallback_entry => (
     default => sub { KiokuDB::TypeMap::Entry::MOP->new },
 );
 
+sub clear_compiled {
+    my $self = shift;
+
+    %{ $self->_compiled } = ();
+}
+
 sub resolved {
     my ( $self, $class ) = @_;
 

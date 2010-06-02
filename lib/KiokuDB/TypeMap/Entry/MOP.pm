@@ -250,7 +250,10 @@ sub is_version_up_to_date {
     }
 
     return $cache{$key} = undef;
-} }
+}
+
+sub clear_version_cache { %cache = () }
+}
 
 sub find_version_handlers {
     my ( $self, $meta, $version ) = @_;

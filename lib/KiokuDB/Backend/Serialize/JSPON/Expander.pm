@@ -60,7 +60,7 @@ sub _build__expander {
                             push @attrs, class => $class;
 
                             push @attrs, class_meta    => $data->{$class_meta_field} if exists $data->{$class_meta_field};
-                            push @attrs, class_version => $data->{$class_meta_field} if exists $data->{$class_version_field};
+                            push @attrs, class_version => $data->{$class_version_field} if exists $data->{$class_version_field};
                         }
 
                         push @attrs, id           => $data->{$id_field}                 if exists $data->{$id_field};

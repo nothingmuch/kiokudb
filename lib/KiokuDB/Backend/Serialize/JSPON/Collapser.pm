@@ -40,6 +40,7 @@ sub collapse_jspon {
             return {
                 ( $data->has_class ? ( $self->class_field => $data->class ) : () ),
                 ( $data->has_class_meta ? ( $self->class_meta_field => $data->class_meta ) : () ),
+                ( defined $data->class_version ? ( $self->class_version_field => $data->class_version ) : () ),
                 ( $id ? ( $self->id_field => $id ) : () ),
                 ( $data->root ? ( $self->root_field => JSON::true() ) : () ),
                 ( $data->deleted ? ( $self->deleted_field => JSON::true() ) : () ),

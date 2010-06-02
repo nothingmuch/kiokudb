@@ -7,6 +7,8 @@ with qw(KiokuDB::Role::Upgrade::Handlers);
 
 requires "kiokudb_upgrade_handlers_table";
 
+no warnings 'uninitialized';
+
 sub kiokudb_upgrade_handler {
     my ( $class, $version ) = @_;
 
