@@ -1,2 +1,8 @@
+0.03
+    - Support the new KiokuDB::Backend::Role::GC
+
+0.02
+    - Refactor to use Role::Verbosity
+
 0.01
     - Split up from main KiokuDB distribution (version 0.30)
