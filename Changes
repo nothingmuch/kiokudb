@@ -1,3 +1,7 @@
+0.45
+    - Introduce KiokuDB::Backend::Role::GC which allows backends to construct
+      their own garbage collector for the GC command.
+
 0.44
     - Remove accidental use of namespace::autoclean instead of namespace::clean
       (doy)
