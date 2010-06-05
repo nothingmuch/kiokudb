@@ -27,7 +27,7 @@ $_->make_mutable, $_->make_immutable for KiokuDB::Entry->meta; # recreate new
         does_ok( $s, "KiokuDB::Backend::Serialize" );
 
         my $entry = KiokuDB::Entry->new(
-            class => "Foo",
+            class => "KiokuDB_Test_Foo",
             data  => { foo => "bar" },
         );
 

@@ -17,7 +17,7 @@ use ok "KiokuDB::Backend::Hash";
 use ok "KiokuDB";
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has foo => (
@@ -115,9 +115,9 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
     my $id;
 
     {
-        my $foo = Foo->new(
+        my $foo = KiokuDB_Test_Foo->new(
             foo => Set::Object->new(
-                Foo->new,
+                KiokuDB_Test_Foo->new,
             ),
         );
 
@@ -133,7 +133,7 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
 
         my $foo = $k->lookup($id);
 
-        isa_ok( $foo, "Foo" );
+        isa_ok( $foo, "KiokuDB_Test_Foo" );
 
         is( ref($foo->scalar_ref), "SCALAR", "scalar ref" );
         is_deeply( $foo->scalar_ref, \"foo", "value" );
@@ -161,7 +161,7 @@ foreach my $format ( qw(memory storable json), eval { require YAML::XS; "yaml" }
 
         isa_ok( $foo->foo, "Set::Object" );
 
-        isa_ok( ( $foo->foo->members )[0], "Foo", 'set enumeration' );
+        isa_ok( ( $foo->foo->members )[0], "KiokuDB_Test_Foo", 'set enumeration' );
     }
 }
 

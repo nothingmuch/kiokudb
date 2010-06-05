@@ -12,7 +12,7 @@ my $dir = KiokuDB->connect("hash");
 
 {
 
-    package WithCodeRef;
+    package KiokuDB_Test_WithCodeRef;
     use KiokuDB::Class;
 
     has coderef => (
@@ -24,7 +24,7 @@ my $dir = KiokuDB->connect("hash");
     sub apply { shift->coderef->(@_) }
 }
 
-sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
+sub obj (&) { KiokuDB_Test_WithCodeRef->new( coderef => $_[0] ) }
 
 {
     my $id;
@@ -46,7 +46,7 @@ sub obj (&) { WithCodeRef->new( coderef => $_[0] ) }
 
         $id and my $obj = $dir->lookup($id);
 
-        isa_ok $obj, 'WithCodeRef';
+        isa_ok $obj, 'KiokuDB_Test_WithCodeRef';
         is eval { $obj->coderef->(38) }, 42, "apply coderef",
     }
 }

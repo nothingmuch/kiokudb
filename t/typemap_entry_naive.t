@@ -15,22 +15,22 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Backend::Hash';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has foo => ( is => "rw" );
 
-    has bar => ( is => "rw", isa => "Bar" );
+    has bar => ( is => "rw", isa => "KiokuDB_Test_Bar" );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has blah => ( is => "rw" );
 }
 
-my $obj = Foo->new( foo => "HALLO" );
+my $obj = KiokuDB_Test_Foo->new( foo => "HALLO" );
 
-my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai" ) );
+my $deep = KiokuDB_Test_Foo->new( foo => "la", bar => KiokuDB_Test_Bar->new( blah => "hai" ) );
 
 my $n = KiokuDB::TypeMap::Entry::Naive->new();
 my $i = KiokuDB::TypeMap::Entry::Naive->new( intrinsic => 1 );
@@ -38,8 +38,8 @@ my $i = KiokuDB::TypeMap::Entry::Naive->new( intrinsic => 1 );
 my $tr = KiokuDB::TypeMap::Resolver->new(
     typemap => KiokuDB::TypeMap->new(
         entries => {
-            Foo => $n,
-            Bar => $i,
+            KiokuDB_Test_Foo => $n,
+            KiokuDB_Test_Bar => $i,
         },
     ),
 );
@@ -76,7 +76,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $obj, "is_deeply" );
@@ -100,7 +100,7 @@ my $l = KiokuDB::Linker->new(
     is( reftype($entry->data), reftype($deep), "reftype" );
     is_deeply(
         $entry->data,
-        {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar ) },
+        {%$deep, bar => KiokuDB::Entry->new( class => "KiokuDB_Test_Bar", data => {%$bar}, object => $bar ) },
         "is_deeply"
     );
 
@@ -108,7 +108,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($deep), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $deep, "is_deeply" );

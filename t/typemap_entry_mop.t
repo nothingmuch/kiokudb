@@ -22,14 +22,14 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
 # FIXME lazy trait
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     our $VERSION = "0.03";
 
     has foo => ( is => "rw" );
 
-    has bar => ( is => "rw", isa => "Bar" );
+    has bar => ( is => "rw", isa => "KiokuDB_Test_Bar" );
 
     if ( ::HAVE_MX_STORAGE ) {
         has trash => ( is => "ro", traits => [qw(DoNotSerialize)], lazy => 1, default => "lala" );
@@ -37,7 +37,7 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
 
     has junk => ( is => "ro", traits => [qw(KiokuDB::DoNotSerialize)], lazy => 1, default => "barf" );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     our $VERSION = "0.03";
@@ -56,19 +56,19 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
 
     has blah => ( is => "rw" );
 
-    package Gorch;
+    package KiokuDB_Test_Gorch;
     use Moose::Role;
 
     has optional => ( is => "rw" );
 
-    package Value;
+    package KiokuDB_Test_Value;
     use Moose;
 
     with qw(KiokuDB::Role::Intrinsic);
 
     has name => ( is => "rw" );
 
-    package Once;
+    package KiokuDB_Test_Once;
     use Moose;
 
     our $VERSION = "0.03";
@@ -88,24 +88,24 @@ use constant HAVE_MX_STORAGE => try { require MooseX::Storage::Meta::Attribute::
     has name => ( is => "rw" );
 }
 
-my $obj = Foo->new( foo => "HALLO" );
+my $obj = KiokuDB_Test_Foo->new( foo => "HALLO" );
 
 $obj->trash if HAVE_MX_STORAGE;
 $obj->junk;
 
-my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai", id => "the_bar" ) );
+my $deep = KiokuDB_Test_Foo->new( foo => "la", bar => KiokuDB_Test_Bar->new( blah => "hai", id => "the_bar" ) );
 
-my $with_anon = Bar->new( blah => "HALLO", id => "runtime_role" );
+my $with_anon = KiokuDB_Test_Bar->new( blah => "HALLO", id => "runtime_role" );
 
-Gorch->meta->apply($with_anon);
+KiokuDB_Test_Gorch->meta->apply($with_anon);
 
 $with_anon->optional("very much");
 
-my $anon_parent = Foo->new( bar => $with_anon );
+my $anon_parent = KiokuDB_Test_Foo->new( bar => $with_anon );
 
-my $obj_with_value = Foo->new( foo => Value->new( name => "fairly" ) );
+my $obj_with_value = KiokuDB_Test_Foo->new( foo => KiokuDB_Test_Value->new( name => "fairly" ) );
 
-my $once = Once->new( name => "blah" );
+my $once = KiokuDB_Test_Once->new( name => "blah" );
 
 foreach my $intrinsic ( 1, 0 ) {
     my $foo_entry = KiokuDB::TypeMap::Entry::MOP->new(
@@ -128,8 +128,8 @@ foreach my $intrinsic ( 1, 0 ) {
         ),
         typemap => KiokuDB::TypeMap->new(
             entries => {
-                Foo => $foo_entry,
-                Bar => $bar_entry,
+                KiokuDB_Test_Foo => $foo_entry,
+                KiokuDB_Test_Bar => $bar_entry,
             },
         ),
     );
@@ -165,7 +165,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $expanded = $l->expand_object($entry);
 
-        isa_ok( $expanded, "Foo", "expanded object" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
         isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
 
@@ -197,7 +197,7 @@ foreach my $intrinsic ( 1, 0 ) {
         } else {
             is( scalar(keys %$entries), 2, "two entries" );
             ok( exists($entries->{the_bar}), "custom ID exists" );
-            is( $entries->{the_bar}->class, "Bar", "right object" );
+            is( $entries->{the_bar}->class, "KiokuDB_Test_Bar", "right object" );
         }
 
         isnt( refaddr($entry->data), refaddr($deep), "refaddr doesn't equal" );
@@ -207,7 +207,7 @@ foreach my $intrinsic ( 1, 0 ) {
         if ( $intrinsic ) {
             is_deeply(
                 $entry->data,
-                {%$deep, bar => KiokuDB::Entry->new( class => "Bar", data => {%$bar}, object => $bar, class_version => $Bar::VERSION ) },
+                {%$deep, bar => KiokuDB::Entry->new( class => "KiokuDB_Test_Bar", data => {%$bar}, object => $bar, class_version => $KiokuDB_Test_Bar::VERSION ) },
                 "is_deeply"
             );
         } else {
@@ -224,7 +224,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $expanded = try { $l->expand_object($entry) };
 
-        isa_ok( $expanded, "Foo", "expanded object" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
         isnt( refaddr($expanded), refaddr($deep), "refaddr doesn't equal" );
         isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
         is_deeply( $expanded, $deep, "is_deeply" );
@@ -246,7 +246,7 @@ foreach my $intrinsic ( 1, 0 ) {
         } else {
             is( scalar(keys %$entries), 2, "two entries" );
             ok( exists($entries->{runtime_role}), "custom ID exists" );
-            is( $entries->{runtime_role}->class, "Bar", "right object" );
+            is( $entries->{runtime_role}->class, "KiokuDB_Test_Bar", "right object" );
         }
 
         isnt( refaddr($entry->data), refaddr($anon_parent), "refaddr doesn't equal" );
@@ -258,10 +258,10 @@ foreach my $intrinsic ( 1, 0 ) {
                 $entry->data,
                 {
                     bar => KiokuDB::Entry->new(
-                        class => "Bar",
+                        class => "KiokuDB_Test_Bar",
                         data => {%$with_anon},
                         class_meta => {
-                            roles => [qw(Gorch)]
+                            roles => [qw(KiokuDB_Test_Gorch)]
                         },
                         object => $with_anon
                     ),
@@ -282,12 +282,12 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $expanded = try { $l->expand_object($entry) };
 
-        isa_ok( $expanded, "Foo", "expanded object" );
-        isa_ok( $expanded->bar, "Bar", "inner obeject" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
+        isa_ok( $expanded->bar, "KiokuDB_Test_Bar", "inner obeject" );
 
         is( $expanded->bar->id, "runtime_role", "ID attr preserved even if not used" );
 
-        does_ok( $expanded->bar, "Gorch" );
+        does_ok( $expanded->bar, "KiokuDB_Test_Gorch" );
         ok( $expanded->bar->meta->is_anon_class, "anon class" );
     }
 
@@ -310,7 +310,7 @@ foreach my $intrinsic ( 1, 0 ) {
             $entry->data,
             {
                 foo => KiokuDB::Entry->new(
-                    class => "Value",
+                    class => "KiokuDB_Test_Value",
                     data => { %{ $obj_with_value->foo } },
                     object => $obj_with_value->foo,
                 ),
@@ -324,8 +324,8 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $expanded = try { $l->expand_object($entry) };
 
-        isa_ok( $expanded, "Foo", "expanded object" );
-        isa_ok( $expanded->foo, "Value", "inner obeject" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
+        isa_ok( $expanded->foo, "KiokuDB_Test_Value", "inner obeject" );
     }
 
     {
@@ -375,7 +375,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $expanded = try { $l->expand_object($entry) };
 
-        isa_ok( $expanded, "Foo", "expanded object" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
 
         my $bar_addr = refaddr($expanded->bar);
 
@@ -407,7 +407,7 @@ foreach my $intrinsic ( 1, 0 ) {
         {
             # no class_version
             my $entry = KiokuDB::Entry->new(
-                class         => 'Foo',
+                class         => 'KiokuDB_Test_Foo',
                 data          => { foo => 'test', },
                 id            => $id,
             );
@@ -423,7 +423,7 @@ foreach my $intrinsic ( 1, 0 ) {
             fail "error: $_";
         };
 
-        isa_ok( $expanded, "Foo", "expanded object upgraded" );
+        isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object upgraded" );
 
         my $upgraded = $l->backend->get($id);
 
@@ -438,7 +438,7 @@ foreach my $intrinsic ( 1, 0 ) {
         {
             # no class_version
             my $entry = KiokuDB::Entry->new(
-                class         => 'Bar',
+                class         => 'KiokuDB_Test_Bar',
                 data          => { id => $id, blah => "test" },
                 id            => $id,
             );
@@ -454,7 +454,7 @@ foreach my $intrinsic ( 1, 0 ) {
             fail "error: $_";
         };
 
-        isa_ok( $expanded, "Bar", "expanded object upgraded" );
+        isa_ok( $expanded, "KiokuDB_Test_Bar", "expanded object upgraded" );
 
         my $upgraded = $l->backend->get($id);
 
@@ -470,7 +470,7 @@ foreach my $intrinsic ( 1, 0 ) {
             # no class_version
             my $entry = KiokuDB::Entry->new(
                 class_version => "0.01",
-                class         => 'Once',
+                class         => 'KiokuDB_Test_Once',
                 data          => { name => 'test', },
                 id            => $id,
             );
@@ -486,7 +486,7 @@ foreach my $intrinsic ( 1, 0 ) {
             fail "error: $_";
         };
 
-        isa_ok( $expanded, "Once", "expanded object upgraded" );
+        isa_ok( $expanded, "KiokuDB_Test_Once", "expanded object upgraded" );
 
         my $upgraded = $l->backend->get($id);
 

@@ -12,7 +12,7 @@ use ok 'KiokuDB::Backend::Hash';
 use_ok 'KiokuDB::Stream::Objects';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has id  => (is => 'rw', isa => 'Str');
@@ -22,11 +22,11 @@ use_ok 'KiokuDB::Stream::Objects';
 my $dir = KiokuDB->connect( "hash", serializer => 'memory');
 
 my @objs = (
-    Foo->new( id => 'one',   num => 1 ),
-    Foo->new( id => 'two',   num => 2 ),
-    Foo->new( id => 'three', num => 3 ),
-    Foo->new( id => 'zero',  num => 0 ),
-    Foo->new( id => 'four',  num => 4 ),
+    KiokuDB_Test_Foo->new( id => 'one',   num => 1 ),
+    KiokuDB_Test_Foo->new( id => 'two',   num => 2 ),
+    KiokuDB_Test_Foo->new( id => 'three', num => 3 ),
+    KiokuDB_Test_Foo->new( id => 'zero',  num => 0 ),
+    KiokuDB_Test_Foo->new( id => 'four',  num => 4 ),
 );
 
 {

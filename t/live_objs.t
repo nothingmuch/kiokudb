@@ -11,12 +11,12 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Entry';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has bar => ( is => "rw", weak_ref => 1 );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has foo => ( is => "rw", weak_ref => 1 );
@@ -34,7 +34,7 @@ use ok 'KiokuDB::Entry';
     {
         my $s = $l->new_scope;
 
-        my $x = Foo->new;
+        my $x = KiokuDB_Test_Foo->new;
 
         $l->insert( x => $x );
 
@@ -55,7 +55,7 @@ use ok 'KiokuDB::Entry';
         my $s = $l->new_scope;
 
         my %objects = (
-            ( map { $_ => Foo->new } ( 'a' .. 'z' ) ),
+            ( map { $_ => KiokuDB_Test_Foo->new } ( 'a' .. 'z' ) ),
             hash  => { foo => "bar" },
             array => [ 1 .. 3 ],
         );
@@ -105,8 +105,8 @@ use ok 'KiokuDB::Entry';
 {
     my $l = KiokuDB::LiveObjects->new;
 
-    is( $l->objects_to_ids(Foo->new), undef, "random object has undef ID" );
-    is_deeply( [ $l->objects_to_ids(Foo->new, Foo->new) ], [ undef, undef ], "random objects have undef IDs" );
+    is( $l->objects_to_ids(KiokuDB_Test_Foo->new), undef, "random object has undef ID" );
+    is_deeply( [ $l->objects_to_ids(KiokuDB_Test_Foo->new, KiokuDB_Test_Foo->new) ], [ undef, undef ], "random objects have undef IDs" );
 }
 
 {
@@ -130,7 +130,7 @@ use ok 'KiokuDB::Entry';
     my $s = $l->new_scope;
 
     my $entry = KiokuDB::Entry->new( id => "blah" );
-    my $blah = Foo->new;
+    my $blah = KiokuDB_Test_Foo->new;
     $l->insert( $entry => $blah );
 
     is_deeply( [ $l->objects_to_entries($blah) ], [ $entry ], "objects to entries" );
@@ -146,9 +146,9 @@ use ok 'KiokuDB::Entry';
     {
         my $s = $l->new_scope;
 
-        my $inner_foo = $foo = Foo->new;
+        my $inner_foo = $foo = KiokuDB_Test_Foo->new;
         weaken($foo);
-        my $bar = Bar->new;
+        my $bar = KiokuDB_Test_Bar->new;
 
         $foo->bar($bar);
         $bar->foo($foo);
@@ -176,9 +176,9 @@ use ok 'KiokuDB::Entry';
         is( $s->parent, undef, "no parent scope" );
 
         {
-            my $inner_foo = $foo = Foo->new;
+            my $inner_foo = $foo = KiokuDB_Test_Foo->new;
             weaken($foo);
-            my $bar = Bar->new;
+            my $bar = KiokuDB_Test_Bar->new;
 
             $foo->bar($bar);
             $bar->foo($foo);
@@ -200,11 +200,11 @@ use ok 'KiokuDB::Entry';
 
                 is( $l->current_scope, $child_s, "current scope" );
 
-                $l->insert( blah => Foo->new );
+                $l->insert( blah => KiokuDB_Test_Foo->new );
 
                 is( scalar($l->live_objects), 2, "two live objects" );
 
-                isa_ok( $l->id_to_object("blah"), "Foo" );
+                isa_ok( $l->id_to_object("blah"), "KiokuDB_Test_Foo" );
 
                 is_deeply(
                     [ sort $l->live_objects ],

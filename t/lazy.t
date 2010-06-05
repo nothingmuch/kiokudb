@@ -11,7 +11,7 @@ use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
 {
-    package Simple;
+    package KiokuDB_Test_Simple;
     use KiokuDB::Class;
 
     has name => ( is => "rw" );
@@ -31,16 +31,16 @@ use ok 'KiokuDB::Backend::Hash';
 
 ok( exists($INC{"KiokuDB/Meta/Attribute/Lazy.pm"}), "KiokuDB::Meta::Attribute::Lazy loaded" );
 
-does_ok( Simple->meta->get_attribute("foo"), 'KiokuDB::Meta::Attribute::Lazy', '"foo" meta attr does KiokuDB::Meta::Attribute::Lazy' );
-does_ok( Simple->meta->get_attribute("foos"), 'KiokuDB::Meta::Attribute::Lazy', '"foo" meta attr does KiokuDB::Meta::Attribute::Lazy' );
+does_ok( KiokuDB_Test_Simple->meta->get_attribute("foo"), 'KiokuDB::Meta::Attribute::Lazy', '"foo" meta attr does KiokuDB::Meta::Attribute::Lazy' );
+does_ok( KiokuDB_Test_Simple->meta->get_attribute("foos"), 'KiokuDB::Meta::Attribute::Lazy', '"foo" meta attr does KiokuDB::Meta::Attribute::Lazy' );
 
 my $dir = KiokuDB->new( backend => KiokuDB::Backend::Hash->new );
 
 {
     my $s = $dir->new_scope;
 
-    my ( $foo, @baz ) = map { Simple->new } 1 .. 3;
-    my $bar = Simple->new( foo => $foo, foos => \@baz);
+    my ( $foo, @baz ) = map { KiokuDB_Test_Simple->new } 1 .. 3;
+    my $bar = KiokuDB_Test_Simple->new( foo => $foo, foos => \@baz);
 
     is( $bar->foo, $foo, "foo attribute" );
 

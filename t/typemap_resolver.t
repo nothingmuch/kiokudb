@@ -13,23 +13,23 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
 use ok 'KiokuDB::TypeMap::Resolver';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
-    extends qw(Foo);
+    extends qw(KiokuDB_Test_Foo);
 
-    package CA;
+    package KiokuDB_Test_CA;
 
-    package CA::Sub;
-    use base qw(CA);
+    package KiokuDB_Test_CA::Sub;
+    use base qw(KiokuDB_Test_CA);
 }
 
 my $t = KiokuDB::TypeMap->new(
     entries => {
-        CA => KiokuDB::TypeMap::Entry::Naive->new,
+        KiokuDB_Test_CA => KiokuDB::TypeMap::Entry::Naive->new,
     },
 );
 
@@ -39,21 +39,21 @@ my $tr = KiokuDB::TypeMap::Resolver->new(
 
 isa_ok( $tr, "KiokuDB::TypeMap::Resolver" );
 
-ok( !$tr->resolved("CA"), "not yet resolved" );
+ok( !$tr->resolved("KiokuDB_Test_CA"), "not yet resolved" );
 
-my $method = $tr->expand_method("CA");
+my $method = $tr->expand_method("KiokuDB_Test_CA");
 
 is( reftype($method), "CODE", "expand method" );
 
-ok( $tr->resolved("CA"), "now it's resolved" );
+ok( $tr->resolved("KiokuDB_Test_CA"), "now it's resolved" );
 
 dies_ok { $tr->expand_method("Hippies") } "no method for non existent class";
 
-dies_ok { $tr->expand_method("CA::Sub") } "no method for unregistered class";
+dies_ok { $tr->expand_method("KiokuDB_Test_CA::Sub") } "no method for unregistered class";
 
-lives_ok { $tr->expand_method("Foo") } "classes with meta do work";
+lives_ok { $tr->expand_method("KiokuDB_Test_Foo") } "classes with meta do work";
 
-ok( my $method_meta = $tr->expand_method("Foo"), "code" );
+ok( my $method_meta = $tr->expand_method("KiokuDB_Test_Foo"), "code" );
 
 is( reftype($method_meta), "CODE", "expand method" );
 

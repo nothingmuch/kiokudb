@@ -18,7 +18,7 @@ use ok 'Search::GIN::Query::Class';
 use ok 'Search::GIN::Extract::Class';
 
 {
-    package MyGIN;
+    package KiokuDB_Test_MyGIN;
     use Moose;
 
     extends qw(KiokuDB::Backend::Hash);
@@ -40,7 +40,7 @@ use ok 'Search::GIN::Extract::Class';
     __PACKAGE__->meta->make_immutable;
 }
 
-my $gin = MyGIN->new(
+my $gin = KiokuDB_Test_MyGIN->new(
     extract => Search::GIN::Extract::Class->new,
     root_only => 0,
 );

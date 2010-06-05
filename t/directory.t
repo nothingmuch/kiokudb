@@ -19,7 +19,7 @@ use ok 'KiokuDB::Backend::Hash';
 my $dir = KiokuDB->new(
     check_class_versions => 1,
     class_version_table => {
-        Foo => {
+        KiokuDB_Test_Foo => {
             "0.01" => {
                 class_version => "0.02",
                 data          => { foo => "upgraded" },
@@ -44,7 +44,7 @@ sub no_live_objects {
 }
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     our $VERSION = "0.02";
@@ -74,9 +74,9 @@ my $id;
 {
     my $s = $dir->new_scope;
 
-    my $x = Foo->new(
+    my $x = KiokuDB_Test_Foo->new(
         foo => "dancing",
-        bar => Foo->new(
+        bar => KiokuDB_Test_Foo->new(
             foo => "oh",
         ),
     );
@@ -127,9 +127,9 @@ memory_cycle_ok($l, "no cycles in live objects");
     memory_cycle_ok($l, "no cycles in live objects");
 
     is( $obj->foo, "dancing", "simple attr" );
-    isa_ok( $obj->bar, "Foo", "object attr" );
+    isa_ok( $obj->bar, "KiokuDB_Test_Foo", "object attr" );
     is( $obj->bar->foo, "oh", "simple attr of sub object" );
-    isa_ok( $obj->bar->parent, "Foo", "object attr of sub object" );
+    isa_ok( $obj->bar->parent, "KiokuDB_Test_Foo", "object attr of sub object" );
     is( $obj->bar->parent, $obj, "circular ref" );
 }
 
@@ -140,9 +140,9 @@ memory_cycle_ok($l, "no cycles in live objects");
 {
     my $s = $dir->new_scope;
 
-    my $x = Foo->new(
+    my $x = KiokuDB_Test_Foo->new(
         foo => "oink oink",
-        bar => my $y = Foo->new(
+        bar => my $y = KiokuDB_Test_Foo->new(
             foo => "yay",
         ),
     );
@@ -162,7 +162,7 @@ memory_cycle_ok($l, "no cycles in live objects");
         my $s = $dir->new_scope;
         my @objects = map { $dir->lookup($_) } @ids;
 
-        isa_ok( $objects[0], "Foo" );
+        isa_ok( $objects[0], "KiokuDB_Test_Foo" );
         is( $objects[0]->foo, "oink oink", "object retrieved" );
         is( $objects[1], $y, "object is already live" );
         is( $objects[0]->bar, $y, "link recreated" );
@@ -177,10 +177,10 @@ no_live_objects;
     my @ids = do{
         my $s = $dir->new_scope;
 
-        my $shared = Foo->new( foo => "shared" );
+        my $shared = KiokuDB_Test_Foo->new( foo => "shared" );
 
-        my $first  = Foo->new( foo => "first",  bar => $shared );
-        my $second = Foo->new( foo => "second", bar => $shared );
+        my $first  = KiokuDB_Test_Foo->new( foo => "first",  bar => $shared );
+        my $second = KiokuDB_Test_Foo->new( foo => "second", bar => $shared );
 
         $dir->store( $first, $second );
     };
@@ -189,14 +189,14 @@ no_live_objects;
 
     my $first = $dir->lookup($ids[0]);
 
-    isa_ok( $first, "Foo" );
+    isa_ok( $first, "KiokuDB_Test_Foo" );
     is( $first->foo, "first", "normal attr" );
-    isa_ok( $first->bar, "Foo", "shared object" );
+    isa_ok( $first->bar, "KiokuDB_Test_Foo", "shared object" );
     is( $first->bar->foo, "shared", "normal attr of shared" );
 
     my $second = $dir->lookup($ids[1]);
 
-    isa_ok( $second, "Foo" );
+    isa_ok( $second, "KiokuDB_Test_Foo" );
     is( $second->foo, "second", "normal attr" );
 
     is( $second->bar, $first->bar, "shared object" );
@@ -210,12 +210,12 @@ no_live_objects;
     my @ids = do{
         my $s = $dir->new_scope;
 
-        my $shared = { foo => "shared", object => Foo->new( foo => "shared child" ) };
+        my $shared = { foo => "shared", object => KiokuDB_Test_Foo->new( foo => "shared child" ) };
 
         $shared->{object}->parent($shared);
 
-        my $first  = Foo->new( foo => "first",  bar => $shared );
-        my $second = Foo->new( foo => "second", bar => $shared );
+        my $first  = KiokuDB_Test_Foo->new( foo => "first",  bar => $shared );
+        my $second = KiokuDB_Test_Foo->new( foo => "second", bar => $shared );
 
         $dir->store( $first, $second );
     };
@@ -224,17 +224,17 @@ no_live_objects;
 
     my $first = $dir->lookup($ids[0]);
 
-    isa_ok( $first, "Foo" );
+    isa_ok( $first, "KiokuDB_Test_Foo" );
     is( $first->foo, "first", "normal attr" );
 
     is( ref($first->bar), "HASH", "shared hash" );
     is( $first->bar->{foo}, "shared", "hash data" );
 
-    isa_ok( $first->bar->{object}, "Foo", "indirect shared child" );
+    isa_ok( $first->bar->{object}, "KiokuDB_Test_Foo", "indirect shared child" );
 
     my $second = $dir->lookup($ids[1]);
 
-    isa_ok( $second, "Foo" );
+    isa_ok( $second, "KiokuDB_Test_Foo" );
     is( $second->foo, "second", "normal attr" );
 
     is( $second->bar, $first->bar, "shared value" );
@@ -252,14 +252,14 @@ no_live_objects;
 
         weaken($shared->{self} = $shared);
 
-        $dir->store( Foo->new( foo => "blimey", bar => $shared ) );
+        $dir->store( KiokuDB_Test_Foo->new( foo => "blimey", bar => $shared ) );
     };
 
     no_live_objects;
 
     my $obj = $dir->lookup($id);
 
-    isa_ok( $obj, "Foo" );
+    isa_ok( $obj, "KiokuDB_Test_Foo" );
     is( $obj->foo, "blimey", "normal attr" );
 
     is( ref($obj->bar), "HASH", "shared hash" );
@@ -275,7 +275,7 @@ no_live_objects;
 {
     my $s = $dir->new_scope;
 
-    my $id = $dir->insert( Foo->new( foo => "henry" ) );
+    my $id = $dir->insert( KiokuDB_Test_Foo->new( foo => "henry" ) );
     ok( $id, "insert returns ID for new object" );
 
     $s->clear;
@@ -297,7 +297,7 @@ no_live_objects;
 {
     my $id = do {
         my $s = $dir->new_scope;
-        $dir->store( Foo->new( foo => "blimey" ) );
+        $dir->store( KiokuDB_Test_Foo->new( foo => "blimey" ) );
     };
 
     no_live_objects;
@@ -307,7 +307,7 @@ no_live_objects;
 
         my $obj = $dir->lookup($id);
 
-        isa_ok( $obj, "Foo" );
+        isa_ok( $obj, "KiokuDB_Test_Foo" );
         is( $obj->foo, "blimey", "normal attr" );
 
         $obj->foo("fancy");
@@ -322,7 +322,7 @@ no_live_objects;
 
         my $obj = $dir->lookup($id);
 
-        isa_ok( $obj, "Foo" );
+        isa_ok( $obj, "KiokuDB_Test_Foo" );
         is( $obj->foo, "blimey", "change not saved" );
 
         $obj->foo("pancy");
@@ -341,7 +341,7 @@ no_live_objects;
 
         my $obj = $dir->lookup($id);
 
-        isa_ok( $obj, "Foo" );
+        isa_ok( $obj, "KiokuDB_Test_Foo" );
         is( $obj->foo, "blimey", "change not saved" );
 
         $obj->foo("shmancy");
@@ -358,12 +358,12 @@ no_live_objects;
 
         my $obj = $dir->lookup($id);
 
-        isa_ok( $obj, "Foo" );
+        isa_ok( $obj, "KiokuDB_Test_Foo" );
         is( $obj->foo, "shmancy", "store saved change" );
 
         is( $obj->bar, undef, "no 'bar' attr" );
 
-        $obj->bar( Foo->new( foo => "child" ) );
+        $obj->bar( KiokuDB_Test_Foo->new( foo => "child" ) );
 
         is( $dir->store($obj), $id, "ID" );
     }
@@ -380,9 +380,9 @@ no_live_objects;
 
             my $obj = $dir->lookup($id);
 
-            isa_ok( $obj, "Foo" );
+            isa_ok( $obj, "KiokuDB_Test_Foo" );
 
-            isa_ok( $obj->bar, "Foo" );
+            isa_ok( $obj->bar, "KiokuDB_Test_Foo" );
 
             is( $obj->bar->foo, "child", "child object's attr" );
 
@@ -401,9 +401,9 @@ no_live_objects;
 
             my $obj = $dir->lookup($id);
 
-            isa_ok( $obj, "Foo" );
+            isa_ok( $obj, "KiokuDB_Test_Foo" );
 
-            isa_ok( $obj->bar, "Foo" );
+            isa_ok( $obj->bar, "KiokuDB_Test_Foo" );
 
             is( $obj->bar->foo, "child", "child object's attr" );
 
@@ -415,7 +415,7 @@ no_live_objects;
                 "two objects in live object set",
             );
 
-            $obj->bar( Foo->new( foo => "third" ) );
+            $obj->bar( KiokuDB_Test_Foo->new( foo => "third" ) );
 
             $dir->store( $obj->bar );
         }
@@ -425,15 +425,15 @@ no_live_objects;
 
             my $obj = $dir->lookup($id);
 
-            isa_ok( $obj, "Foo" );
+            isa_ok( $obj, "KiokuDB_Test_Foo" );
 
-            isa_ok( $obj->bar, "Foo" );
+            isa_ok( $obj->bar, "KiokuDB_Test_Foo" );
 
             is( $obj->bar->foo, "child", "child object's attr unchanged" );
 
             is( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
 
-            $obj->bar( Foo->new( foo => "third" ) );
+            $obj->bar( KiokuDB_Test_Foo->new( foo => "third" ) );
 
             $dir->store( $obj );
         }
@@ -443,9 +443,9 @@ no_live_objects;
 
             my $obj = $dir->lookup($id);
 
-            isa_ok( $obj, "Foo" );
+            isa_ok( $obj, "KiokuDB_Test_Foo" );
 
-            isa_ok( $obj->bar, "Foo" );
+            isa_ok( $obj->bar, "KiokuDB_Test_Foo" );
 
             isnt( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
 
@@ -462,7 +462,7 @@ no_live_objects;
 {
     my $id = do {
         my $s = $dir->new_scope;
-        $dir->insert( Foo->new( foo => "hippies" ) );
+        $dir->insert( KiokuDB_Test_Foo->new( foo => "hippies" ) );
     };
 
     ok( $id, "insert returns ID for new object" );
@@ -509,7 +509,7 @@ no_live_objects;
 
     no_live_objects;
 
-    my $child = Foo->new( foo => "meddling kids" );
+    my $child = KiokuDB_Test_Foo->new( foo => "meddling kids" );
 
     {
         my $s = $dir->new_scope;
@@ -581,9 +581,9 @@ no_live_objects;
         my $s = $dir->new_scope;
 
         $dir->store(
-            Foo->new(
+            KiokuDB_Test_Foo->new(
                 foo => "dancing",
-                bar => Foo->new(
+                bar => KiokuDB_Test_Foo->new(
                     foo => "oh",
                 ),
             ),
@@ -594,7 +594,7 @@ no_live_objects;
 
     {
         my $s = $dir->new_scope;
-        isa_ok( $dir->lookup($id), "Foo" );
+        isa_ok( $dir->lookup($id), "KiokuDB_Test_Foo" );
     }
 
     no_live_objects;
@@ -612,9 +612,9 @@ no_live_objects;
     my $s = $dir->new_scope;
 
      my $id = $dir->store(
-        my $foo = Foo->new(
+        my $foo = KiokuDB_Test_Foo->new(
             foo => "dancing",
-            bar => my $bar = Foo->new(
+            bar => my $bar = KiokuDB_Test_Foo->new(
                 foo => "oh",
             ),
         ),
@@ -638,7 +638,7 @@ no_live_objects;
     my $s = $dir->new_scope;
 
     my $id = $dir->store(
-        blah => my $foo = Foo->new( foo => "dancing" ),
+        blah => my $foo = KiokuDB_Test_Foo->new( foo => "dancing" ),
     );
 
     is( $id, "blah", "custom id" );
@@ -656,7 +656,7 @@ no_live_objects;
     my $s = $dir->new_scope;
 
     my $id = $dir->insert_nonroot(
-        nonroot_object => my $foo = Foo->new( foo => "lala" ),
+        nonroot_object => my $foo = KiokuDB_Test_Foo->new( foo => "lala" ),
     );
 
     is( $id, "nonroot_object", "custom id" );
@@ -674,7 +674,7 @@ no_live_objects;
     {
         my $s = $dir->new_scope;
 
-        my $id = $dir->insert( Foo->new( foo => "blah blah" ) );
+        my $id = $dir->insert( KiokuDB_Test_Foo->new( foo => "blah blah" ) );
 
         my ( $entry ) = $dir->backend->get($id);
 
@@ -691,7 +691,7 @@ no_live_objects;
 
         my $obj = $dir->lookup("old_object");
 
-        isa_ok( $obj, "Foo" );
+        isa_ok( $obj, "KiokuDB_Test_Foo" );
 
         is( $obj->foo, "upgraded", "field upgraded" );
     }

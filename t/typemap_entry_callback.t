@@ -15,14 +15,14 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Backend::Hash';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has foo => ( is => "rw" );
 
-    has bar => ( is => "rw", isa => "Bar" );
+    has bar => ( is => "rw", isa => "KiokuDB_Test_Bar" );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has blah => ( is => "rw" );
@@ -33,9 +33,9 @@ use ok 'KiokuDB::Backend::Hash';
     }
 }
 
-my $obj = Foo->new( foo => "HALLO" );
+my $obj = KiokuDB_Test_Foo->new( foo => "HALLO" );
 
-my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai" ) );
+my $deep = KiokuDB_Test_Foo->new( foo => "la", bar => KiokuDB_Test_Bar->new( blah => "hai" ) );
 
 my $bar = KiokuDB::TypeMap::Entry::Callback->new(
     collapse => "pack",
@@ -57,8 +57,8 @@ my $foo = KiokuDB::TypeMap::Entry::Callback->new(
 my $tr = KiokuDB::TypeMap::Resolver->new(
     typemap => KiokuDB::TypeMap->new(
         entries => {
-            Bar => $bar,
-            Foo => $foo,
+            KiokuDB_Test_Bar => $bar,
+            KiokuDB_Test_Foo => $foo,
         },
     ),
 );
@@ -93,7 +93,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $obj, "is_deeply" );

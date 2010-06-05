@@ -12,7 +12,7 @@ use ok 'KiokuDB::Entry';
 use ok 'KiokuDB::Reference';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     with qw(KiokuDB::Backend::Serialize::JSON);
@@ -44,7 +44,7 @@ my $tied = KiokuDB::Entry->new(
 );
 
 {
-    my $x = Foo->new;
+    my $x = KiokuDB_Test_Foo->new;
 
     does_ok( $x, "KiokuDB::Backend::TypeMap::Default" );
     does_ok( $x, "KiokuDB::Backend::Serialize" );
@@ -96,7 +96,7 @@ my $tied = KiokuDB::Entry->new(
 }
 
 {
-    my $x = Foo->new(
+    my $x = KiokuDB_Test_Foo->new(
         id_field => "_id",
         class_field => "class",
         inline_data => 1,
@@ -132,7 +132,7 @@ my $tied = KiokuDB::Entry->new(
 }
 
 {
-    my $x = Foo->new;
+    my $x = KiokuDB_Test_Foo->new;
 
     my $jspon = $x->collapse_jspon($tied);
 

@@ -39,14 +39,14 @@ SKIP: {
     my $json = JSON->new->decode('{ "id": "lala", "data": { "yes": true, "no": false } }');
 
     {
-        package My::Object;
+        package KiokuDB_Test_My::Object;
         use Moose;
 
         has yes => ( is => "ro", default => sub { JSON::true() } );
         has no  => ( is => "ro", default => sub { JSON::false() } );
     }
 
-    my $obj = My::Object->new;
+    my $obj = KiokuDB_Test_My::Object->new;
 
     require KiokuDB::Collapser;
     require KiokuDB::LiveObjects;

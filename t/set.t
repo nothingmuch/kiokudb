@@ -24,7 +24,7 @@ my $dir = KiokuDB->new(
 );
 
 my @ids = do {
-    my @people = map { KiokuDB::Test::Person->new( name => $_ ) } qw(jamima elvis norton);
+    my @people = map { KiokuDB::Test::Person->new( name => $_ ) } qw(jemima elvis norton);
 
     my $s = $dir->new_scope;
 

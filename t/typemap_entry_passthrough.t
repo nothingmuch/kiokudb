@@ -16,24 +16,24 @@ use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Backend::Hash';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has foo => ( is => "rw" );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has foo => ( is => "rw" );
 
-    package Gorch;
+    package KiokuDB_Test_Gorch;
     use Moose;
 
     has foo => ( is => "rw" );
 }
 
-my $foo = Foo->new( foo => "HALLO" );
-my $bar = Gorch->new( foo => Bar->new( foo => "LULZ" ) );
+my $foo = KiokuDB_Test_Foo->new( foo => "HALLO" );
+my $bar = KiokuDB_Test_Gorch->new( foo => KiokuDB_Test_Bar->new( foo => "LULZ" ) );
 
 my $p = KiokuDB::TypeMap::Entry::Passthrough->new();
 my $pi = KiokuDB::TypeMap::Entry::Passthrough->new( intrinsic => 1 );
@@ -42,8 +42,8 @@ my $n = KiokuDB::TypeMap::Entry::Naive->new;
 my $tr = KiokuDB::TypeMap::Resolver->new(
     typemap => KiokuDB::TypeMap->new(
         entries => {
-            Foo => $p,
-            Bar => $pi,
+            KiokuDB_Test_Foo => $p,
+            KiokuDB_Test_Bar => $pi,
         },
     ),
 );
@@ -74,12 +74,12 @@ my $l = KiokuDB::Linker->new(
 
     my $entry = ( values %$entries )[0];
 
-    isa_ok( $entry->data, "Foo", "entry data" );
+    isa_ok( $entry->data, "KiokuDB_Test_Foo", "entry data" );
     is( refaddr($entry->data), refaddr($foo), "refaddr equals" );
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     is( refaddr($expanded), refaddr($foo), "refaddr equals" );
 }
 
@@ -96,12 +96,12 @@ my $l = KiokuDB::Linker->new(
     my $entry = ( values %$entries )[0];
 
     is( (blessed($entry->data)||''), '', "entry data not blessed" );
-    isa_ok( $entry->data->{foo}, "Bar", "intrinsic entry" );
+    isa_ok( $entry->data->{foo}, "KiokuDB_Test_Bar", "intrinsic entry" );
     is( refaddr($entry->data->{foo}), refaddr($bar->foo), "refaddr equals" );
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Gorch", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Gorch", "expanded object" );
     is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
 
     is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
@@ -124,7 +124,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Gorch", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Gorch", "expanded object" );
     is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
 
     is_deeply( $expanded->foo, $bar->foo, "eq deeply" );
@@ -146,7 +146,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Gorch", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Gorch", "expanded object" );
     is( refaddr($expanded->foo), refaddr($bar->foo), "expanded intrinsic refaddr" );
 
     is_deeply( $expanded->foo, $bar->foo, "eq deeply" );

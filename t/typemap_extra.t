@@ -10,7 +10,7 @@ use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
 {
-    package Blah;
+    package KiokuDB_Test_Blah;
 
     sub new {
         my $class = shift;
@@ -19,19 +19,19 @@ use ok 'KiokuDB::Backend::Hash';
 
     sub data { $_[0]{data} }
 
-    package Foo;
-    use base qw(Blah);
+    package KiokuDB_Test_Foo;
+    use base qw(KiokuDB_Test_Blah);
 
-    package Bar;
-    use base qw(Foo);
+    package KiokuDB_Test_Bar;
+    use base qw(KiokuDB_Test_Foo);
 
-    package Baz;
-    use base qw(Blah);
+    package KiokuDB_Test_Baz;
+    use base qw(KiokuDB_Test_Blah);
 
-    package Qux;
-    use base qw(Baz);
+    package KiokuDB_Test_Qux;
+    use base qw(KiokuDB_Test_Baz);
 
-    package Person;
+    package KiokuDB_Test_Person;
     use Moose;
 
     has name => ( is => "rw" );
@@ -43,7 +43,7 @@ use constant HAVE_OI => eval { require Object::InsideOut };
 
 if ( HAVE_CA ) {
     eval q{
-        package CA::Foo;
+        package KiokuDB_Test_CA::KiokuDB_Test_Foo;
         use base qw(Class::Accessor);
 
         __PACKAGE__->mk_accessors(qw(data));
@@ -52,14 +52,14 @@ if ( HAVE_CA ) {
 
 if ( HAVE_OT ) {
     eval q{
-        package OT::Foo;
+        package KiokuDB_Test_OT::KiokuDB_Test_Foo;
         use Object::Tiny qw(data);
     }
 }
 
 if ( HAVE_OI ) {
     eval q{
-        package OI::Foo;
+        package KiokuDB_Test_OI::KiokuDB_Test_Foo;
         use Object::InsideOut;
 
         my @data :Field :Accessor(data) :Arg(Name => 'data');
@@ -67,64 +67,64 @@ if ( HAVE_OI ) {
 }
 
 foreach my $format ( qw(storable json yaml) ) {
-    foreach my $data ( "foo", 42, [ 1 .. 3 ], { foo => "bar" }, Person->new( name => "jello" ) ) {
+    foreach my $data ( "foo", 42, [ 1 .. 3 ], { foo => "bar" }, KiokuDB_Test_Person->new( name => "jello" ) ) {
         my $dir = KiokuDB->connect( hash => (
             serializer => $format,
-            allow_classes => [qw(Foo)],
-            allow_bases   => [qw(Baz)],
+            allow_classes => [qw(KiokuDB_Test_Foo)],
+            allow_bases   => [qw(KiokuDB_Test_Baz)],
             allow_class_builders => 1,
         ));
 
         {
             my $s = $dir->new_scope;
 
-            lives_ok { $dir->store( foo => Foo->new( data => $data ) ) } "can store foo";
-            dies_ok  { $dir->store( bar => Bar->new( data => $data ) ) } "can't store bar";
-            lives_ok { $dir->store( baz => Baz->new( data => $data ) ) } "can store baz";
-            lives_ok { $dir->store( qux => Qux->new( data => $data ) ) } "can store qux";
+            lives_ok { $dir->store( foo => KiokuDB_Test_Foo->new( data => $data ) ) } "can store foo";
+            dies_ok  { $dir->store( bar => KiokuDB_Test_Bar->new( data => $data ) ) } "can't store bar";
+            lives_ok { $dir->store( baz => KiokuDB_Test_Baz->new( data => $data ) ) } "can store baz";
+            lives_ok { $dir->store( qux => KiokuDB_Test_Qux->new( data => $data ) ) } "can store qux";
         }
 
         {
             my $s = $dir->new_scope;
-            is_deeply( $dir->lookup("foo"), Foo->new( data => $data ), "lookup foo" );
-            is_deeply( $dir->lookup("baz"), Baz->new( data => $data ), "lookup baz" );
-            is_deeply( $dir->lookup("qux"), Qux->new( data => $data ), "lookup qux" );
+            is_deeply( $dir->lookup("foo"), KiokuDB_Test_Foo->new( data => $data ), "lookup foo" );
+            is_deeply( $dir->lookup("baz"), KiokuDB_Test_Baz->new( data => $data ), "lookup baz" );
+            is_deeply( $dir->lookup("qux"), KiokuDB_Test_Qux->new( data => $data ), "lookup qux" );
             ok( !$dir->exists("bar"), "bar doesn't exist" );
         }
 
         if ( HAVE_CA ) {
             {
                 my $s = $dir->new_scope;
-                lives_ok { $dir->store( ca => CA::Foo->new({ data => $data }) ) } "can store Class::Accessor";
+                lives_ok { $dir->store( ca => KiokuDB_Test_CA::KiokuDB_Test_Foo->new({ data => $data }) ) } "can store Class::Accessor";
             }
 
             {
                 my $s = $dir->new_scope;
-                is_deeply( $dir->lookup("ca"), CA::Foo->new({ data => $data }), "is_deeply" );
+                is_deeply( $dir->lookup("ca"), KiokuDB_Test_CA::KiokuDB_Test_Foo->new({ data => $data }), "is_deeply" );
             }
         }
 
         if ( HAVE_OT ) {
             {
                 my $s = $dir->new_scope;
-                lives_ok { $dir->store( ot => OT::Foo->new( data => $data ) ) } "can store Object::Tiny";
+                lives_ok { $dir->store( ot => KiokuDB_Test_OT::KiokuDB_Test_Foo->new( data => $data ) ) } "can store Object::Tiny";
             }
 
             {
                 my $s = $dir->new_scope;
-                is_deeply( $dir->lookup("ot"), OT::Foo->new( data => $data ), "is_deeply" );
+                is_deeply( $dir->lookup("ot"), KiokuDB_Test_OT::KiokuDB_Test_Foo->new( data => $data ), "is_deeply" );
             }
         }
 
         if ( HAVE_OI ) {
             {
                 my $s = $dir->new_scope;
-                lives_ok { $dir->store( oi => OI::Foo->new( data => $data ) ) } "can store Object::InsideOut";
+                lives_ok { $dir->store( oi => KiokuDB_Test_OI::KiokuDB_Test_Foo->new( data => $data ) ) } "can store Object::InsideOut";
             }
 
             {
                 my $s = $dir->new_scope;
-                is_deeply( $dir->lookup("oi")->dump, OI::Foo->new( data => $data )->dump, "is_deeply" );
+                is_deeply( $dir->lookup("oi")->dump, KiokuDB_Test_OI::KiokuDB_Test_Foo->new( data => $data )->dump, "is_deeply" );
             }
         }
     }

@@ -12,18 +12,18 @@ use ok 'KiokuDB::TypeMap::Entry::Alias';
 use ok 'KiokuDB::TypeMap::Entry::Naive';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
-    extends qw(Foo);
+    extends qw(KiokuDB_Test_Foo);
 
-    package CA;
+    package KiokuDB_Test_CA;
 
-    package CA::Sub;
-    use base qw(CA);
+    package KiokuDB_Test_CA::Sub;
+    use base qw(KiokuDB_Test_CA);
 }
 
 {
@@ -34,38 +34,38 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
 
     my $t = KiokuDB::TypeMap->new(
         entries => {
-            CA => $n,
+            KiokuDB_Test_CA => $n,
         }
     );
 
     isa_ok( $t, "KiokuDB::TypeMap" );
 
-    is( $t->resolve("CA"), $n, "resolve regular entry" );
-    is( $t->resolve("CA::Sub"), undef, "failed resolution of subclass" );
-    is( $t->resolve("Foo"), undef, "failed resolution of unspecified class" );
+    is( $t->resolve("KiokuDB_Test_CA"), $n, "resolve regular entry" );
+    is( $t->resolve("KiokuDB_Test_CA::Sub"), undef, "failed resolution of subclass" );
+    is( $t->resolve("KiokuDB_Test_Foo"), undef, "failed resolution of unspecified class" );
     is( $t->resolve("Blarfla"), undef, "failed resolution of random string" );
 }
 
 {
     my $n = KiokuDB::TypeMap::Entry::Naive->new;
 
-    my $a = KiokuDB::TypeMap::Entry::Alias->new( to => "CA" );
+    my $a = KiokuDB::TypeMap::Entry::Alias->new( to => "KiokuDB_Test_CA" );
 
     isa_ok( $a, "KiokuDB::TypeMap::Entry::Alias" );
     ok( !$a->does("KiokuDB::TypeMap::Entry"), "alias is not a real type entry" );
 
     my $t = KiokuDB::TypeMap->new(
         entries => {
-            CA => $n,
-            Foo => $a,
+            KiokuDB_Test_CA => $n,
+            KiokuDB_Test_Foo => $a,
         }
     );
 
     isa_ok( $t, "KiokuDB::TypeMap" );
 
-    is( $t->resolve("CA"), $n, "resolve regular entry" );
-    is( $t->resolve("CA::Sub"), undef, "failed resolution of subclass" );
-    is( $t->resolve("Foo"), $n, "alias resolution" );
+    is( $t->resolve("KiokuDB_Test_CA"), $n, "resolve regular entry" );
+    is( $t->resolve("KiokuDB_Test_CA::Sub"), undef, "failed resolution of subclass" );
+    is( $t->resolve("KiokuDB_Test_Foo"), $n, "alias resolution" );
     is( $t->resolve("Blarfla"), undef, "failed resolution of random string" );
 }
 
@@ -74,15 +74,15 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
 
     my $t = KiokuDB::TypeMap->new(
         isa_entries => {
-            CA => $n,
+            KiokuDB_Test_CA => $n,
         }
     );
 
     isa_ok( $t, "KiokuDB::TypeMap" );
 
-    is( $t->resolve("CA"), $n, "resolve isa entry for base class" );
-    is( $t->resolve("CA::Sub"), $n, "resolve isa entry for subclass" );
-    is( $t->resolve("Foo"), undef, "failed resolution" );
+    is( $t->resolve("KiokuDB_Test_CA"), $n, "resolve isa entry for base class" );
+    is( $t->resolve("KiokuDB_Test_CA::Sub"), $n, "resolve isa entry for subclass" );
+    is( $t->resolve("KiokuDB_Test_Foo"), undef, "failed resolution" );
 }
 
 {
@@ -90,22 +90,22 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
 
     my $t = KiokuDB::TypeMap->new(
         isa_entries => {
-            CA => $n,
-            Foo => KiokuDB::TypeMap::Entry::Alias->new( to => "CA" ),
+            KiokuDB_Test_CA => $n,
+            KiokuDB_Test_Foo => KiokuDB::TypeMap::Entry::Alias->new( to => "KiokuDB_Test_CA" ),
         },
         entries => {
-            'Unknown::Foo' => KiokuDB::TypeMap::Entry::Alias->new( to => "CA" ),
+            'Unknown::KiokuDB_Test_Foo' => KiokuDB::TypeMap::Entry::Alias->new( to => "KiokuDB_Test_CA" ),
         },
     );
 
     isa_ok( $t, "KiokuDB::TypeMap" );
 
-    is( $t->resolve("CA"), $n, "resolve isa entry for base class" );
-    is( $t->resolve("CA::Sub"), $n, "resolve isa entry for subclass" );
-    is( $t->resolve("Foo"), $n, "alias resolution of isa entry" );
-    is( $t->resolve("Bar"), $n, "alias resolution of isa entry" );
+    is( $t->resolve("KiokuDB_Test_CA"), $n, "resolve isa entry for base class" );
+    is( $t->resolve("KiokuDB_Test_CA::Sub"), $n, "resolve isa entry for subclass" );
+    is( $t->resolve("KiokuDB_Test_Foo"), $n, "alias resolution of isa entry" );
+    is( $t->resolve("KiokuDB_Test_Bar"), $n, "alias resolution of isa entry" );
     is( $t->resolve("Blarfla"), undef, "failed resolution of random string" );
-    is( $t->resolve("Unknown::Foo"), $n, "alias to isa entry" );
+    is( $t->resolve("Unknown::KiokuDB_Test_Foo"), $n, "alias to isa entry" );
 }
 
 {
@@ -118,23 +118,23 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         includes => [
             KiokuDB::TypeMap->new(
                 entries => {
-                    'CA' => $ca,
+                    'KiokuDB_Test_CA' => $ca,
                 },
             ),
         ],
         entries => {
-            'Foo' => $foo,
+            'KiokuDB_Test_Foo' => $foo,
         }
     );
 
     my $t2 = KiokuDB::TypeMap->new(
         entries => {
-            'CA' => $ca,
+            'KiokuDB_Test_CA' => $ca,
         },
         includes => [
             KiokuDB::TypeMap->new(
                 entries => {
-                    'Foo' => $foo,
+                    'KiokuDB_Test_Foo' => $foo,
                 }
             ),
         ],
@@ -144,27 +144,27 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         includes => [
             KiokuDB::TypeMap->new(
                 entries => {
-                    'CA' => $ca,
+                    'KiokuDB_Test_CA' => $ca,
                 },
             ),
             KiokuDB::TypeMap->new(
                 entries => {
-                    'Foo' => $foo,
+                    'KiokuDB_Test_Foo' => $foo,
                 }
             ),
         ],
     );
 
-    my @desc = ( "inherit CA", "inherit Foo", "inherit both" );
+    my @desc = ( "inherit KiokuDB_Test_CA", "inherit KiokuDB_Test_Foo", "inherit both" );
     foreach my $t ( $t1, $t2, $t3 ) {
         my $desc = "(". shift(@desc) . ")";
 
         isa_ok( $t, "KiokuDB::TypeMap" );
 
-        is( $t->resolve("CA"), $ca, "resolve CA entry $desc" );
-        is( $t->resolve("Foo"), $foo, "resolve Foo entry $desc" );
-        is( $t->resolve("CA::Sub"), undef, "failed resolution $desc" );
-        is( $t->resolve("Bar"), undef, "failed resolution $desc" );
+        is( $t->resolve("KiokuDB_Test_CA"), $ca, "resolve KiokuDB_Test_CA entry $desc" );
+        is( $t->resolve("KiokuDB_Test_Foo"), $foo, "resolve KiokuDB_Test_Foo entry $desc" );
+        is( $t->resolve("KiokuDB_Test_CA::Sub"), undef, "failed resolution $desc" );
+        is( $t->resolve("KiokuDB_Test_Bar"), undef, "failed resolution $desc" );
     }
 }
 
@@ -178,23 +178,23 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         includes => [
             KiokuDB::TypeMap->new(
                 isa_entries => {
-                    'CA' => $ca,
+                    'KiokuDB_Test_CA' => $ca,
                 },
             ),
         ],
         isa_entries => {
-            'Foo' => $foo,
+            'KiokuDB_Test_Foo' => $foo,
         }
     );
 
     my $t2 = KiokuDB::TypeMap->new(
         isa_entries => {
-            'CA' => $ca,
+            'KiokuDB_Test_CA' => $ca,
         },
         includes => [
             KiokuDB::TypeMap->new(
                 isa_entries => {
-                    'Foo' => $foo,
+                    'KiokuDB_Test_Foo' => $foo,
                 }
             ),
         ],
@@ -204,29 +204,29 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
         includes => [
             KiokuDB::TypeMap->new(
                 isa_entries => {
-                    'CA' => $ca,
+                    'KiokuDB_Test_CA' => $ca,
                 },
             ),
             KiokuDB::TypeMap->new(
                 isa_entries => {
-                    'Foo' => $foo,
+                    'KiokuDB_Test_Foo' => $foo,
                 }
             ),
         ],
     );
 
-    my @desc = ( "inherit CA", "inherit Foo", "inherit both" );
+    my @desc = ( "inherit KiokuDB_Test_CA", "inherit KiokuDB_Test_Foo", "inherit both" );
     foreach my $t ( $t1, $t2, $t3 ) {
         my $desc = "(". shift(@desc) . ")";
 
         isa_ok( $t, "KiokuDB::TypeMap" );
 
-        is_deeply( $t->all_isa_entry_classes, [qw(Foo CA)], "isa entry classes" );
+        is_deeply( $t->all_isa_entry_classes, [qw(KiokuDB_Test_Foo KiokuDB_Test_CA)], "isa entry classes" );
 
-        is( $t->resolve("CA"), $ca, "resolve CA entry $desc" );
-        is( $t->resolve("Foo"), $foo, "resolve Foo entry $desc" );
-        is( $t->resolve("CA::Sub"), $ca, "resolve CA entry for subclass $desc" );
-        is( $t->resolve("Bar"), $foo, "resolve Foo entry for subclass $desc" );
+        is( $t->resolve("KiokuDB_Test_CA"), $ca, "resolve KiokuDB_Test_CA entry $desc" );
+        is( $t->resolve("KiokuDB_Test_Foo"), $foo, "resolve KiokuDB_Test_Foo entry $desc" );
+        is( $t->resolve("KiokuDB_Test_CA::Sub"), $ca, "resolve KiokuDB_Test_CA entry for subclass $desc" );
+        is( $t->resolve("KiokuDB_Test_Bar"), $foo, "resolve KiokuDB_Test_Foo entry for subclass $desc" );
     }
 }
 
@@ -238,13 +238,13 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
     throws_ok {
         KiokuDB::TypeMap->new(
             entries => {
-                'CA' => $ca,
+                'KiokuDB_Test_CA' => $ca,
             },
             isa_entries => {
-                'CA' => $ca,
+                'KiokuDB_Test_CA' => $ca,
             }
         );
-    } qr/\bCA\b/, "regular conflicting with isa entry";
+    } qr/\bKiokuDB_Test_CA\b/, "regular conflicting with isa entry";
 
 }
 
@@ -258,51 +258,51 @@ use ok 'KiokuDB::TypeMap::Entry::Naive';
             includes => [
                 KiokuDB::TypeMap->new(
                     entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     },
                 ),
                 KiokuDB::TypeMap->new(
                     entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     }
                 ),
             ],
         );
-    } qr/\bCA\b/, "regular entry conflict";
+    } qr/\bKiokuDB_Test_CA\b/, "regular entry conflict";
 
     throws_ok {
         KiokuDB::TypeMap->new(
             includes => [
                 KiokuDB::TypeMap->new(
                     isa_entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     },
                 ),
                 KiokuDB::TypeMap->new(
                     isa_entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     }
                 ),
             ],
         );
-    } qr/\bCA\b/, "isa entry conflict";
+    } qr/\bKiokuDB_Test_CA\b/, "isa entry conflict";
 
     throws_ok {
         KiokuDB::TypeMap->new(
             includes => [
                 KiokuDB::TypeMap->new(
                     isa_entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     },
                 ),
                 KiokuDB::TypeMap->new(
                     entries => {
-                        'CA' => $ca,
+                        'KiokuDB_Test_CA' => $ca,
                     }
                 ),
             ],
         );
-    } qr/\bCA\b/, "mixed entry conflict";
+    } qr/\bKiokuDB_Test_CA\b/, "mixed entry conflict";
 }
 
 

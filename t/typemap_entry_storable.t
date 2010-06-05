@@ -17,12 +17,12 @@ use ok 'KiokuDB::Backend::Hash';
 BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok {}' }
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has foo => ( is => "rw" );
 
-    has bar => ( is => "rw", isa => "Bar", predicate => "has_bar" );
+    has bar => ( is => "rw", isa => "KiokuDB_Test_Bar", predicate => "has_bar" );
 
     sub STORABLE_freeze {
         my ( $self, $cloning ) = @_;
@@ -36,14 +36,14 @@ BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok {}' }
         $self->bar($bar) if ref $bar;
     }
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has blah => ( is => "rw" );
 
     has foo => ( is => "rw", weak_ref => 1 );
 
-    package Gorch;
+    package KiokuDB_Test_Gorch;
     use Moose;
 
     has name => ( is => "rw" );
@@ -60,21 +60,21 @@ BEGIN { eval 'use Test::Memory::Cycle; 1' or eval 'sub memory_cycle_ok {}' }
     }
 }
 
-my $obj = Foo->new( foo => "HALLO" );
+my $obj = KiokuDB_Test_Foo->new( foo => "HALLO" );
 
-my $deep = Foo->new( foo => "la", bar => Bar->new( blah => "hai" ) );
+my $deep = KiokuDB_Test_Foo->new( foo => "la", bar => KiokuDB_Test_Bar->new( blah => "hai" ) );
 
-my $circular = Foo->new( foo => "oink", bar => Bar->new( blah => "three" ) );
+my $circular = KiokuDB_Test_Foo->new( foo => "oink", bar => KiokuDB_Test_Bar->new( blah => "three" ) );
 $circular->bar->foo($circular);
 
-my $attach = Gorch->new( name => "blah" );
+my $attach = KiokuDB_Test_Gorch->new( name => "blah" );
 
 my $s = KiokuDB::TypeMap::Entry::StorableHook->new;
 
 my $tr = KiokuDB::TypeMap::Resolver->new(
     typemap => KiokuDB::TypeMap->new(
         entries => {
-            Foo => $s,
+            KiokuDB_Test_Foo => $s,
         },
     ),
 );
@@ -109,7 +109,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $obj, "is_deeply" );
@@ -137,7 +137,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($deep), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $deep, "is_deeply" );
@@ -165,7 +165,7 @@ my $l = KiokuDB::Linker->new(
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Foo", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Foo", "expanded object" );
     isnt( refaddr($expanded), refaddr($circular), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $circular, "is_deeply" );
@@ -195,7 +195,7 @@ is_deeply( [ $l->live_objects->live_objects ], [], "no live objects" );
 
     my $expanded = $l->expand_object($entry);
 
-    isa_ok( $expanded, "Gorch", "expanded object" );
+    isa_ok( $expanded, "KiokuDB_Test_Gorch", "expanded object" );
     isnt( refaddr($expanded), refaddr($obj), "refaddr doesn't equal" );
     isnt( refaddr($expanded), refaddr($entry->data), "refaddr doesn't entry data refaddr" );
     is_deeply( $expanded, $attach, "is_deeply" );

@@ -19,12 +19,12 @@ use ok 'KiokuDB::Backend::Hash';
 use Tie::RefHash;
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has bar => ( is => "rw" );
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has blah => ( is => "rw" );
@@ -32,9 +32,9 @@ use Tie::RefHash;
 
 tie my %h, 'Tie::RefHash';
 
-$h{Bar->new( blah => "two" )} = "bar";
+$h{KiokuDB_Test_Bar->new( blah => "two" )} = "bar";
 
-my $obj = Foo->new(
+my $obj = KiokuDB_Test_Foo->new(
     bar => \%h,
 );
 
@@ -85,9 +85,9 @@ for my $i ( 0, 1 ) {
 
     my $loaded = $l->expand_object($copy->{$ids[0]});
 
-    isa_ok( $loaded, "Foo" );
+    isa_ok( $loaded, "KiokuDB_Test_Foo" );
 
-    is( ref(my $h = $loaded->bar), "HASH", "Foo->bar is a hash" );
+    is( ref(my $h = $loaded->bar), "HASH", "KiokuDB_Test_Foo->bar is a hash" );
 
     isa_ok( tied(%$h), "Tie::RefHash", "tied to Tie::RefHash" );
 }

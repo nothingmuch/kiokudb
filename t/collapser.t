@@ -39,7 +39,7 @@ sub unknown_ok (&@) {
 }
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     # check reserved field clashes
@@ -53,7 +53,7 @@ sub unknown_ok (&@) {
 
     __PACKAGE__->meta->make_immutable;
 
-    package Bar;
+    package KiokuDB_Test_Bar;
     use Moose;
 
     has id => ( is => "rw", isa => "Int" );
@@ -77,10 +77,10 @@ sub unknown_ok (&@) {
 
     my $s = $lo->new_scope;
 
-    my $foo = Foo->new(
+    my $foo = KiokuDB_Test_Foo->new(
         id  => "oink",
         zot => "zot",
-        bar => Bar->new(
+        bar => KiokuDB_Test_Bar->new(
             id => 3,
             blah => {
                 oink => 3
@@ -91,7 +91,7 @@ sub unknown_ok (&@) {
     unknown_ok { $v->collapse( objects => [ $foo ], only_known => 1 ) } $foo;
 
     {
-        my $obj = Foo->new( bar => $foo->bar );
+        my $obj = KiokuDB_Test_Foo->new( bar => $foo->bar );
 
         $v->live_objects->insert( foo => $obj );
 
@@ -120,7 +120,7 @@ sub unknown_ok (&@) {
 
     is( scalar(@entries), 2, "two entries" );
 
-    is( $entries[0]->class, 'Foo', "class" );
+    is( $entries[0]->class, 'KiokuDB_Test_Foo', "class" );
 
     is_deeply(
         $entries[0]->data,
@@ -129,7 +129,7 @@ sub unknown_ok (&@) {
             id  => "oink",
             zot => "zot",
         },
-        "Foo object",
+        "KiokuDB_Test_Foo object",
     );
 
     is_deeply(
@@ -140,7 +140,7 @@ sub unknown_ok (&@) {
                 oink => 3
             },
         },
-        "Bar object",
+        "KiokuDB_Test_Bar object",
     );
 }
 
@@ -163,7 +163,7 @@ sub unknown_ok (&@) {
     my $x = { name => "shared" };
 
     # shared values must be assigned a UID
-    my $bar = Bar->new(
+    my $bar = KiokuDB_Test_Bar->new(
         id => 5,
         blah => [ $x, $x ],
     );
@@ -214,10 +214,10 @@ sub unknown_ok (&@) {
 
     my $s = $lo->new_scope;
 
-    my $foo = Foo->new(
+    my $foo = KiokuDB_Test_Foo->new(
         id  => "oink",
         zot => "zot",
-        bar => Bar->new(
+        bar => KiokuDB_Test_Bar->new(
             id => 3,
         ),
     );
@@ -232,7 +232,7 @@ sub unknown_ok (&@) {
 
     my $other_id = $entries[1]->id;
 
-    is( $entries[0]->class, 'Foo', "class" );
+    is( $entries[0]->class, 'KiokuDB_Test_Foo', "class" );
 
     is_deeply(
         $entries[0]->data,
@@ -241,7 +241,7 @@ sub unknown_ok (&@) {
             id  => "oink",
             zot => "zot",
         },
-        "Foo object",
+        "KiokuDB_Test_Foo object",
     );
 
     is_deeply(
@@ -250,7 +250,7 @@ sub unknown_ok (&@) {
             id => 3,
             blah => KiokuDB::Reference->new( id => $id ),
         },
-        "Bar object",
+        "KiokuDB_Test_Bar object",
     );
 }
 
@@ -273,7 +273,7 @@ sub unknown_ok (&@) {
     my $x = { name => "shared" };
 
     # shared values must be assigned a UID
-    my $bar = Bar->new(
+    my $bar = KiokuDB_Test_Bar->new(
         id => 5,
         blah => [ $x, $x ],
     );
@@ -328,7 +328,7 @@ sub unknown_ok (&@) {
     my $x = { name => "shared" };
 
     # shared values must be assigned a UID
-    my $bar = Bar->new(
+    my $bar = KiokuDB_Test_Bar->new(
         id => 5,
         blah => [ $x, $x ],
     );
@@ -384,7 +384,7 @@ sub unknown_ok (&@) {
     my $data = { };
     $data->{self} = $data;
 
-    my $obj = Foo->new( bar => $data );
+    my $obj = KiokuDB_Test_Foo->new( bar => $data );
 
     $v->live_objects->insert( obj => $obj );
 
@@ -392,7 +392,7 @@ sub unknown_ok (&@) {
 }
 
 {
-    my $obj = Foo->new( bar => { foo => "hello" } );
+    my $obj = KiokuDB_Test_Foo->new( bar => { foo => "hello" } );
 
     {
         my $v = KiokuDB::Collapser->new(
@@ -438,7 +438,7 @@ sub unknown_ok (&@) {
 }
 
 {
-    my $obj = Foo->new( foo => "one", bar => Foo->new( foo => "two" ) );
+    my $obj = KiokuDB_Test_Foo->new( foo => "one", bar => KiokuDB_Test_Foo->new( foo => "two" ) );
 
     {
         my $v = KiokuDB::Collapser->new(
@@ -475,9 +475,9 @@ sub unknown_ok (&@) {
 }
 
 {
-    my $obj = Foo->new(
+    my $obj = KiokuDB_Test_Foo->new(
         zot => "one",
-        bar => Bar->new( blah => "two" )
+        bar => KiokuDB_Test_Bar->new( blah => "two" )
     );
 
     {
@@ -487,7 +487,7 @@ sub unknown_ok (&@) {
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
-                        Bar => KiokuDB::TypeMap::Entry::MOP->new(
+                        KiokuDB_Test_Bar => KiokuDB::TypeMap::Entry::MOP->new(
                             intrinsic => 1,
                         ),
                         ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
@@ -511,7 +511,7 @@ sub unknown_ok (&@) {
             {
                 zot => "one",
                 bar => KiokuDB::Entry->new(
-                    class => "Bar",
+                    class => "KiokuDB_Test_Bar",
                     data  => { blah => "two" },
                     object => $obj->bar,
                 ),
@@ -522,8 +522,8 @@ sub unknown_ok (&@) {
 }
 
 {
-    my $bar = Bar->new( blah => "two" );
-    my $obj = Foo->new(
+    my $bar = KiokuDB_Test_Bar->new( blah => "two" );
+    my $obj = KiokuDB_Test_Foo->new(
         zot => "one",
         bar => $bar,
         zot => $bar,
@@ -536,7 +536,7 @@ sub unknown_ok (&@) {
             typemap_resolver => KiokuDB::TypeMap::Resolver->new(
                 typemap => KiokuDB::TypeMap->new(
                     entries => {
-                        Bar => KiokuDB::TypeMap::Entry::MOP->new(
+                        KiokuDB_Test_Bar => KiokuDB::TypeMap::Entry::MOP->new(
                             intrinsic => 1,
                         ),
                         ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
@@ -560,12 +560,12 @@ sub unknown_ok (&@) {
             {
                 zot => "one",
                 bar => KiokuDB::Entry->new(
-                    class => "Bar",
+                    class => "KiokuDB_Test_Bar",
                     data  => { blah => "two" },
                     object => $obj->bar,
                 ),
                 zot => KiokuDB::Entry->new(
-                    class => "Bar",
+                    class => "KiokuDB_Test_Bar",
                     data  => { blah => "two" },
                     object => $obj->bar,
                 ),
@@ -578,9 +578,9 @@ sub unknown_ok (&@) {
 {
     tie my %h, 'Tie::RefHash';
 
-    $h{Bar->new( blah => "two" )} = "bar";
+    $h{KiokuDB_Test_Bar->new( blah => "two" )} = "bar";
 
-    my $obj = Foo->new(
+    my $obj = KiokuDB_Test_Foo->new(
         bar => \%h,
     );
 
@@ -623,7 +623,7 @@ sub unknown_ok (&@) {
             dclone($root),
             KiokuDB::Entry->new(
                 id    => $ids[0],
-                class => "Foo",
+                class => "KiokuDB_Test_Foo",
                 data  => {
                     bar => KiokuDB::Entry->new(
                         tied => "H",
@@ -642,9 +642,9 @@ sub unknown_ok (&@) {
 {
     tie my %h, 'Tie::RefHash';
 
-    $h{Bar->new( blah => "two" )} = "bar";
+    $h{KiokuDB_Test_Bar->new( blah => "two" )} = "bar";
 
-    my $obj = Foo->new(
+    my $obj = KiokuDB_Test_Foo->new(
         bar => \%h,
     );
 
@@ -680,7 +680,7 @@ sub unknown_ok (&@) {
             dclone($root),
             KiokuDB::Entry->new(
                 id    => $ids[0],
-                class => "Foo",
+                class => "KiokuDB_Test_Foo",
                 data  => {
                     bar => KiokuDB::Entry->new(
                         tied => "H",
@@ -694,27 +694,27 @@ sub unknown_ok (&@) {
 }
 
 {
-    my $bar = Bar->new( blah => "shared" );
+    my $bar = KiokuDB_Test_Bar->new( blah => "shared" );
 
-    my $foo_1 = Foo->new(
+    my $foo_1 = KiokuDB_Test_Foo->new(
         zot => "one",
         bar => $bar,
     );
 
-    my $foo_2 = Foo->new(
+    my $foo_2 = KiokuDB_Test_Foo->new(
         zot => "two",
         bar => $bar,
     );
 
-    my $foo_3 = Foo->new(
+    my $foo_3 = KiokuDB_Test_Foo->new(
         zot => "three",
         bar => $bar,
     );
 
-    my $foo_4 = Foo->new(
+    my $foo_4 = KiokuDB_Test_Foo->new(
         zot => "two",
         bar => $bar,
-        moof => [ Bar->new( blah => "yay" ), $bar ],
+        moof => [ KiokuDB_Test_Bar->new( blah => "yay" ), $bar ],
     );
 
     my $v = KiokuDB::Collapser->new(
@@ -740,7 +740,7 @@ sub unknown_ok (&@) {
         is( scalar(keys %$entries), 1, "one entry" );
         is( scalar(@ids), 1, "one root set ID" );
 
-        is( $entries->{$ids[0]}->class, "Bar", "class" );
+        is( $entries->{$ids[0]}->class, "KiokuDB_Test_Bar", "class" );
 
         $buffer->update_entries;
     }
@@ -753,7 +753,7 @@ sub unknown_ok (&@) {
         is( scalar(keys %$entries), 1, "one entry with only_new" );
         is( scalar(@ids), 1, "one root set ID" );
 
-        is( $entries->{$ids[0]}->class, "Foo", "class" );
+        is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
         $buffer->update_entries;
     }
@@ -766,7 +766,7 @@ sub unknown_ok (&@) {
         is( scalar(keys %$entries), 2, "two entries" );
         is( scalar(@ids), 1, "one root set ID" );
 
-        is( $entries->{$ids[0]}->class, "Foo", "class" );
+        is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
         $buffer->update_entries;
     }
@@ -783,7 +783,7 @@ sub unknown_ok (&@) {
         is( scalar(keys %$entries), 1, "one entry" );
         is( scalar(@ids), 1, "one root set ID" );
 
-        is( $entries->{$ids[0]}->class, "Foo", "class" );
+        is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
         $buffer->update_entries;
     }
@@ -796,7 +796,7 @@ sub unknown_ok (&@) {
         is( scalar(keys %$entries), 2, "two entries" );
         is( scalar(@ids), 1, "one root set ID" );
 
-        is( $entries->{$ids[0]}->class, "Foo", "class" );
+        is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
         ok( !exists($entries->{$lo->object_to_id($bar)}), "known object doesn't exist in entry set" );
 

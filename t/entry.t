@@ -12,13 +12,13 @@ use ok 'KiokuDB::Reference';
 use ok 'KiokuDB::LiveObjects';
 
 {
-    package Foo;
+    package KiokuDB_Test_Foo;
     use Moose;
 
     has oi => ( is => "rw" );
 }
 
-my $x = Foo->new( oi => "vey" );
+my $x = KiokuDB_Test_Foo->new( oi => "vey" );
 my $l = KiokuDB::LiveObjects->new;
 
 {
@@ -26,10 +26,10 @@ my $l = KiokuDB::LiveObjects->new;
         KiokuDB::Entry->new(
             id => "foo",
             root => 1,
-            class => "Foo",
+            class => "KiokuDB_Test_Foo",
             data => { oi => "vey" },
             object => $x,
-            class_meta => { roles => [qw(Bar)] },
+            class_meta => { roles => [qw(KiokuDB_Test_Bar)] },
         ),
         KiokuDB::Entry->new(
             id => "bar",
@@ -43,7 +43,7 @@ my $l = KiokuDB::LiveObjects->new;
             id   => "bondage",
             tied => "H",
             data => KiokuDB::Entry->new(
-                class => "Foo",
+                class => "KiokuDB_Test_Foo",
                 data => {},
             ),
         ),
@@ -51,7 +51,7 @@ my $l = KiokuDB::LiveObjects->new;
         #    id   => "bondage",
         #    tied => "HASH",
         #    data => KiokuDB::Entry->new(
-        #        class => "Foo",
+        #        class => "KiokuDB_Test_Foo",
         #        data => {},
         #    ),
         #),
