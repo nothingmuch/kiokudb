@@ -5,8 +5,6 @@ use Moose;
 
 use Carp qw(croak);
 
-use Moose::Util::TypeConstraints;
-
 use namespace::clean -except => 'meta';
 
 extends qw(KiokuDB::Cmd::Base);
@@ -28,11 +26,12 @@ has print => (
 
 has mode => (
     traits => [qw(Getopt)],
-    isa => enum([qw(naive foofoooo)]),
     is  => "ro",
     default => "naive",
     cmd_aliases => "m",
     documentation => "the garbage collection mode to use",
+    predicate => "has_mode",
+    lazy => 1,
 );
 
 my %modes = (
@@ -49,7 +48,6 @@ has class => (
 
 sub _build_class {
     my $self = shift;
-
     $modes{$self->mode} or croak "Unknown mode: " . $self->mode;
 }
 
@@ -62,14 +60,22 @@ has collector => (
 sub _build_collector {
     my $self = shift;
 
-    my $class = $self->class;
+    if ( $self->backend->does("KiokuDB::Backend::Role::GC") ) {
+       $self->backend->new_garbage_collector(
+           command => $self,
+           ( $self->has_mode  ? ( mode  => $self->mode )  : () ),
+           ( $self->has_class ? ( class => $self->class ) : () ),
+       );
+    } else {
+        my $class = $self->class;
 
-    Class::MOP::load_class($class);
+        Class::MOP::load_class($class);
 
-    $class->new(
-        backend => $self->backend,
-        verbose => $self->verbose,
-    );
+        return $class->new(
+            backend => $self->backend,
+            verbose => $self->verbose,
+        );
+    }
 }
 
 augment run => sub {
