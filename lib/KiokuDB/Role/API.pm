@@ -6,6 +6,8 @@ use namespace::clean -except => 'meta';
 requires qw(
     new_scope
     txn_do
+    scoped_txn
+    txn_begin txn_commit txn_rollback
 
     lookup
 

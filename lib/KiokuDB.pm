@@ -583,6 +583,42 @@ sub delete {
     $l->remove(@ids_or_objects);
 }
 
+sub scoped_txn {
+    my ( $self, $body, @args ) = @_;
+
+    $self->txn_do(body => $body, scope => 1, @args);
+}
+
+sub txn_begin {
+    my ( $self, @args ) = @_;
+
+    my $backend = $self->backend;
+
+    return unless $backend->can("txn_begin");
+
+    $backend->txn_begin(@args);
+}
+
+sub txn_commit {
+    my ( $self, @args ) = @_;
+
+    my $backend = $self->backend;
+
+    return unless $backend->can("txn_commit");
+
+    $backend->txn_commit(@args);
+}
+
+sub txn_rollback {
+    my ( $self, @args ) = @_;
+
+    my $backend = $self->backend;
+
+    return unless $backend->can("txn_rollback");
+
+    $backend->txn_rollback(@args);
+}
+
 sub txn_do {
     my ( $self, @args ) = @_;
 
@@ -1006,10 +1042,15 @@ C<update> must be called for the change to take effect.
 
 =item txn_do %args
 
+=item scoped_txn $code
+
 Executes $code within the scope of a transaction.
 
 This requires that the backend supports transactions
 (L<KiokuDB::Backend::Role::TXN>).
+
+If the backend does not support transactions, the code block will simply be
+invoked.
 
 Transactions may be nested.
 
@@ -1018,6 +1059,19 @@ keeping the scope for the duration of the transaction.
 
 The return value is propagated from the code block, with handling of
 list/scalar/void context.
+
+C<scoped_txn> is like C<txn_do> but sets C<scope> to true.
+
+=item txn_begin
+
+=item txn_commit
+
+=item txn_rollback
+
+These methods simply call the corresponding methods on the backend.
+
+Like C<txn_do> these methods are no-ops if the backend does not support
+transactions.
 
 =item search \%proto
 
