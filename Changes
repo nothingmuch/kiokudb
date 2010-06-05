@@ -1,6 +1,9 @@
 0.45
     - Introduce KiokuDB::Backend::Role::GC which allows backends to construct
       their own garbage collector for the GC command.
+    - name mangle inline classes in tests to avoid false failure reports (e.g.
+      when a Foo.pm is in @INC)
+    - add scoped_txn, txn_begin, txn_commit, txn_abort
 
 0.44
     - Remove accidental use of namespace::autoclean instead of namespace::clean
