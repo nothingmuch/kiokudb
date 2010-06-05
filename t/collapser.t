@@ -594,7 +594,12 @@ sub unknown_ok (&@) {
                         'Tie::RefHash' => KiokuDB::TypeMap::Entry::Callback->new(
                             intrinsic => 1,
                             collapse  => "STORABLE_freeze",
-                            expand    => "STORABLE_thaw",
+                            expand    => sub {
+                                my ( $class, @args ) = @_;
+                                my $self = bless [], $class;
+                                $self->STORABLE_thaw(@args);
+                                return $self;
+                            }
                         ),
                         ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
                         HASH  => KiokuDB::TypeMap::Entry::Ref->new,
