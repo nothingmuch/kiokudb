@@ -3,7 +3,7 @@
 package KiokuDB;
 use Moose;
 
-our $VERSION = "0.44";
+our $VERSION = "0.45";
 
 use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
@@ -26,7 +26,7 @@ use namespace::clean -except => [qw(meta SERIAL_IDS)];
 
 no warnings 'recursion';
 
-our $REQUIRED_CMD_VERSION = "0.02";
+our $REQUIRED_CMD_VERSION = "0.03";
 sub cmd_is_up_to_date {
     require KiokuDB::Cmd;
     try { KiokuDB::Cmd->VERSION($REQUIRED_CMD_VERSION); 1 };
