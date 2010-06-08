@@ -6,20 +6,16 @@ use Moose;
 use namespace::clean -except => 'meta';
 
 has objects => (
+    traits => [qw(Array)],
     isa => "ArrayRef",
-    is  => "ro",
     default => sub { [] },
+    clearer => "_clear_objects",
+    handles => {
+        push => "push",
+        objects => "elements",
+        clear => "clear",
+    },
 );
-
-sub push {
-    my ( $self, @objs ) = @_;
-    push @{ $self->objects }, @objs;
-}
-
-sub clear {
-    my $self = shift;
-    @{ $self->objects } = ();
-}
 
 has parent => (
     isa => __PACKAGE__,
@@ -29,7 +25,7 @@ has parent => (
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "ro",
-    required => 1,
+    clearer => "_clear_live_objects",
 );
 
 sub DEMOLISH {
@@ -41,16 +37,24 @@ sub DEMOLISH {
     # problems can arise from an object outliving the scope it was loaded in:
     # { my $outer = lookup(...); { my $inner = lookup(...); $outer->foo($inner) } }
 
-    if ( my $l = $self->live_objects ) {
-        if ( my $parent = $self->parent ) {
-            $l->_set_current_scope($parent);
-        } else {
-            $l->_clear_current_scope();
-        }
-    }
+    $self->remove;
+}
 
-    # FIXME in debug mode detect if @{ $self->objects } = (), but said objects
-    # survive the cleanup and warn about them
+sub detach {
+    my $self = shift;
+
+    if ( my $l = $self->live_objects ) {
+        $l->detach_scope($self);
+    }
+}
+
+sub remove {
+    my $self = shift;
+
+    if ( my $l = $self->live_objects ) { # can be false under global destruction
+        $l->remove_scope($self);
+        $self->_clear_live_objects;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -92,6 +96,17 @@ Adds objects or entries, increasing their reference count.
 =item clear
 
 Clears the objects from the scope object.
+
+=item detach
+
+Marks this scope as no longer the "current" live object scope, if it is the current one.
+
+This allows keeping branching of scopes, which can be useful under long running
+applications.
+
+=item remove
+
+Effectively kills the scope by clearing it and removing it from the live object set.
 
 =back
 

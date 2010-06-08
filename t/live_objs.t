@@ -16,6 +16,8 @@ use ok 'KiokuDB::Entry';
 
     has bar => ( is => "rw", weak_ref => 1 );
 
+    has strong_ref => ( is => "rw" );
+
     package KiokuDB_Test_Bar;
     use Moose;
 
@@ -240,5 +242,107 @@ use ok 'KiokuDB::Entry';
     );
 }
 
+{
+    my $l = KiokuDB::LiveObjects->new;
+
+    {
+        my $s = $l->new_scope;
+
+        my $foo = KiokuDB_Test_Foo->new;
+
+        $l->insert( foo => $foo );
+
+        is_deeply( [ $l->live_objects ], [ $foo ], "live object set" );
+
+        is_deeply( [ $s->objects ], [ $foo ], "scope objects" );
+
+        $s->detach;
+
+        is( $l->current_scope, undef, "scope detached:" );
+
+        is_deeply( [ $l->live_objects ], [ $foo ], "live object set" );
+
+        is_deeply( [ $s->objects ], [ $foo ], "scope objects" );
+
+        my $s2 = $l->new_scope;
+
+        my $bar = KiokuDB_Test_Bar->new;
+
+        $l->insert( bar => $bar );
+
+        is_deeply( [ sort $l->live_objects ], [ sort $foo, $bar ], "live object set" );
+
+        is_deeply( [ $s->objects ], [ $foo ], "scope objects" );
+
+        is_deeply( [ $s2->objects ], [ $bar ], "second scope objects" );
+
+        $s->remove;
+        undef $foo;
+
+        is_deeply( [ $l->live_objects ], [ $bar ], "disjoint scope death" );
+
+        is_deeply( [ $s2->objects ], [ $bar ], "second scope objects" );
+    }
+
+    is_deeply(
+        [ $l->live_objects ],
+        [ ],
+        "live object set is now empty"
+    );
+}
+
+{
+    my $leak_tracker_called;
+
+    my $l = KiokuDB::LiveObjects->new(
+        clear_leaks => 1,
+        leak_tracker => sub {
+            $leak_tracker_called++;
+            $_->strong_ref(undef) for @_;
+        }
+    );
+
+    my $foo = KiokuDB_Test_Foo->new;
+    my $bar = KiokuDB_Test_Foo->new;
+
+    $foo->strong_ref($bar);
+    $bar->strong_ref($foo);
+
+    weaken $foo;
+    weaken $bar;
+
+    ok( defined($foo), "circular refs keep structure alive" );
+
+    {
+        my $s = $l->new_scope;
+
+        {
+            my $s2 = $l->new_scope;
+
+            $l->insert( foo => $foo );
+
+            is_deeply( [ $l->live_objects ], [ $foo ], "live object set" );
+
+            is_deeply( [ $s2->objects ], [ $foo ], "scope objects" );
+        }
+
+        is_deeply( [ $s->objects ], [ ], "no scope objects" );
+
+        my @live = $l->live_objects;
+        is( scalar(@live), 1, "circular ref still live" );
+    }
+
+    is( $l->current_scope, undef, "no current scope" );
+
+    is_deeply(
+        [ $l->live_objects ],
+        [ ],
+        "live object set is now empty"
+    );
+
+    ok( $leak_tracker_called, "leak tracker called" );
+
+    is( $foo, undef, "structure has been manually cleared" );
+}
 
 done_testing;

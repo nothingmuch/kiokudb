@@ -15,6 +15,17 @@ use KiokuDB::LiveObjects::TXNScope;
 
 use namespace::clean -except => 'meta';
 
+has clear_leaks => (
+    isa => "Bool",
+    is  => "rw",
+);
+
+has leak_tracker => (
+    isa => "CodeRef|Object",
+    is  => "rw",
+    clearer => "clear_leak_tracker",
+);
+
 has _objects => (
     isa => "HashRef",
     is  => "ro",
@@ -99,6 +110,53 @@ has current_scope => (
     weak_ref => 1,
 );
 
+has _known_scopes => (
+    isa => "Set::Object",
+    is  => "ro",
+    default => sub { Set::Object::Weak->new },
+);
+
+sub detach_scope {
+    my ( $self, $scope ) = @_;
+
+    my $current_scope = $self->current_scope;
+    if ( defined($current_scope) and refaddr($current_scope) == refaddr($scope) ) {
+        if ( my $parent = $scope->parent ) {
+            $self->_set_current_scope($parent);
+        } else {
+            $self->_clear_current_scope;
+        }
+    }
+}
+
+sub remove_scope {
+    my ( $self, $scope ) = @_;
+
+    $self->detach_scope($scope);
+
+    $scope->clear;
+
+    my $known = $self->_known_scopes;
+
+    $known->remove($scope);
+
+    if ( $known->size == 0 ) {
+        if ( my @objects = $self->live_objects ) {
+            if ( $self->clear_leaks ) {
+                $self->clear;
+            }
+
+            if ( my $tracker = $self->leak_tracker ) {
+                if ( ref($tracker) eq 'CODE' ) {
+                    $tracker->(@objects);
+                } else {
+                    $tracker->leaked_objects(@objects);
+                }
+            }
+        }
+    }
+}
+
 has txn_scope => (
     isa => "KiokuDB::LiveObjects::TXNScope",
     is  => "ro",
@@ -118,6 +176,8 @@ sub new_scope {
     );
 
     $self->_set_current_scope($child);
+
+    $self->_known_scopes->insert($child);
 
     return $child;
 }
@@ -260,6 +320,16 @@ sub remove {
     }
 }
 
+sub register_entry {
+    my ( $self, $entry, $object ) = @_;
+}
+
+sub register_id {
+    my ( $self, $id, $object ) = @_;
+
+
+}
+
 sub insert {
     my ( $self, @pairs ) = @_;
 
@@ -358,6 +428,9 @@ sub clear {
 
     %{ $self->_entry_ids } = ();
     %{ $self->_entry_objects } = ();
+
+    $self->_clear_current_scope;
+    $self->_known_scopes->clear;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -388,6 +461,44 @@ KiokuDB::LiveObjects - Live object set tracking
 
 This object keeps track of the set of live objects, their associated IDs, and
 the storage entries.
+
+=head1 ATTRIBUTES
+
+=over 4
+
+=item clear_leaks
+
+Boolean. Defaults to false.
+
+If true, when the last known scope is removed but some objects are still live
+they will be removed from the live object set.
+
+Note that this does B<NOT> prevent leaks (memory cannot be reclaimed), it
+merely prevents stale objects from staying loaded.
+
+=item leak_tracker
+
+This is a coderef or object.
+
+If any objects ar eleaked (see C<clear_leaks>) then the this can be used to
+report them, or to break the circular structure.
+
+When an object is provided the C<leaked_objects> method is called. The coderef
+is simply invoked with the objects as arguments.
+
+Triggered after C<clear_leaks> causes C<clear> to be called.
+
+For example, to break cycles you can use L<Data::Structure::Util>'s
+C<circular_off> function:
+
+    use Data::Structure::Util qw(circular_off);
+
+    $dir->live_objects->leak_tracker(sub {
+        my @leaked_objects = @_;
+        circular_off($_) for @leaked_objects;
+    });
+
+=back
 
 =head1 METHODS
 
@@ -481,6 +592,20 @@ Called by L<KiokuDB::LiveObjects::TXNScope/rollback>.
 =item remove
 
 Removes entries from the live object set.
+
+=item remove_scope $scope
+
+Removes a scope from the set of known scopes.
+
+Also calls C<detach_scope>, and calls C<KiokuDB::LiveObjects::Scope/clear> on
+the scope itself.
+
+=item detach_scope $scope
+
+Detaches C<$scope> if it's the current scope.
+
+This prevents C<push> from being called on this scope object implicitly
+anymore.
 
 =back
 
