@@ -320,14 +320,30 @@ sub remove {
     }
 }
 
-sub register_entry {
-    my ( $self, $entry, $object ) = @_;
-}
+sub register_object_ids {
+    my ( $self, %objects ) = @_;
 
-sub register_id {
-    my ( $self, $id, $object ) = @_;
+    my ( $i, $o ) = ( $self->_ids, $self->_objects );
 
+    my $s = $self->current_scope or croak "no open live object scope";
 
+    foreach my $id ( keys %objects ) {
+        my $object = $objects{$id};
+
+        croak($object, " is already registered as $o->{$object}{id}")
+            if exists($o->{$object}) and $o->{$object}{id} ne $id;;
+
+        croak "An object with the id '$id' is already registered ($i->{$id} != $object)"
+            if exists($i->{$id}) and refaddr($i->{$id}) != refaddr($object);
+
+        weaken($i->{$id} = $object);
+        $s->push($object);
+
+        my $info = $o->{$objects{$id}} ||= {};
+
+        $info->{id}      = $id;
+        $info->{guard} ||= KiokuDB::LiveObjects::Guard->new( $i, $id );
+    }
 }
 
 sub insert {
@@ -336,10 +352,11 @@ sub insert {
     croak "The arguments must be an list of pairs of IDs/Entries to objects"
         unless @pairs % 2 == 0;
 
+    croak "no open live object scope" unless $self->current_scope;
+
     my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
 
-    my $s = $self->current_scope or croak "no open live object scope";
-
+    my @register;
     while ( @pairs ) {
         my ( $id, $object ) = splice @pairs, 0, 2;
         my $entry;
@@ -353,37 +370,33 @@ sub insert {
 
         croak($object, " is not a reference") unless ref($object);
         croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
-        croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object} and $o->{$object}{id} ne $id;;
 
-        if ( exists $i->{$id} ) {
-            croak "An object with the id '$id' is already registered";
-        } else {
-            weaken($i->{$id} = $object);
+        # FIXME bulk this? or will ->insert just get deprecated?
+        $self->register_object_ids( $id => $object );
 
-            $s->push($object);
-
-            if ( $entry ) {
-                unless ( $ei->{$id} ) {
-                    $ei->{$id} = $entry;
-                    $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
-                }
-
-                # break cycle for passthrough objects
-                if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
-                    weaken($entry->{data}); # FIXME there should be a MOP way to do this
-                }
+        if ( $entry ) {
+            unless ( $ei->{$id} ) {
+                $ei->{$id} = $entry;
+                $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
             }
 
-            # note, $entry = $e->{$id} is *not* desired, it isn't necessarily
-            # up to date
+            # break cycle for passthrough objects
+            if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+                weaken($entry->{data}); # FIXME there should be a MOP way to do this
+            }
 
-            $o->{$object} = {
-                id => $id,
-                entry => $entry,
-                guard => KiokuDB::LiveObjects::Guard->new( $i, $id ),
-            };
+            my $info = $o->{$object} ||= {};
+
+            $info->{in_storage} = 1;
+            $info->{entry} = $entry;
         }
     }
+}
+
+sub object_is_in_storage {
+    my ( $self, $object ) = @_;
+
+    $self->_objects->{$object}{in_storage};
 }
 
 sub insert_entries {
