@@ -37,7 +37,7 @@ my @objs = (
     }
 }
 
-my @ids = $dir->store( @objs);
+my @ids = $dir->store(@objs);
 
 sub iter {
     my @x = @objs;

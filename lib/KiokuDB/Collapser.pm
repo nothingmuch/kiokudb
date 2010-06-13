@@ -117,7 +117,7 @@ sub make_entry {
             %args,
         );
 
-        $self->_buffer->insert_entry( $id => $entry );
+        $self->_buffer->insert_entry( $id => $entry, $object );
 
         return $entry;
     } else {

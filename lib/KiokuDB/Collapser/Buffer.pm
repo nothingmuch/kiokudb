@@ -108,9 +108,10 @@ sub insert {
 }
 
 sub insert_entry {
-    my ( $self, $id, $entry ) = @_;
+    my ( $self, $id, $entry, $object ) = @_;
 
     $self->_entries->{$id} = $entry;
+    $self->insert($id, $object);
 }
 
 sub compact_entries {
@@ -190,15 +191,19 @@ sub insert_to_backend {
 
     $backend->insert(@insert);
 
-    $self->update_entries;
+    $self->update_entries( in_storage => 1 );
 }
 
 sub update_entries {
-    my $self = shift;
+    my ( $self, @args ) = @_;
+
+    my ( $e, $o ) = ( $self->_entries, $self->_ids );
 
     my $l = $self->live_objects;
-   
-    $l->update_entries( values %{ $self->_entries } );
+
+    foreach my $id ( keys %$e ) {
+        $l->update_entry( $o->{$id} => $e->{$id}, @args );
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

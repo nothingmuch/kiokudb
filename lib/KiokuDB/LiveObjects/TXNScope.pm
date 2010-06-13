@@ -24,7 +24,7 @@ has parent => (
     is  => "ro",
 );
 
-sub update_entries {
+sub push {
     my ( $self, @entries ) = @_;
 
     my $e = $self->entries;

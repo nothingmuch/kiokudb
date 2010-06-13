@@ -351,7 +351,7 @@ foreach my $intrinsic ( 1, 0 ) {
             "is_deeply"
         );
 
-        $v->live_objects->update_entries( values %$entries );
+        $v->live_objects->update_entries( map { $_->object => $_ } values %$entries );
 
         my ( $new_entries, $new_id ) = $v->collapse( objects => [ $once ] );
 

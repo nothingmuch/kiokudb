@@ -245,34 +245,48 @@ sub object_to_entry {
     return undef;
 }
 
-sub update_entries {
-    my ( $self, @entries ) = @_;
+sub update_entry {
+    my ( $self, $object, $entry, %args ) = @_;
 
-    my @ret;
+
+    # FIXME store() without a live object scope is actually allowed for now,
+    # it's in the tests, but I think that should be removed
+    #my $s = $self->current_scope or croak "no open live object scope";
+    my $s = $self->current_scope or return;
 
     my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
 
-    foreach my $entry ( @entries ) {
-        my $id = $entry->id;
+    my $id = $entry->id;
 
-        push @ret, $ei->{$id} if defined wantarray;
+    $self->register_entry( $id => $entry );
 
-        weaken($ei->{$id} = $entry);
-        $eo->{$entry} ||= KiokuDB::LiveObjects::Guard->new( $ei, $id );
-
-        if ( ref(my $obj = $i->{$id}) ) {
-            my $ent = $o->{$obj};
-            $ent->{entry} = $entry;
-        } elsif ( ref( my $object = $entry->object ) ) {
-            $self->insert( $entry => $object );
-        }
+    # FIXME register_object logic duplicated here
+    unless ( ref $i->{$id} ) {
+        weaken($i->{$id} = $object);
+        $s->push($object);
     }
 
-    if ( my $s = $self->txn_scope ) {
-        $s->update_entries(@entries);
+    my $data = $o->{$object} ||= { id => $id, guard => KiokuDB::LiveObjects::Guard->new($i, $id) };
+    $data->{entry} = $entry;
+
+    @{$data}{keys %args} = values %args;
+
+    # note entries so that in case txn scope rolls back, we can roll them back.
+    if ( my $txs = $self->txn_scope ) {
+        $txs->push($entry);
+    }
+}
+
+sub update_entries {
+    my ( $self, @pairs ) = @_;
+    my @entries;
+
+    while ( @pairs ) {
+        my ( $object, $entry ) = splice @pairs, 0, 2;
+        $self->update_entry( $object, $entry, in_storage => 1 );
     }
 
-    @ret;
+    return;
 }
 
 sub rollback_entries {
@@ -320,29 +334,56 @@ sub remove {
     }
 }
 
-sub register_object_ids {
-    my ( $self, %objects ) = @_;
+sub register_object {
+    my ( $self, $id, $object, @args ) = @_;
 
     my ( $i, $o ) = ( $self->_ids, $self->_objects );
 
     my $s = $self->current_scope or croak "no open live object scope";
 
-    foreach my $id ( keys %objects ) {
-        my $object = $objects{$id};
+    croak($object, " is not a reference") unless ref($object);
+    croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
 
-        croak($object, " is already registered as $o->{$object}{id}")
-            if exists($o->{$object}) and $o->{$object}{id} ne $id;;
+    croak($object, " is already registered as $o->{$object}{id}")
+        if exists($o->{$object});# and $o->{$object}{id} ne $id; # FIXME
 
-        croak "An object with the id '$id' is already registered ($i->{$id} != $object)"
-            if exists($i->{$id}) and refaddr($i->{$id}) != refaddr($object);
+    croak "An object with the id '$id' is already registered ($i->{$id} != $object)"
+        if exists($i->{$id});# and refaddr($i->{$id}) != refaddr($object); # FIXME
 
-        weaken($i->{$id} = $object);
-        $s->push($object);
+    weaken($i->{$id} = $object);
+    $s->push($object);
 
-        my $info = $o->{$objects{$id}} ||= {};
+    $o->{$object} = {
+        @args,
+        id    => $id,
+        guard => KiokuDB::LiveObjects::Guard->new($i, $id),
+    };
+}
 
-        $info->{id}      = $id;
-        $info->{guard} ||= KiokuDB::LiveObjects::Guard->new( $i, $id );
+sub register_entry {
+    my ( $self, $id, $entry ) = @_;
+
+    my ( $eo, $ei ) = ( $self->_entry_objects, $self->_entry_ids );
+
+    if ( my $old = delete $ei->{$id} ) {
+        if ( my $guard = delete $eo->{$old} ) {
+            $guard->dismiss;
+        }
+    }
+
+    weaken($ei->{$id} = $entry);
+    $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
+}
+
+sub register_object_and_entry {
+    my ( $self, $id, $object, $entry, @args ) = @_;
+
+    $self->register_entry( $id => $entry );
+    $self->register_object( $id => $object, entry => $entry, @args );
+
+    # break cycle for passthrough objects
+    if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+        weaken($entry->{data}); # FIXME there should be a MOP way to do this
     }
 }
 
@@ -371,24 +412,10 @@ sub insert {
         croak($object, " is not a reference") unless ref($object);
         croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
 
-        # FIXME bulk this? or will ->insert just get deprecated?
-        $self->register_object_ids( $id => $object );
-
         if ( $entry ) {
-            unless ( $ei->{$id} ) {
-                $ei->{$id} = $entry;
-                $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
-            }
-
-            # break cycle for passthrough objects
-            if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
-                weaken($entry->{data}); # FIXME there should be a MOP way to do this
-            }
-
-            my $info = $o->{$object} ||= {};
-
-            $info->{in_storage} = 1;
-            $info->{entry} = $entry;
+            $self->register_object_and_entry( $id => $object, $entry, in_storage => 1 );
+        } else {
+            $self->register_object( $id => $object );
         }
     }
 }

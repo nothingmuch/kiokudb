@@ -517,12 +517,34 @@ sub deep_update {
 # FIXME fails for immutable data...
 sub set_root {
     my ( $self, @objects ) = @_;
-    $_->root(1) for $self->live_objects->objects_to_entries(@objects);
+    my $l = $self->live_objects;
+
+    my @entries = $l->objects_to_entries(@objects);
+
+    $l->update_entries(map {
+        my $obj = shift @objects;
+
+        $obj => $_->derive(
+            root => 1,
+            object => $obj,
+        );
+    } @entries);
 }
 
 sub unset_root {
     my ( $self, @objects ) = @_;
-    $_->root(0) for $self->live_objects->objects_to_entries(@objects);
+    my $l = $self->live_objects;
+
+    my @entries = $l->objects_to_entries(@objects);
+
+    $l->update_entries(map {
+        my $obj = shift @objects;
+
+        $obj => $_->derive(
+            root => 0,
+            object => $obj,
+        );
+    } @entries);
 }
 
 sub is_root {
