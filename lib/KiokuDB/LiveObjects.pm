@@ -420,10 +420,12 @@ sub insert {
     }
 }
 
-sub object_is_in_storage {
+sub object_in_storage {
     my ( $self, $object ) = @_;
 
-    $self->_objects->{$object}{in_storage};
+    my $info = $self->_objects->{$object};
+
+    $info && $info->{in_storage};
 }
 
 sub insert_entries {

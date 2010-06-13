@@ -468,12 +468,10 @@ sub _insert {
 
     return unless @objects;
 
-    idhash my %entries;
-
-    @entries{@objects} = $self->live_objects->objects_to_entries(@objects);
+    my $l = $self->live_objects;
 
     # FIXME make optional?
-    if ( my @in_storage = grep { $entries{$_} } @objects ) {
+    if ( my @in_storage = grep { $l->object_in_storage($_) } @objects ) {
         croak "Objects already in database: @in_storage";
     }
 
