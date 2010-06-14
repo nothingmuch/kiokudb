@@ -172,6 +172,7 @@ sub _build_typemap_resolver {
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "ro",
+    coerce => 1,
     lazy => 1,
     builder => "_build_live_objects", # lazy_build => 1 sets clearer
     handles => {

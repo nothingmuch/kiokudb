@@ -13,7 +13,11 @@ use Set::Object;
 use KiokuDB::LiveObjects::Scope;
 use KiokuDB::LiveObjects::TXNScope;
 
+use Moose::Util::TypeConstraints;
+
 use namespace::clean -except => 'meta';
+
+coerce __PACKAGE__, from "HashRef", via { __PACKAGE__->new($_) };
 
 has clear_leaks => (
     isa => "Bool",
