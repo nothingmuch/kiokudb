@@ -291,6 +291,11 @@ sub update_entry {
     if ( my $txs = $self->txn_scope ) {
         $txs->push($entry);
     }
+
+    # break cycle for passthrough objects
+    if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+        weaken($entry->{data}); # FIXME there should be a MOP way to do this
+    }
 }
 
 sub update_entries {
