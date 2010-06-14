@@ -256,17 +256,14 @@ sub lookup_obj_ok {
     return $obj;
 }
 
-sub _no_live_objects {
-    my ( $self, $entries ) = @_;
+sub no_live_objects {
+    my $self = shift;
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
     my $fail;
 
-    $fail++ unless is( scalar(()=$self->live_objects), 0, "no live objects" );
-    $fail++ if $entries && not is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" );
-
-    if ( $fail ) {
+    unless ( is( scalar(()=$self->live_objects), 0, "no live objects" ) ) {
         my @l = $self->live_objects;
         diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } @l;
         require Data::Dumper;
@@ -285,14 +282,16 @@ sub _no_live_objects {
     }
 }
 
-sub no_live_objects {
-    my $self = shift;
-    $self->_no_live_objects(0);
-}
-
 sub no_live_entries {
     my $self = shift;
-    $self->_no_live_objects(1);
+
+    local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    unless ( is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" ) ) {
+        diag "live entries: " . join ", ", map { $_->id . " (" . $_->class . ")" } $self->directory->live_objects->live_entries;
+
+        $self->directory->live_objects->clear;
+    }
 }
 
 sub live_objects_are {
