@@ -14,6 +14,10 @@ sub new {
     return $self;
 }
 
+sub key {
+    $_[0][1];
+}
+
 sub DESTROY {
     my $self = shift;
     my ( $hash, $key ) = splice @$self;
@@ -24,6 +28,7 @@ sub dismiss {
     my $self = shift;
     @$self = ();
 }
+
 
 __PACKAGE__
 

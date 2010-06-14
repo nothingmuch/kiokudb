@@ -733,7 +733,7 @@ sub unknown_ok (&@) {
     my $s = $lo->new_scope;
 
     {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $bar ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $bar ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -746,11 +746,11 @@ sub unknown_ok (&@) {
     }
 
     {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_1 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_1 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
-        is( scalar(keys %$entries), 1, "one entry with only_new" );
+        is( scalar(keys %$entries), 1, "one entry with only_in_storage" );
         is( scalar(@ids), 1, "one root set ID" );
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
@@ -774,7 +774,7 @@ sub unknown_ok (&@) {
     {
         $lo->insert( foo_3 => $foo_3 );
 
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_3 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_3 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -789,7 +789,7 @@ sub unknown_ok (&@) {
     }
 
     lives_ok {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_4 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_4 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 

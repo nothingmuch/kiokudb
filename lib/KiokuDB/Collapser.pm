@@ -184,7 +184,7 @@ sub visit_ref_fallback {
 
     my $o = $self->_buffer->options;
 
-    if ( my $entry = $o->{only_new} && $self->live_objects->object_to_entry($ref) ) {
+    if ( my $entry = $o->{only_in_storage} && $self->live_objects->object_to_entry($ref) ) {
         return $self->make_ref( $entry->id => $_[1] );
     }
 
@@ -310,7 +310,7 @@ sub collapse_first_class {
 
     my $o = $b->options;
 
-    if ( $o->{only_new} && $prev ) {
+    if ( $o->{only_in_storage} && $prev ) {
         return $self->make_ref( $prev->id => $_[2] );
     }
 

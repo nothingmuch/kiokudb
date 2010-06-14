@@ -116,7 +116,8 @@ use ok 'KiokuDB::Entry';
 
     {
         my $entry = KiokuDB::Entry->new( id => "oink" );
-        $l->insert_entries($entry);
+
+        $l->register_entry( $entry->id, $entry, in_storage => 1 );
 
         is_deeply( [ $l->loaded_ids ], ["oink"], "loaded IDs" );
 

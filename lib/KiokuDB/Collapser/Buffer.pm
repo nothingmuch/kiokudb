@@ -213,9 +213,15 @@ sub update_entries {
     foreach my $id ( keys %$e ) {
         my ( $object, $entry ) = ( $o->{$id}, $e->{$id} );
 
-        my @entry_args = @{ $args->{$id} || [] };
+        my @args = @{ $args->{$id} || [] }; # FIXME XXX FIXME FIXME XXX BLAH BLAH
 
-        $l->update_entry( $object, $entry, @entry_args, @shared_args );
+        $l->register_entry( $id => $entry, @shared_args );
+
+        unless ( $l->object_to_id($object) ) {
+            $l->register_object( $id => $object, @args );
+        } else {
+            $l->update_object_entry( $object, $entry, @args );
+        }
     }
 }
 

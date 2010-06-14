@@ -243,12 +243,15 @@ sub BUILD {
 
 with qw(KiokuDB::Role::API);
 
-
-
 sub exists {
     my ( $self, @ids ) = @_;
 
     return unless @ids;
+
+    my @exists = map { $_ ? 1 : '' } $self->backend->exists(@ids);
+    return ( @ids == 1 ? $exists[0] : @exists );
+
+    # FIXME fix for in_storage etc
 
     if ( @ids == 1 ) {
         my $id = $ids[0];
@@ -259,7 +262,7 @@ sub exists {
 
         if ( my $entry = ($self->backend->exists($id))[0] ) { # backend returns a list
             if ( ref $entry ) {
-                $self->live_objects->insert_entries($entry);
+                $self->live_objects->register_entry( $id => $entry, in_storage => 1 );
             }
 
             return 1;
@@ -285,7 +288,7 @@ sub exists {
             my @values = $self->backend->exists(@missing);
 
             if ( my @entries = grep { ref } @values ) {
-                $self->live_objects->insert_entries(@entries);
+                $self->live_objects->register_entry( $_->id => $_, in_storage => 1 ) for @entries;
             }
 
             @exists{@missing} = map { ref($_) ? 1 : $_ } @values;
@@ -476,7 +479,7 @@ sub _insert {
         croak "Objects already in database: @in_storage";
     }
 
-    $self->store_objects( root_set => $root, only_new => 1, objects => \@objects );
+    $self->store_objects( root_set => $root, only_in_storage => 1, objects => \@objects );
 
     # return IDs only for unknown objects
     if ( defined wantarray ) {
