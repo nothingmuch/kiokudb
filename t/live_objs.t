@@ -345,4 +345,45 @@ use ok 'KiokuDB::Entry';
     is( $foo, undef, "structure has been manually cleared" );
 }
 
+{
+    my $leak_tracker_called;
+
+    my $l = KiokuDB::LiveObjects->new(
+        clear_leaks => 1,
+        leak_tracker => sub {
+            $leak_tracker_called++;
+        }
+    );
+
+    my $foo = KiokuDB_Test_Foo->new;
+
+    ok( defined($foo), "circular refs keep structure alive" );
+
+    {
+        my $s = $l->new_scope;
+
+        {
+            my $s2 = $l->new_scope;
+            $l->register_object( foo => $foo, immortal => 1 );
+        }
+
+        is_deeply( [ $s->objects ], [ ], "no scope objects" );
+
+        my @live = $l->live_objects;
+        is( scalar(@live), 1, "externally referenced object still live" );
+    }
+
+    is( $l->current_scope, undef, "no current scope" );
+
+    is_deeply(
+        [ $l->live_objects ],
+        [ ],
+        "live object set is now empty"
+    );
+
+    ok( !$leak_tracker_called, "leak tracker not called" );
+
+    isa_ok( $foo, "KiokuDB_Test_Foo", "immortal object still live" );
+}
+
 done_testing;

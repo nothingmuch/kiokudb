@@ -141,17 +141,29 @@ sub remove_scope {
     $known->remove($scope);
 
     if ( $known->size == 0 ) {
-        if ( my @objects = $self->live_objects ) {
-            if ( $self->clear_leaks ) {
-                $self->clear;
-            }
+        $self->check_leaks;
+    }
+}
 
-            if ( my $tracker = $self->leak_tracker ) {
-                if ( ref($tracker) eq 'CODE' ) {
-                    $tracker->(@objects);
-                } else {
-                    $tracker->leaked_objects(@objects);
-                }
+sub check_leaks {
+    my $self = shift;
+
+    return if $self->_known_scopes->size;
+
+    if ( my @still_live = grep { defined } $self->live_objects ) {
+        # immortal objects are still live but not considered leaks
+        my $o = $self->_objects;
+        my @leaked = grep { not($o->{$_}{immortal}) } @still_live;
+
+        if ( $self->clear_leaks ) {
+            $self->clear;
+        }
+
+        if ( my $tracker = $self->leak_tracker and @leaked ) {
+            if ( ref($tracker) eq 'CODE' ) {
+                $tracker->(@leaked);
+            } else {
+                $tracker->leaked_objects(@leaked);
             }
         }
     }
