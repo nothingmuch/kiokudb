@@ -58,9 +58,16 @@ has _deferred => (
 );
 
 sub register_object {
-    my ( $self, $entry, $object ) = @_;
+    my ( $self, $entry, $object, @args ) = @_;
 
-    $self->live_objects->insert( $entry => $object ) if $entry->id;
+    if ( my $id = $entry->id ) {
+        $self->live_objects->register_object_and_entry(
+            $id => $object,
+            $entry,
+            in_storage => 1,
+            @args,
+        );
+    }
 }
 
 sub expand_objects {
