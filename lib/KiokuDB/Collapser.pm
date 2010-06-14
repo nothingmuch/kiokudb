@@ -107,9 +107,11 @@ sub may_compact {
 sub make_entry {
     my ( $self, %args ) = @_;
 
-    if ( my $id = $args{id} ) {
-        my $object = $args{object};
+    my $meta = delete $args{meta} || {};
 
+    my $object = $args{object};
+
+    if ( my $id = $args{id} ) {
         my $prev = $self->live_objects->object_to_entry($object);
 
         my $entry = KiokuDB::Entry->new(
@@ -117,12 +119,16 @@ sub make_entry {
             %args,
         );
 
-        $self->_buffer->insert_entry( $id => $entry, $object );
+        $self->_buffer->insert_entry( $id => $entry, $object, %$meta );
 
         return $entry;
     } else {
         # intrinsic
-        return KiokuDB::Entry->new(%args);
+        my $entry = KiokuDB::Entry->new(%args);
+
+        $self->_buffer->insert_intrinsic( $object => $entry, %$meta );
+
+        return $entry;
     }
 }
 
@@ -371,11 +377,7 @@ sub collapse_intrinsic {
         @entry_args,
     );
 
-    my $entry = $self->$collapse(@args);
-
-    $self->_buffer->insert_intrinsic( $object => $entry );
-
-    return $entry;
+    return $self->$collapse(@args);
 }
 
 # we don't reblass in collapse_naive

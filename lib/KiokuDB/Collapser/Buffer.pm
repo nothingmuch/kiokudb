@@ -37,6 +37,12 @@ has _ids => (
     default => sub { return {} },
 );
 
+has _entry_args => (
+    isa => "HashRef",
+    is  => "ro",
+    default => sub { return {} },
+);
+
 sub id_to_object {
     my ( $self, $id ) = @_;
 
@@ -101,17 +107,18 @@ has options => (
 );
 
 sub insert {
-    my ( $self, $id, $object ) = @_;
+    my ( $self, $id, $object, @args ) = @_;
 
     $self->_objects->{$object} = $id;
     $self->_ids->{$id} = $object;
+    $self->_entry_args->{$id} = \@args if @args;
 }
 
 sub insert_entry {
-    my ( $self, $id, $entry, $object ) = @_;
+    my ( $self, $id, $entry, $object, @args ) = @_;
 
     $self->_entries->{$id} = $entry;
-    $self->insert($id, $object);
+    $self->insert($id, $object, @args);
 }
 
 sub compact_entries {
@@ -195,14 +202,20 @@ sub insert_to_backend {
 }
 
 sub update_entries {
-    my ( $self, @args ) = @_;
+    my ( $self, @shared_args ) = @_;
 
     my ( $e, $o ) = ( $self->_entries, $self->_ids );
 
     my $l = $self->live_objects;
 
+    my $args = $self->_entry_args;
+
     foreach my $id ( keys %$e ) {
-        $l->update_entry( $o->{$id} => $e->{$id}, @args );
+        my ( $object, $entry ) = ( $o->{$id}, $e->{$id} );
+
+        my @entry_args = @{ $args->{$id} || [] };
+
+        $l->update_entry( $object, $entry, @entry_args, @shared_args );
     }
 }
 
