@@ -13,10 +13,7 @@ unless ( try_run() ) {
         print "KiokuDB::Cmd is not installed (it's now shipped in a separate distribution).\n";
     }
 
-    if ( try_auto_install() ) {
-        delete $INC{"KiokuDB/Cmd.pm"};
-        try_run();
-    }
+    try_auto_install();
 }
 
 print "\nPlease install an up to date KiokuDB::Cmd from CPAN\n";
@@ -40,7 +37,9 @@ sub try_auto_install {
         print "\n";
         if ( ExtUtils::MakeMaker::prompt("Module::AutoInstall is available. Should I use it to install KiokuDB::Cmd?", "N/y") =~ /^y/i ) {
             my @installed = Module::AutoInstall->install( [], "KiokuDB::Cmd" => $KiokuDB::REQUIRED_CMD_VERSION );
-            return @installed > 0;
+            print "\n\n";
+            print "Please retry running your command :)\n";
+            exit 1;
         }
     }
 
