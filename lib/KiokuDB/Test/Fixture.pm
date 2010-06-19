@@ -99,6 +99,7 @@ sub run {
         $self->clear_live_objects;
 
         is_deeply( [ $self->live_objects ], [ ], "no live objects at start of " . $self->name . " fixture" );
+        is_deeply( [ $self->live_entries ], [ ], "no live entries at start of " . $self->name . " fixture" );
 
         lives_ok {
             local $Test::Builder::Level = $Test::Builder::Level - 1;
@@ -110,6 +111,7 @@ sub run {
         } "no error in fixture";
 
         is_deeply( [ $self->live_objects ], [ ], "no live objects at end of " . $self->name . " fixture" );
+        is_deeply( [ $self->live_entries ], [ ], "no live entries at end of " . $self->name . " fixture" );
 
         $self->clear_live_objects;
     }
@@ -166,6 +168,11 @@ sub _build_directory {
 sub live_objects {
     shift->directory->live_objects->live_objects
 }
+
+sub live_entries {
+    shift->directory->live_objects->live_entries
+}
+
 
 sub update_live_objects {
     my $self = shift;
@@ -263,11 +270,23 @@ sub no_live_objects {
 
     my $fail;
 
-    unless ( is( scalar(()=$self->live_objects), 0, "no live objects" ) ) {
-        my @l = $self->live_objects;
-        diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } @l;
-        require Data::Dumper;
-        diag Data::Dumper::Dumper(@l);
+    my @l = $self->live_objects;
+    my @e;
+
+    my $failed;
+    
+    $failed++ unless is( scalar(@l), 0, "no live objects" );
+
+    unless ( $self->directory->live_objects->txn_scope ) {
+        # no live objects should imply no live entries
+        # however, under keep_entries a txn stack is maintained
+        $failed++ unless is( scalar(@e), 0, "no live entries" );
+        @e = $self->directory->live_objects->live_entries;
+    }
+
+    if ( $failed ) {
+        diag "live objects: " . join ", ", map { $self->object_to_id($_) . " ($_)" } @l if @l;
+        diag "live entries: " . join ", ", map { $_->id . " (" . $_->class . ")" } @e;
 
         #use Scalar::Util qw(weaken);
         #weaken($_) for @l;
@@ -287,8 +306,10 @@ sub no_live_entries {
 
     local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-    unless ( is( scalar($self->directory->live_objects->live_entries), 0, "no live entries" ) ) {
-        diag "live entries: " . join ", ", map { $_->id . " (" . $_->class . ")" } $self->directory->live_objects->live_entries;
+    my @e = $self->directory->live_objects->live_entries;
+
+    unless ( is( scalar(@e), 0, "no live entries" ) ) {
+        diag "live entries: " . join ", ", map { $_->id . " (" . $_->class . ")" } @e;
 
         $self->directory->live_objects->clear;
     }

@@ -26,6 +26,8 @@ sub verify {
 
     $self->exists_ok($self->joe);
 
+    my $keep = $self->directory->live_objects->keep_entries;
+
     {
         my $s = $self->new_scope;
 
@@ -35,23 +37,28 @@ sub verify {
 
         my $entry = $l->objects_to_entries($joe);
 
-        isa_ok( $entry, "KiokuDB::Entry" );
+        isa_ok( $entry, "KiokuDB::Entry" ) if $keep;
 
         lives_ok {
             $self->txn_do(sub {
                 $joe->name("HALLO");
                 $self->update_ok($joe);
-                my $updated_entry = $l->objects_to_entries($joe);
 
-                isnt( $updated_entry, $entry, "entry updated" );
-                is( $updated_entry->prev, $entry, "parent of updated is orig" );
+                if ( $keep ) {
+                    my $updated_entry = $l->objects_to_entries($joe);
+
+                    isnt( $updated_entry, $entry, "entry updated" );
+                    is( $updated_entry->prev, $entry, "parent of updated is orig" );
+                }
             });
         } "successful transaction";
 
-        my $updated_entry = $l->objects_to_entries($joe);
+        if ( $keep ) {
+            my $updated_entry = $l->objects_to_entries($joe);
 
-        isnt( $updated_entry, $entry, "entry updated" );
-        is( $updated_entry->prev, $entry, "parent of updated is orig" );
+            isnt( $updated_entry, $entry, "entry updated" );
+            is( $updated_entry->prev, $entry, "parent of updated is orig" );
+        }
 
         is( $joe->name, "HALLO", "name attr" );
 
@@ -68,25 +75,29 @@ sub verify {
 
             my $entry = $l->objects_to_entries($joe);
 
-            isa_ok( $entry, "KiokuDB::Entry" );
+            isa_ok( $entry, "KiokuDB::Entry" ) if $keep;
 
             throws_ok {
                 $self->txn_do(sub {
                     $joe->name("YASE");
                     $self->update_ok($joe);
 
-                    my $updated_entry = $l->objects_to_entries($joe);
+                    if ( $keep ) {
+                        my $updated_entry = $l->objects_to_entries($joe);
 
-                    isnt( $updated_entry, $entry, "entry updated" );
-                    is( $updated_entry->prev, $entry, "parent of updated is orig" );
+                        isnt( $updated_entry, $entry, "entry updated" );
+                        is( $updated_entry->prev, $entry, "parent of updated is orig" );
+                    }
 
                     die "foo";
                 });
             } qr/foo/, "failed transaction";
 
-            my $updated_entry = $l->objects_to_entries($joe);
+            if ( $keep ) {
+                my $updated_entry = $l->objects_to_entries($joe);
 
-            is( $updated_entry, $entry, "entry rolled back" );
+                is( $updated_entry, $entry, "entry rolled back" );
+            }
 
             is( $joe->name, "YASE", "name not rolled back in live object" );
 
@@ -119,7 +130,7 @@ sub verify {
 
             my $entry = $l->objects_to_entries($joe);
 
-            isa_ok( $entry, "KiokuDB::Entry" );
+            isa_ok( $entry, "KiokuDB::Entry" ) if $keep;
 
             throws_ok {
                 $self->txn_do(sub {
@@ -129,19 +140,23 @@ sub verify {
                         $joe->name("oi");
                         $self->update_ok($joe);
 
-                        my $updated_entry = $l->objects_to_entries($joe);
+                        if ( $keep ) {
+                            my $updated_entry = $l->objects_to_entries($joe);
 
-                        isnt( $updated_entry, $entry, "entry updated" );
-                        is( $updated_entry->prev->prev, $entry, "parent of parent of updated is orig" );
+                            isnt( $updated_entry, $entry, "entry updated" );
+                            is( $updated_entry->prev->prev, $entry, "parent of parent of updated is orig" );
+                        }
 
                         die "foo";
                     });
                 });
             } qr/foo/, "failed transaction";
 
-            my $updated_entry = $l->objects_to_entries($joe);
+            if ( $keep ) {
+                my $updated_entry = $l->objects_to_entries($joe);
 
-            is( $updated_entry, $entry, "entry rolled back" );
+                is( $updated_entry, $entry, "entry rolled back" );
+            }
 
             is( $joe->name, "oi", "name attr of object" );
 

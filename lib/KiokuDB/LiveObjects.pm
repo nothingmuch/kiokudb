@@ -30,6 +30,12 @@ has leak_tracker => (
     clearer => "clear_leak_tracker",
 );
 
+has keep_entries => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
 has [qw(_objects _entries _object_entries)] => (
     isa => "HashRef",
     is  => "ro",
@@ -222,6 +228,8 @@ sub new_scope {
 sub new_txn {
     my $self = shift;
 
+    return unless $self->keep_entries;
+
     my $parent = $self->txn_scope;
 
     my $child = KiokuDB::LiveObjects::TXNScope->new(
@@ -265,6 +273,16 @@ sub object_to_entry {
     return $self->id_to_entry( $self->object_to_id($obj) || return );
 }
 
+sub id_in_root_set {
+    my ( $self, $id ) = @_;
+
+    if ( my $data = $self->_id_info($id) ) {
+        return $data->{root};
+    }
+
+    return undef;
+}
+
 sub id_in_storage {
     my ( $self, $id ) = @_;
 
@@ -286,18 +304,21 @@ sub update_object_entry {
     my ( $self, $object, $entry, %args ) = @_;
 
 
-    # FIXME store() without a live object scope is actually allowed for now,
-    # it's in the tests, but I think that should be removed
-    #my $s = $self->current_scope or croak "no open live object scope";
-    my $s = $self->current_scope or return;
+    my $s = $self->current_scope or croak "no open live object scope";
 
     my $info = $self->_objects->{$object} or croak "Object not yet registered";
+    $self->_entries->{$entry} = $info;
 
+    @{$info}{keys %args} = values %args;
     weaken($info->{entry} = $entry);
-    @{$info}{keys %args} = (values %args );
 
-    # FIXME remove later
-    $self->_object_entries->{$object} = $entry;
+    if ( $self->keep_entries ) {
+        $self->_object_entries->{$object} = $entry;
+
+        if ( $args{in_storage} and my $txs = $self->txn_scope ) {
+            $txs->push($entry);
+        }
+    }
 
     # break cycle for passthrough objects
     if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
@@ -327,8 +348,7 @@ sub register_object {
 
     weaken($info->{object} = $object);
 
-    if ( my $entry = $info->{entry} ) {
-        # FIXME remove later
+    if ( $self->keep_entries and my $entry = $info->{entry} ) {
         $self->_object_entries->{$object} = $entry;
     }
 
@@ -344,11 +364,12 @@ sub register_entry {
 
     $self->_entries->{$entry} = $info;
 
+    confess "$entry" unless $entry->isa("KiokuDB::Entry");
+    @{$info}{keys %args, 'root'} = ( values %args, $entry->root );
+
     weaken($info->{entry} = $entry);
 
-    @{$info}{keys %args} = values %args;
-
-    if ( $args{in_storage} and my $txs = $self->txn_scope ) {
+    if ( $args{in_storage} and $self->keep_entries and my $txs = $self->txn_scope ) {
         $txs->push($entry);
     }
 }
@@ -433,12 +454,13 @@ sub remove {
 
         if ( ref $thing ) {
             # FIXME make this a bit less zealous?
-            if ( my $info = delete $o->{$thing} ) {
+            my $info;
+            if ( $info = delete $o->{$thing} ) {
                 delete $info->{object};
                 delete $oe->{$thing};
                 push @stuff, $info->{entry} if $info->{entry};
-            } elsif ( my $einfo = delete $e->{$thing} ) {
-                delete $einfo->{entry};
+            } elsif ( $info = delete $e->{$thing} ) {
+                delete $info->{entry};
                 push @stuff, $info->{object} if ref $info->{object};
             }
         } else {
@@ -527,6 +549,15 @@ C<circular_off> function:
         my @leaked_objects = @_;
         circular_off($_) for @leaked_objects;
     });
+
+=item keep_entries
+
+B<EXPERIMENTAL>
+
+When true (the default), L<KiokuDB::Entries> loaded from the backend or created
+by the collapser are kept around.
+
+This results in a considerable memory overhead, so it's no longer required.
 
 =back
 

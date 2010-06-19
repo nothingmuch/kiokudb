@@ -64,7 +64,7 @@ sub register_object {
         my $l = $self->live_objects;
 
         $l->register_entry( $id => $entry );
-        $l->register_object( $id => $object, entry => $entry, @args );
+        $l->register_object( $id => $object, @args );
 
         use Scalar::Util qw(refaddr);
         # break cycle for passthrough objects
@@ -362,7 +362,7 @@ sub refresh_object {
 sub get_or_load_entry {
     my ( $self, $id ) = @_;
 
-    $self->id_to_entry($id) || $self->load_entry($id);
+    return $self->id_to_entry($id) || $self->load_entry($id);
 }
 
 sub load_entry {
@@ -379,7 +379,9 @@ sub load_entry {
 sub load_object {
     my ( $self, $id ) = @_;
 
-    $self->expand_object( $self->get_or_load_entry($id) );
+    my $entry = $self->get_or_load_entry($id);
+
+    return $self->expand_object($entry);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -461,7 +461,7 @@ sub unknown_ok (&@) {
             is( scalar(keys %{ $buffer->_entries }), 2, "two entries for deep collapse" );
             is( scalar(@ids), 1, "one root set ID" );
 
-            $buffer->update_entries;
+            $buffer->update_entries( in_storage => 1 );
         }
 
         {
@@ -469,7 +469,7 @@ sub unknown_ok (&@) {
             is( scalar(keys %{ $buffer->_entries }), 1, "one entry for shallow collapse" );
             is( scalar(@ids), 1, "one root set ID" );
 
-            $buffer->update_entries;
+            $buffer->update_entries( in_storage => 1 );
         }
     }
 }
@@ -742,7 +742,7 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Bar", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
@@ -755,7 +755,7 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
@@ -768,7 +768,7 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
@@ -785,7 +785,7 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     lives_ok {
@@ -800,7 +800,7 @@ sub unknown_ok (&@) {
 
         ok( !exists($entries->{$lo->object_to_id($bar)}), "known object doesn't exist in entry set" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
 
         is_deeply(
             $entries->{$ids[0]}->data->{moof},

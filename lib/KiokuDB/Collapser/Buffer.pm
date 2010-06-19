@@ -191,14 +191,17 @@ sub imply_root {
     }
 }
 
+sub commit {
+    my ( $self, $backend ) = @_;
+
+    $self->insert_to_backend($backend);
+    $self->update_entries( in_storage => 1 );
+}
+
 sub insert_to_backend {
     my ( $self, $backend ) = @_;
 
-    my @insert = values %{ $self->_entries };
-
-    $backend->insert(@insert);
-
-    $self->update_entries( in_storage => 1 );
+    $backend->insert(values %{ $self->_entries });
 }
 
 sub update_entries {

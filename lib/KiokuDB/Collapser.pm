@@ -112,7 +112,15 @@ sub make_entry {
     my $object = $args{object};
 
     if ( my $id = $args{id} ) {
-        my $prev = $self->live_objects->object_to_entry($object);
+        my $l = $self->live_objects;
+
+        my $prev = $l->object_to_entry($object);
+
+        if ( !$prev and $l->id_in_storage($id) ) {
+            # FIXME Backend->store( insert => [ ... ], update => [ ... ] )
+            # this happens when keep_entries is false
+            $prev = KiokuDB::Entry->new( root => $l->id_in_root_set($id) ); # force the operation to be an update
+        }
 
         my $entry = KiokuDB::Entry->new(
             ( $prev ? ( prev => $prev ) : () ),
@@ -306,25 +314,24 @@ sub collapse_first_class {
 
     my ( $l, $b ) = ( $self->live_objects, $self->_buffer );
 
-    my $prev = $l->object_to_entry($object);
+    my $id = $l->object_to_id($object);
+    my $in_storage = $l->id_in_storage($id);
 
     my $o = $b->options;
 
-    if ( $o->{only_in_storage} && $prev ) {
-        return $self->make_ref( $prev->id => $_[2] );
+    if ( $o->{only_in_storage} && $in_storage ) {
+        return $self->make_ref( $id => $_[2] );
     }
 
     if ( my $only = $o->{only} ) {
         unless ( $only->contains($object) ) {
-            if ( $prev ) {
-                return $self->make_ref( $prev->id => $_[2] );
+            if ( $in_storage ) {
+                return $self->make_ref( $id => $_[2] );
             } else {
                 KiokuDB::Error::UnknownObjects->throw( objects => [ $object ] );
             }
         }
     }
-
-    my $id = $l->object_to_id($object);
 
     unless ( $id ) {
         if ( $o->{only_known} ) {

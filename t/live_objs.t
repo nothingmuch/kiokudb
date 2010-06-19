@@ -111,20 +111,58 @@ use ok 'KiokuDB::Entry';
     is_deeply( [ $l->objects_to_ids(KiokuDB_Test_Foo->new, KiokuDB_Test_Foo->new) ], [ undef, undef ], "random objects have undef IDs" );
 }
 
-{
-    my $l = KiokuDB::LiveObjects->new;
+foreach my $keep ( 1, 0 ) {
+    my $l = KiokuDB::LiveObjects->new( keep_entries => $keep );
+
+    my $s = $l->new_scope;
 
     {
         my $entry = KiokuDB::Entry->new( id => "oink" );
 
         $l->register_entry( $entry->id, $entry, in_storage => 1 );
 
-        is_deeply( [ $l->loaded_ids ], ["oink"], "loaded IDs" );
+        is_deeply( [ $l->loaded_ids ], [qw(oink)], "loaded IDs" );
+        is_deeply( [ $l->known_ids ], [qw(oink)], "known IDs" );
 
         is_deeply( [ $l->ids_to_entries("oink") ], [ $entry ], "ids_to_entries" );
     }
 
     is_deeply( [ $l->loaded_ids ], [], "loaded IDs" );
+    is_deeply( [ $l->known_ids ], [], "known IDs" );
+}
+
+foreach my $keep ( 1, 0 ) {
+    my $l = KiokuDB::LiveObjects->new( keep_entries => $keep );
+
+    {
+        my $s = $l->new_scope;
+
+        {
+            my $entry = KiokuDB::Entry->new( id => "oink" );
+
+            $l->register_entry( $entry->id, $entry, in_storage => 1 );
+
+            is_deeply( [ $l->loaded_ids ], ["oink"], "loaded IDs" );
+
+            is_deeply( [ $l->ids_to_entries("oink") ], [ $entry ], "ids_to_entries" );
+
+            $l->register_object( oink => KiokuDB_Test_Foo->new );
+        }
+
+        is_deeply( [ $l->loaded_ids ], [ $keep ? ( qw(oink) ) : () ], "loaded IDs" );
+        is_deeply( [ $l->known_ids ], [qw(oink)], "known IDs" );
+
+        if ( $keep ) {
+            isa_ok( $l->id_to_entry("oink"), "KiokuDB::Entry", "entry still live" );
+        } else {
+            is( $l->id_to_entry("oink"), undef, "entry died" );
+        }
+    }
+
+    is_deeply( [ $l->loaded_ids ], [], "loaded IDs" );
+    is_deeply( [ $l->known_ids ], [], "known IDs" );
+    is_deeply( [ $l->live_entries ], [], "live_entries" );
+    is_deeply( [ $l->live_objects ], [], "live_objects" );
 }
 
 {
@@ -136,9 +174,37 @@ use ok 'KiokuDB::Entry';
     my $blah = KiokuDB_Test_Foo->new;
     $l->insert( $entry => $blah );
 
+    is( $l->id_to_object("blah"), $blah, "id to object" );
+    ok( $l->object_in_storage($blah), "object in storage" );
     is_deeply( [ $l->objects_to_entries($blah) ], [ $entry ], "objects to entries" );
-
     is_deeply( [ $l->ids_to_entries("blah") ], [ $entry ], "ids to entries" );
+}
+
+{
+    my $l = KiokuDB::LiveObjects->new( keep_entries => 0 );
+
+    {
+        my $s = $l->new_scope;
+
+        my $blah = KiokuDB_Test_Foo->new;
+
+        {
+            my $entry = KiokuDB::Entry->new( id => "blah" );
+            $l->insert( $entry => $blah );
+
+            is( $l->id_to_object("blah"), $blah, "id to object" );
+            ok( $l->object_in_storage($blah), "object in storage" );
+            is( $l->object_to_entry($blah), $entry, "object to entry" );
+            is( $l->id_to_entry("blah"), $entry, "id to entry" );
+        }
+
+        is( $l->id_to_object("blah"), $blah, "id to object" );
+        ok( $l->object_in_storage($blah), "object in storage" );
+        is( $l->object_to_entry($blah), undef, "object to entry" );
+        is( $l->id_to_entry("blah"), undef, "id to entry" );
+    }
+
+    is_deeply( [ $l->known_ids ], [], "known IDs" );
 }
 
 {
