@@ -1,11 +1,15 @@
 package KiokuDB::Error;
-use Moose::Role;
+use Moose;
 
 use namespace::clean -except => 'meta';
 
-with qw(Throwable);
+extends qw(Throwable::Error);
 
-requires qw(as_string);
+has "message" => ( is => "ro", lazy_build => 1 );
+
+sub _build_message { "$_[0]" }
+
+__PACKAGE__->meta->make_immutable;
 
 # ex: set sw=4 et:
 

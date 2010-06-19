@@ -3,9 +3,7 @@ use Moose;
 
 use namespace::clean -except => "meta"; # autoclean kills overloads
 
-use overload '""' => "as_string";
-
-with qw(KiokuDB::Error);
+extends qw(KiokuDB::Error);
 
 has objects => (
     isa => "ArrayRef[Ref]",
@@ -15,7 +13,7 @@ has objects => (
 
 sub objects { @{ shift->_objects } }
 
-sub as_string {
+sub _build_message {
     my $self = shift;
 
     local $, = ", ";
