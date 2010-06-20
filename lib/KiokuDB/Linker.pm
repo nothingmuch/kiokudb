@@ -58,9 +58,20 @@ has _deferred => (
 );
 
 sub register_object {
-    my ( $self, $entry, $object ) = @_;
+    my ( $self, $entry, $object, @args ) = @_;
 
-    $self->live_objects->insert( $entry => $object ) if $entry->id;
+    if ( my $id = $entry->id ) {
+        my $l = $self->live_objects;
+
+        $l->register_entry( $id => $entry );
+        $l->register_object( $id => $object, @args );
+
+        use Scalar::Util qw(refaddr);
+        # break cycle for passthrough objects
+        if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+            weaken($entry->{data}); # FIXME there should be a MOP way to do this
+        }
+    }
 }
 
 sub expand_objects {
@@ -298,7 +309,10 @@ sub load_entries {
         KiokuDB::Error::MissingObjects->throw( ids => \@missing );
     }
 
-    $self->live_objects->insert_entries( @entries );
+    my $l = $self->live_objects;
+    foreach my $entry ( @entries ) {
+        $l->register_entry( $entry->id, $entry, in_storage => 1 );
+    }
 
     return @entries;
 }
@@ -306,7 +320,11 @@ sub load_entries {
 sub register_and_expand_entries {
     my ( $self, @entries ) = @_;
 
-    $self->live_objects->insert_entries(@entries),
+    my $l = $self->live_objects;
+    foreach my $entry ( @entries ) {
+        $l->register_entry( $entry->id, $entry, in_storage => 1 );
+    }
+
     $self->expand_objects(@entries);
 }
 
@@ -344,7 +362,7 @@ sub refresh_object {
 sub get_or_load_entry {
     my ( $self, $id ) = @_;
 
-    $self->id_to_entry($id) || $self->load_entry($id);
+    return $self->id_to_entry($id) || $self->load_entry($id);
 }
 
 sub load_entry {
@@ -353,7 +371,7 @@ sub load_entry {
     my $entry = ( $self->backend->get($id) )[0]
         or KiokuDB::Error::MissingObjects->throw( ids => [ $id ] );
 
-    $self->live_objects->insert_entries($entry);
+    $self->live_objects->register_entry( $id => $entry, in_storage => 1 );
 
     return $entry;
 }
@@ -361,7 +379,9 @@ sub load_entry {
 sub load_object {
     my ( $self, $id ) = @_;
 
-    $self->expand_object( $self->get_or_load_entry($id) );
+    my $entry = $self->get_or_load_entry($id);
+
+    return $self->expand_object($entry);
 }
 
 __PACKAGE__->meta->make_immutable;

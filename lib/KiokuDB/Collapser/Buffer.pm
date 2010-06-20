@@ -37,6 +37,12 @@ has _ids => (
     default => sub { return {} },
 );
 
+has _entry_args => (
+    isa => "HashRef",
+    is  => "ro",
+    default => sub { return {} },
+);
+
 sub id_to_object {
     my ( $self, $id ) = @_;
 
@@ -101,16 +107,18 @@ has options => (
 );
 
 sub insert {
-    my ( $self, $id, $object ) = @_;
+    my ( $self, $id, $object, @args ) = @_;
 
     $self->_objects->{$object} = $id;
     $self->_ids->{$id} = $object;
+    $self->_entry_args->{$id} = \@args if @args;
 }
 
 sub insert_entry {
-    my ( $self, $id, $entry ) = @_;
+    my ( $self, $id, $entry, $object, @args ) = @_;
 
     $self->_entries->{$id} = $entry;
+    $self->insert($id, $object, @args);
 }
 
 sub compact_entries {
@@ -183,22 +191,41 @@ sub imply_root {
     }
 }
 
+sub commit {
+    my ( $self, $backend ) = @_;
+
+    $self->insert_to_backend($backend);
+    $self->update_entries( in_storage => 1 );
+}
+
 sub insert_to_backend {
     my ( $self, $backend ) = @_;
 
-    my @insert = values %{ $self->_entries };
-
-    $backend->insert(@insert);
-
-    $self->update_entries;
+    $backend->insert(values %{ $self->_entries });
 }
 
 sub update_entries {
-    my $self = shift;
+    my ( $self, @shared_args ) = @_;
+
+    my ( $e, $o ) = ( $self->_entries, $self->_ids );
 
     my $l = $self->live_objects;
-   
-    $l->update_entries( values %{ $self->_entries } );
+
+    my $args = $self->_entry_args;
+
+    foreach my $id ( keys %$e ) {
+        my ( $object, $entry ) = ( $o->{$id}, $e->{$id} );
+
+        my @args = @{ $args->{$id} || [] }; # FIXME XXX FIXME FIXME XXX BLAH BLAH
+
+        $l->register_entry( $id => $entry, @shared_args );
+
+        unless ( $l->object_to_id($object) ) {
+            $l->register_object( $id => $object, @args );
+        } else {
+            $l->update_object_entry( $object, $entry, @args );
+        }
+    }
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -220,7 +220,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $sl = $l->live_objects->new_scope;
 
-        $l->live_objects->insert_entries( values %$entries );
+        $l->live_objects->register_entry( $_->id => $_ ) for values %$entries;
 
         my $expanded = try { $l->expand_object($entry) };
 
@@ -278,7 +278,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $sl = $l->live_objects->new_scope;
 
-        $l->live_objects->insert_entries( values %$entries );
+        $l->live_objects->register_entry( $_->id => $_ ) for values %$entries;
 
         my $expanded = try { $l->expand_object($entry) };
 
@@ -320,7 +320,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $sl = $l->live_objects->new_scope;
 
-        $l->live_objects->insert_entries( values %$entries );
+        $l->live_objects->register_entry( $_->id => $_ ) for values %$entries;
 
         my $expanded = try { $l->expand_object($entry) };
 
@@ -351,7 +351,7 @@ foreach my $intrinsic ( 1, 0 ) {
             "is_deeply"
         );
 
-        $v->live_objects->update_entries( values %$entries );
+        $v->live_objects->update_entries( map { $_->object => $_ } values %$entries );
 
         my ( $new_entries, $new_id ) = $v->collapse( objects => [ $once ] );
 

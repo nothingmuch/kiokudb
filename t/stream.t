@@ -29,28 +29,35 @@ my @objs = (
     KiokuDB_Test_Foo->new( id => 'four',  num => 4 ),
 );
 
+my @ids;
+
+my @entries;
+
 {
     my $s = $dir->new_scope;
 
     foreach my $obj (@objs) {
         lives_ok { $dir->store( $obj->id   => $obj ) } "can store " . $obj->id;
     }
+
+    @ids = $dir->live_objects->objects_to_ids(@objs);
+
+    @entries = map { $_->clone } $dir->live_objects->objects_to_entries(@objs);
 }
 
-my @ids = $dir->store( @objs);
 
 sub iter {
-    my @x = @objs;
+    my @x = @_;
     Data::Stream::Bulk::Callback->new(
     callback =>
-    sub { return unless @x; return [ shift @x ] })->filter(sub {[grep { $_->num } @$_ ]});
+    sub { return unless @x; return [ shift @x ] })->filter(sub {[grep { $_->can("num") ? $_->num  : $_->data->{num} } @$_ ]});
 }
 
-is_deeply([map { $_->num } iter()->all],[1,2,3,4], "found 4 objects");
+is_deeply([map { $_->num } iter(@objs)->all],[1,2,3,4], "found 4 objects");
 
-my $stream =KiokuDB::Stream::Objects ->new(
+my $stream = KiokuDB::Stream::Objects ->new(
   directory => $dir,
-  entry_stream => iter(),
+  entry_stream => iter(@entries),
 );
 
 is_deeply([map { $_->num } $stream->all],[1,2,3,4], "found 4 objects");
