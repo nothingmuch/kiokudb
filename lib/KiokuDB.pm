@@ -589,36 +589,6 @@ sub scoped_txn {
     $self->txn_do(body => $body, scope => 1, @args);
 }
 
-sub txn_begin {
-    my ( $self, @args ) = @_;
-
-    my $backend = $self->backend;
-
-    return unless $backend->can("txn_begin");
-
-    $backend->txn_begin(@args);
-}
-
-sub txn_commit {
-    my ( $self, @args ) = @_;
-
-    my $backend = $self->backend;
-
-    return unless $backend->can("txn_commit");
-
-    $backend->txn_commit(@args);
-}
-
-sub txn_rollback {
-    my ( $self, @args ) = @_;
-
-    my $backend = $self->backend;
-
-    return unless $backend->can("txn_rollback");
-
-    $backend->txn_rollback(@args);
-}
-
 sub txn_do {
     my ( $self, @args ) = @_;
 
