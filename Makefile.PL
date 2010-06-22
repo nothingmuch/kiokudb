@@ -92,6 +92,8 @@ WriteMakefile(
 
         'Set::Object' => '1.26',
 
+        'Cache::Ref' => 0,
+
         'Module::Pluggable::Object' => 0,
         'Test::use::ok' => 0,
         'Test::Exception' => 0,

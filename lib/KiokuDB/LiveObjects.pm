@@ -24,6 +24,11 @@ has clear_leaks => (
     is  => "rw",
 );
 
+has cache => (
+    isa => "Cache::Ref",
+    is  => "ro",
+);
+
 has leak_tracker => (
     isa => "CodeRef|Object",
     is  => "rw",
@@ -81,6 +86,10 @@ sub _vivify_id_info {
 sub id_to_object {
     my ( $self, $id ) = @_;
 
+    if ( my $c = $self->cache ) {
+        $c->hit($id);
+    }
+
     if ( my $data = $self->_id_info($id) ) {
         return $data->{object};
     }
@@ -88,6 +97,11 @@ sub id_to_object {
 
 sub ids_to_objects {
     my ( $self, @ids ) = @_;
+
+    if ( my $c = $self->cache ) {
+        $c->hit(@ids);
+    }
+
     map { $_ && $_->{object} } $self->_id_info(@ids);
 }
 
@@ -184,7 +198,10 @@ sub check_leaks {
     if ( my @still_live = grep { defined } $self->live_objects ) {
         # immortal objects are still live but not considered leaks
         my $o = $self->_objects;
-        my @leaked = grep { not($o->{$_}{immortal}) } @still_live;
+        my @leaked = grep {
+            my $i = $o->{$_};
+            not($i->{immortal} or $i->{cache})
+        } @still_live;
 
         if ( $self->clear_leaks ) {
             $self->clear;
@@ -353,6 +370,10 @@ sub register_object {
     }
 
     @{$info}{keys %args} = values %args;
+
+    if ( $args{cache} and my $c = $self->cache ) {
+        $c->set( $id => $object );
+    }
 
     $s->push($object);
 }
