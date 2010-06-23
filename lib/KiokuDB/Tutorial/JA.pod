@@ -10,7 +10,7 @@ KiokuDB::Tutorial - Getting started with L<KiokuDB>
 
 =end original
 
-KiokuDB::Tutorial - L<KiokuDB>を始めよう
+KiokuDB::Tutorial::JA - L<KiokuDB>を始めよう
 
 =head1 Install
 
