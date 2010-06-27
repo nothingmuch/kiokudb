@@ -1,3 +1,8 @@
+0.046_02
+    - Support for caching of live objects (i.e. immutable ones)
+    - Fix the =head1 NAME of Tutorial::JA
+    - Move t/set.t into a standalone test fixture
+
 0.46_01
     - Lots of refactoring to LiveObjects
         - metadata is keyed by ID, not object
