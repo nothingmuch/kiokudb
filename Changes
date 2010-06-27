@@ -1,3 +1,6 @@
+0.46
+    - s/_03/ on the version
+
 0.46_03
     - Internals change cleanups regarding weakening $entry->{data} with
       passthrough objects
