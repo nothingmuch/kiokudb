@@ -3,7 +3,11 @@ use Moose;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Role::ID::Digest MooseX::Clone);
+with qw(
+    KiokuDB::Role::ID::Digest
+    KiokuDB::Role::Immutable::Transitive
+    MooseX::Clone
+);
 
 has [qw(foo bar)] => ( is => "ro" );
 
