@@ -30,6 +30,18 @@ sub _build_linker {
     $self->directory->linker;
 }
 
+has live_objects => (
+    isa => "KiokuDB::LiveObjects",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build_live_objects {
+    my $self = shift;
+
+    $self->directory->live_objects;
+}
+
 has _scope => (
     isa => "KiokuDB::LiveObjects::Scope",
     writer  => "_scope",
@@ -53,6 +65,9 @@ sub next {
     if ( @$entries ) {
         $self->_scope( $self->directory->new_scope )
             unless $self->_no_scope;
+
+        $self->live_objects->register_entry( $_->id => $_, in_storage => 1 ) for @$entries;
+
         return [ $self->linker->register_and_expand_entries(@$entries) ];
     } else {
         return [];

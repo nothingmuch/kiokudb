@@ -20,10 +20,10 @@ sub compile_expand {
     return sub {
         my ( $linker, $entry, @args ) = @_;
 
-        my $instance = $linker->$create($entry, @args);
+        my ( $instance, @register_args ) = $linker->$create($entry, @args);
 
         # this is registered *before* any other value expansion, to allow circular refs
-        $linker->register_object( $entry => $instance );
+        $linker->register_object( $entry => $instance, @register_args );
 
         $linker->$expand_data($instance, $entry, @args);
 

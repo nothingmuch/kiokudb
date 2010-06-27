@@ -143,8 +143,8 @@ sub compile_collapse_body {
 
             if ( $immutable ) {
                 # FIXME this doesn't handle unset_root
-                if ( my $prev = $self->live_objects->object_to_entry($object) ) {
-                    return $self->make_skip_entry( %args, prev => $prev );
+                if ( $self->live_objects->object_in_storage($object) ) {
+                    return $self->make_skip_entry( %args, prev => $self->live_objects->object_to_entry($object) );
                 } elsif ( $content_id ) {
                     if ( ($self->backend->exists($args{id}))[0] ) { # exists works in list context
                         return $self->make_skip_entry(%args);
@@ -353,7 +353,15 @@ sub compile_create {
 
     my $meta_instance = $meta->get_meta_instance;
 
-    return sub { $meta_instance->create_instance() };
+    my $cache = does_role($meta, "KiokuDB::Role::Cacheable");
+
+    my @register_args = (
+        ( $cache ? ( cache => 1 ) : () ),
+    );
+
+    return sub {
+        return ( $meta_instance->create_instance(), @register_args );
+    };
 }
 
 sub compile_clear {

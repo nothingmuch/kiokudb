@@ -3,7 +3,7 @@
 package KiokuDB;
 use Moose;
 
-our $VERSION = "0.45";
+our $VERSION = "0.46_03";
 
 use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
@@ -172,6 +172,7 @@ sub _build_typemap_resolver {
 has live_objects => (
     isa => "KiokuDB::LiveObjects",
     is  => "ro",
+    coerce => 1,
     lazy => 1,
     builder => "_build_live_objects", # lazy_build => 1 sets clearer
     handles => {
@@ -242,12 +243,15 @@ sub BUILD {
 
 with qw(KiokuDB::Role::API);
 
-
-
 sub exists {
     my ( $self, @ids ) = @_;
 
     return unless @ids;
+
+    my @exists = map { $_ ? 1 : '' } $self->backend->exists(@ids);
+    return ( @ids == 1 ? $exists[0] : @exists );
+
+    # FIXME fix for in_storage etc
 
     if ( @ids == 1 ) {
         my $id = $ids[0];
@@ -258,7 +262,7 @@ sub exists {
 
         if ( my $entry = ($self->backend->exists($id))[0] ) { # backend returns a list
             if ( ref $entry ) {
-                $self->live_objects->insert_entries($entry);
+                $self->live_objects->register_entry( $id => $entry, in_storage => 1 );
             }
 
             return 1;
@@ -284,7 +288,7 @@ sub exists {
             my @values = $self->backend->exists(@missing);
 
             if ( my @entries = grep { ref } @values ) {
-                $self->live_objects->insert_entries(@entries);
+                $self->live_objects->register_entry( $_->id => $_, in_storage => 1 ) for @entries;
             }
 
             @exists{@missing} = map { ref($_) ? 1 : $_ } @values;
@@ -435,7 +439,7 @@ sub refresh {
     my $l = $self->live_objects;
 
     croak "Object not in storage"
-        if grep { not defined } $l->objects_to_entries(@objects);
+        if grep { not $l->object_in_storage($_) } @objects;
 
     $self->linker->refresh_objects(@objects);
 
@@ -468,16 +472,14 @@ sub _insert {
 
     return unless @objects;
 
-    idhash my %entries;
-
-    @entries{@objects} = $self->live_objects->objects_to_entries(@objects);
+    my $l = $self->live_objects;
 
     # FIXME make optional?
-    if ( my @in_storage = grep { $entries{$_} } @objects ) {
+    if ( my @in_storage = grep { $l->object_in_storage($_) } @objects ) {
         croak "Objects already in database: @in_storage";
     }
 
-    $self->store_objects( root_set => $root, only_new => 1, objects => \@objects );
+    $self->store_objects( root_set => $root, only_in_storage => 1, objects => \@objects );
 
     # return IDs only for unknown objects
     if ( defined wantarray ) {
@@ -496,7 +498,7 @@ sub update {
     my $l = $self->live_objects;
 
     croak "Object not in storage"
-        if grep { not defined } $l->objects_to_entries(@objects);
+        if grep { not $l->object_in_storage($_) } @objects;
 
     $self->store_objects( shallow => 1, only_known => 1, objects => \@objects );
 }
@@ -509,26 +511,50 @@ sub deep_update {
     my $l = $self->live_objects;
 
     croak "Object not in storage"
-        if grep { not defined } $l->objects_to_entries(@objects);
+        if grep { not $l->object_in_storage($_) } @objects;
 
     $self->store_objects( only_known => 1, objects => \@objects );
 }
 
-# FIXME fails for immutable data...
+sub _derive_entries {
+    my ( $self, %args ) = @_;
+
+    my @objects = @{ $args{objects} };
+
+    my $l = $self->live_objects;
+
+    my @entries = $l->objects_to_entries( @{ $args{objects} } );
+
+    my $method = $args{method} || "derive";
+
+    my $derive_args = $args{args} || [];
+
+    my @args = ref($derive_args) eq 'HASH' ? %$derive_args : @$derive_args;
+
+    $l->update_entries(map {
+        my $obj = shift @objects;
+        $obj => $_->$method( object => $obj, @args );
+    } @entries);
+}
+
 sub set_root {
     my ( $self, @objects ) = @_;
-    $_->root(1) for $self->live_objects->objects_to_entries(@objects);
+
+    $self->_derive_entries( objects => \@objects, args => { root => 1 } );
 }
 
 sub unset_root {
     my ( $self, @objects ) = @_;
-    $_->root(0) for $self->live_objects->objects_to_entries(@objects);
+
+    $self->_derive_entries( objects => \@objects, args => { root => 0 } );
 }
 
 sub is_root {
     my ( $self, @objects ) = @_;
 
-    my @is_root = map { $_->root } $self->live_objects->objects_to_entries(@objects);
+    my $l = $self->live_objects;
+
+    my @is_root = map { $l->id_in_root_set($_) } $l->objects_to_ids(@objects);
 
     return @objects == 1 ? $is_root[0] : @is_root;
 }
@@ -542,7 +568,7 @@ sub store_objects {
 
     $buffer->imply_root(@ids) if $args{root_set};
 
-    $buffer->insert_to_backend($self->backend);
+    $buffer->commit($self->backend);
 
     if ( @$objects == 1 ) {
         return $ids[0];
@@ -558,17 +584,22 @@ sub delete {
 
     my $l = $self->live_objects;
 
-    my ( @ids, @objects );
+    my @ids = grep { not ref } @ids_or_objects;
+    my @objects = grep { ref } @ids_or_objects;
 
-    push @{ ref($_) ? \@objects : \@ids }, $_ for @ids_or_objects;
+    # FIXME requires 'deleted' flag or somesuch
+    unless ( $l->keep_entries ) {
+        push @ids, $l->objects_to_ids(@objects);
+        @objects = ();
+    }
 
     my @entries;
 
-    push @entries, $l->objects_to_entries(@objects) if @objects;
-
-    for ( @entries ) {
-        croak "Object not in storage" unless defined;
+    for ( @objects ) {
+        croak "Object not in storage" unless $l->object_in_storage($_);
     }
+
+    push @entries, $l->objects_to_entries(@objects) if @objects;
 
     @entries = map { $_->deletion_entry } @entries;
 
@@ -606,7 +637,7 @@ sub txn_do {
         my $scope = $self->live_objects->new_txn;
 
         my $rollback = $args{rollback};
-        $args{rollback} = sub { $scope->rollback; $rollback && $rollback->() };
+        $args{rollback} = sub { $scope && $scope->rollback; $rollback && $rollback->() };
 
         return $backend->txn_do( $code, %args );
     } else {

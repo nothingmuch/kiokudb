@@ -25,6 +25,28 @@ sub verify {
 
     $self->no_live_objects;
 
+    my $l = $self->directory->live_objects;
+
+    my $cache = $l->cache;
+
+    my $old_value = $l->leak_tracker;
+
+    my $reset = Scope::Guard->new(sub {
+        if ( $old_value ) {
+            $l->leak_tracker($old_value);
+        } else {
+            $l->clear_leak_tracker;
+        }
+    });
+
+    $l->leak_tracker(sub {
+        my $i = $Test::Builder::Level || 1;
+        $i++ until (caller($i))[1] eq __FILE__;
+        local $Test::Builder::Level = $i + 2;
+        fail("no leaks");
+        diag("leaked @_"),
+    });
+
     my $id = $self->populate_ids->[0];
 
     $self->txn_lives(sub {
@@ -35,12 +57,21 @@ sub verify {
         is( $obj->foo, "pizza", "field retained" );
     });
 
+    if ( $cache ) {
+        isa_ok( my $cached = $cache->get($id), "KiokuDB::Test::Digested", "cached object" );
+        $self->live_objects_are($cached);
+        $cache->clear;
+    }
+
     $self->no_live_objects();
 
     $self->txn_lives(sub {
         # test idempotent insertions
         $self->insert_ok( KiokuDB::Test::Digested->new( foo => "pizza" ) );
     });
+
+    $cache->clear if $cache;
+    $self->no_live_objects();
 
     $self->txn_lives(sub {
         my $obj = $self->lookup_ok($id);
@@ -51,6 +82,9 @@ sub verify {
         is( $new_id, $id, "idempotent add when instance already live" );
     });
 
+    $cache->clear if $cache;
+    $self->no_live_objects();
+
     $self->txn_lives(sub {
         my $obj = $self->lookup_ok($id);
 
@@ -59,6 +93,12 @@ sub verify {
         ok( $new_id, "got a new ID" );
         isnt( $new_id, $id, "idempotent add when instance already live" );
     });
+
+    if ( $cache ) {
+        isa_ok( my $cached = $cache->get($id), "KiokuDB::Test::Digested", "cached object" );
+        $self->live_objects_are($cached);
+        $cache->clear;
+    }
 
     $self->no_live_objects();
 }

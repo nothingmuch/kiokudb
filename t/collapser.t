@@ -461,7 +461,7 @@ sub unknown_ok (&@) {
             is( scalar(keys %{ $buffer->_entries }), 2, "two entries for deep collapse" );
             is( scalar(@ids), 1, "one root set ID" );
 
-            $buffer->update_entries;
+            $buffer->update_entries( in_storage => 1 );
         }
 
         {
@@ -469,7 +469,7 @@ sub unknown_ok (&@) {
             is( scalar(keys %{ $buffer->_entries }), 1, "one entry for shallow collapse" );
             is( scalar(@ids), 1, "one root set ID" );
 
-            $buffer->update_entries;
+            $buffer->update_entries( in_storage => 1 );
         }
     }
 }
@@ -733,7 +733,7 @@ sub unknown_ok (&@) {
     my $s = $lo->new_scope;
 
     {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $bar ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $bar ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -742,20 +742,20 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Bar", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_1 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_1 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
-        is( scalar(keys %$entries), 1, "one entry with only_new" );
+        is( scalar(keys %$entries), 1, "one entry with only_in_storage" );
         is( scalar(@ids), 1, "one root set ID" );
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
@@ -768,13 +768,13 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     {
         $lo->insert( foo_3 => $foo_3 );
 
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_3 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_3 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -785,11 +785,11 @@ sub unknown_ok (&@) {
 
         is( $entries->{$ids[0]}->class, "KiokuDB_Test_Foo", "class" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
     }
 
     lives_ok {
-        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_4 ], only_new => 1 );
+        my ( $buffer, @ids ) = $v->collapse( objects => [ $foo_4 ], only_in_storage => 1 );
 
         my $entries = $buffer->_entries;
 
@@ -800,7 +800,7 @@ sub unknown_ok (&@) {
 
         ok( !exists($entries->{$lo->object_to_id($bar)}), "known object doesn't exist in entry set" );
 
-        $buffer->update_entries;
+        $buffer->update_entries( in_storage => 1 );
 
         is_deeply(
             $entries->{$ids[0]}->data->{moof},

@@ -13,11 +13,20 @@ use Set::Object;
 use KiokuDB::LiveObjects::Scope;
 use KiokuDB::LiveObjects::TXNScope;
 
+use Moose::Util::TypeConstraints;
+
 use namespace::clean -except => 'meta';
+
+coerce __PACKAGE__, from "HashRef", via { __PACKAGE__->new($_) };
 
 has clear_leaks => (
     isa => "Bool",
     is  => "rw",
+);
+
+has cache => (
+    isa => "Cache::Ref",
+    is  => "ro",
 );
 
 has leak_tracker => (
@@ -26,7 +35,13 @@ has leak_tracker => (
     clearer => "clear_leak_tracker",
 );
 
-has _objects => (
+has keep_entries => (
+    isa => "Bool",
+    is  => "ro",
+    default => 1,
+);
+
+has [qw(_objects _entries _object_entries)] => (
     isa => "HashRef",
     is  => "ro",
     init_arg => undef,
@@ -39,67 +54,97 @@ has _ids => (
     is  => "ro",
     init_arg => undef,
     default => sub { return {} },
-    #provides => {
-    #    get    => "ids_to_objects",
-    #    keys   => "live_ids",
-    #    values => "live_objects",
-    #},
 );
+
+sub _id_info {
+    my ( $self, @ids ) = @_;
+
+    no warnings 'uninitialized'; # @ids can contain undefs
+
+    if ( @ids == 1 ) {
+        return $self->_ids->{$ids[0]};
+    } else {
+        return @{ $self->_ids }{@ids};
+    }
+}
+
+sub _vivify_id_info {
+    my ( $self, $id ) = @_;
+
+    my $info;
+
+    my $i = $self->_ids;
+
+    unless ( $info = $i->{$id} ) {
+        $info = { guard => KiokuDB::LiveObjects::Guard->new( $i, $id ) };
+        weaken( $i->{$id} = $info );
+    }
+
+    return $info;
+}
 
 sub id_to_object {
     my ( $self, $id ) = @_;
-    $self->_ids->{$id};
+
+    if ( my $c = $self->cache ) {
+        $c->hit($id);
+    }
+
+    if ( my $data = $self->_id_info($id) ) {
+        return $data->{object};
+    }
 }
 
 sub ids_to_objects {
     my ( $self, @ids ) = @_;
-    @{ $self->_ids }{@ids};
+
+    if ( my $c = $self->cache ) {
+        $c->hit(@ids);
+    }
+
+    map { $_ && $_->{object} } $self->_id_info(@ids);
 }
 
-sub live_ids {
+sub known_ids {
     keys %{ shift->_ids };
 }
 
-sub live_objects {
-    values %{ shift->_ids };
+sub live_ids {
+    my $self = shift;
+
+    grep { ref $self->_id_info($_)->{object} } $self->known_ids;
 }
 
-has _entry_objects => (
-    isa => "HashRef",
-    is  => "ro",
-    init_arg => undef,
-    default => sub { fieldhash my %hash },
-);
-
-has _entry_ids => (
-    #metaclass => 'Collection::Hash',
-    isa => "HashRef",
-    is  => "ro",
-    init_arg => undef,
-    default  => sub { return {} },
-    #provides => {
-    #    get    => "ids_to_entries",
-    #    keys   => "loaded_ids",
-    #    values => "live_entries",
-    #},
-);
+sub live_objects {
+    grep { ref } map { $_->{object} } values %{ shift->_ids };
+}
 
 sub id_to_entry {
     my ( $self, $id ) = @_;
-    $self->_entry_ids->{$id};
+
+    if ( my $data = $self->_id_info($id) ) {
+        return $data->{entry};
+    }
+
+    return undef;
 }
 
 sub ids_to_entries {
     my ( $self, @ids ) = @_;
-    @{ $self->_entry_ids }{@ids}
+
+    return $self->id_to_entry($ids[0]) if @ids == 1;
+
+    map { $_ && $_->{entry} } $self->_id_info(@ids);
 }
 
 sub loaded_ids {
-    keys %{ shift->_entry_ids };
+    my $self = shift;
+
+    grep { $self->_id_info($_)->{entry} } $self->known_ids;
 }
 
 sub live_entries {
-    values %{ shift->_entry_ids };
+    grep { ref } map { $_->{entry} } values %{ shift->_ids };
 }
 
 has current_scope => (
@@ -141,17 +186,37 @@ sub remove_scope {
     $known->remove($scope);
 
     if ( $known->size == 0 ) {
-        if ( my @objects = $self->live_objects ) {
-            if ( $self->clear_leaks ) {
-                $self->clear;
-            }
+        $self->check_leaks;
+    }
+}
 
-            if ( my $tracker = $self->leak_tracker ) {
-                if ( ref($tracker) eq 'CODE' ) {
-                    $tracker->(@objects);
-                } else {
-                    $tracker->leaked_objects(@objects);
-                }
+sub check_leaks {
+    my $self = shift;
+
+    return if $self->_known_scopes->size;
+
+    my @still_live = grep { defined } $self->live_objects;
+
+    if (@still_live) {
+        # immortal objects are still live but not considered leaks
+        my $o = $self->_objects;
+        my @leaked = grep {
+            my $i = $o->{$_};
+            not($i->{immortal} or $i->{cache})
+        } @still_live;
+
+        weaken($_) for @leaked;
+        @still_live = ();
+
+        if ( $self->clear_leaks ) {
+            $self->clear;
+        }
+
+        if ( my $tracker = $self->leak_tracker and grep { defined } @leaked ) {
+            if ( ref($tracker) eq 'CODE' ) {
+                $tracker->(grep { defined } @leaked);
+            } else {
+                $tracker->leaked_objects(grep { defined } @leaked);
             }
         }
     }
@@ -185,6 +250,8 @@ sub new_scope {
 sub new_txn {
     my $self = shift;
 
+    return unless $self->keep_entries;
+
     my $parent = $self->txn_scope;
 
     my $child = KiokuDB::LiveObjects::TXNScope->new(
@@ -203,19 +270,14 @@ sub objects_to_ids {
     return $self->object_to_id($objects[0])
         if @objects == 1;
 
-    my $o = $self->_objects;
-
-    return map {
-        my $ent = $o->{$_};
-        $ent && $ent->{id};
-    } @objects;
+    map { $_ && $_->{guard}->key } @{ $self->_objects }{@objects};
 }
 
 sub object_to_id {
     my ( $self, $obj ) = @_;
 
-    if ( my $ent = $self->_objects->{$obj} ){
-        return $ent->{id};
+    if ( my $info = $self->_objects->{$obj} ){
+        return $info->{guard}->key;
     }
 
     return undef;
@@ -224,110 +286,125 @@ sub object_to_id {
 sub objects_to_entries {
     my ( $self, @objects ) = @_;
 
-    return $self->object_to_entry($objects[0])
-        if @objects == 1;
-
-    my $o = $self->_objects;
-
-    return map {
-        my $ent = $o->{$_};
-        $ent && $ent->{entry};
-    } @objects;
+    return $self->ids_to_entries( $self->objects_to_ids(@objects) );
 }
 
 sub object_to_entry {
     my ( $self, $obj ) = @_;
 
-    if ( my $ent = $self->_objects->{$obj} ){
-        return $ent->{entry};
+    return $self->id_to_entry( $self->object_to_id($obj) || return );
+}
+
+sub id_in_root_set {
+    my ( $self, $id ) = @_;
+
+    if ( my $data = $self->_id_info($id) ) {
+        return $data->{root};
     }
 
     return undef;
 }
 
-sub update_entries {
-    my ( $self, @entries ) = @_;
+sub id_in_storage {
+    my ( $self, $id ) = @_;
 
-    my @ret;
-
-    my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
-
-    foreach my $entry ( @entries ) {
-        my $id = $entry->id;
-
-        push @ret, $ei->{$id} if defined wantarray;
-
-        weaken($ei->{$id} = $entry);
-        $eo->{$entry} ||= KiokuDB::LiveObjects::Guard->new( $ei, $id );
-
-        if ( ref(my $obj = $i->{$id}) ) {
-            my $ent = $o->{$obj};
-            $ent->{entry} = $entry;
-        } elsif ( ref( my $object = $entry->object ) ) {
-            $self->insert( $entry => $object );
-        }
+    if ( my $data = $self->_id_info($id) ) {
+        return $data->{in_storage};
     }
 
-    if ( my $s = $self->txn_scope ) {
-        $s->update_entries(@entries);
-    }
-
-    @ret;
+    return undef;
 }
 
-sub rollback_entries {
-    my ( $self, @entries ) = @_;
 
-    my ( $o, $i, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_ids );
+sub object_in_storage {
+    my ( $self, $object ) = @_;
 
-    foreach my $entry ( reverse @entries ) {
-        my $id = $entry->id;
+    $self->id_in_storage( $self->object_to_id($object) || return );
+}
 
-        if ( my $prev = $entry->prev ) {
-            $ei->{$id} = $prev;
+sub update_object_entry {
+    my ( $self, $object, $entry, %args ) = @_;
 
-            my $obj = $i->{$id};
 
-            $o->{$obj}{entry} = $prev;
-        } else {
-            delete $ei->{$id};
-            delete $i->{$id};
+    my $s = $self->current_scope or croak "no open live object scope";
+
+    my $info = $self->_objects->{$object} or croak "Object not yet registered";
+    $self->_entries->{$entry} = $info;
+
+    @{$info}{keys %args} = values %args;
+    weaken($info->{entry} = $entry);
+
+    if ( $self->keep_entries ) {
+        $self->_object_entries->{$object} = $entry;
+
+        if ( $args{in_storage} and my $txs = $self->txn_scope ) {
+            $txs->push($entry);
         }
+    }
+
+    # break cycle for passthrough objects
+    if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+        weaken($entry->{data}); # FIXME there should be a MOP way to do this
     }
 }
 
-sub remove {
-    my ( $self, @stuff ) = @_;
+sub register_object {
+    my ( $self, $id, $object, %args ) = @_;
 
-    my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
+    my $s = $self->current_scope or croak "no open live object scope";
 
-    foreach my $thing ( @stuff ) {
-        if ( ref $thing ) {
-            delete $eo->{$thing};
-            if ( my $id = (delete $o->{$thing} || {})->{id} ) { # guard invokes
-                delete $i->{$id};
-                delete $ei->{$id};
-            }
-        } else {
-            if ( ref( my $object = delete $i->{$thing} ) ) {
-                delete $o->{$object};
-            }
+    croak($object, " is not a reference") unless ref($object);
+    croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
 
-            if ( my $entry = $ei->{$thing} ) {
-                delete($eo->{$entry});
-            }
+    if ( my $id = $self->object_to_id($object) ) {
+        croak($object, " is already registered as $id")
+    }
+
+    my $info = $self->_vivify_id_info($id);
+
+    if ( ref $info->{object} ) {
+        croak "An object with the id '$id' is already registered ($info->{object} != $object)"
+    }
+
+    $self->_objects->{$object} = $info;
+
+    weaken($info->{object} = $object);
+
+    if ( my $entry = $info->{entry} ) {
+        # break cycle for passthrough objects
+        if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+            weaken($entry->{data}); # FIXME there should be a MOP way to do this
+        }
+
+        if ( $self->keep_entries ) {
+            $self->_object_entries->{$object} = $entry;
         }
     }
+
+    @{$info}{keys %args} = values %args;
+
+    if ( $args{cache} and my $c = $self->cache ) {
+        $c->set( $id => $object );
+    }
+
+    $s->push($object);
 }
 
 sub register_entry {
-    my ( $self, $entry, $object ) = @_;
-}
+    my ( $self, $id, $entry, %args ) = @_;
 
-sub register_id {
-    my ( $self, $id, $object ) = @_;
+    my $info = $self->_vivify_id_info($id);
 
+    $self->_entries->{$entry} = $info;
 
+    confess "$entry" unless $entry->isa("KiokuDB::Entry");
+    @{$info}{keys %args, 'root'} = ( values %args, $entry->root );
+
+    weaken($info->{entry} = $entry);
+
+    if ( $args{in_storage} and $self->keep_entries and my $txs = $self->txn_scope ) {
+        $txs->push($entry);
+    }
 }
 
 sub insert {
@@ -336,10 +413,9 @@ sub insert {
     croak "The arguments must be an list of pairs of IDs/Entries to objects"
         unless @pairs % 2 == 0;
 
-    my ( $o, $i, $eo, $ei ) = ( $self->_objects, $self->_ids, $self->_entry_objects, $self->_entry_ids );
+    croak "no open live object scope" unless $self->current_scope;
 
-    my $s = $self->current_scope or croak "no open live object scope";
-
+    my @register;
     while ( @pairs ) {
         my ( $id, $object ) = splice @pairs, 0, 2;
         my $entry;
@@ -353,81 +429,85 @@ sub insert {
 
         croak($object, " is not a reference") unless ref($object);
         croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
-        croak($object, " is already registered as $o->{$object}{id}") if exists $o->{$object} and $o->{$object}{id} ne $id;;
 
-        if ( exists $i->{$id} ) {
-            croak "An object with the id '$id' is already registered";
+        if ( $entry ) {
+            $self->register_entry( $id => $entry, in_storage => 1 );
+            $self->register_object( $id => $object );
         } else {
-            weaken($i->{$id} = $object);
-
-            $s->push($object);
-
-            if ( $entry ) {
-                unless ( $ei->{$id} ) {
-                    $ei->{$id} = $entry;
-                    $eo->{$entry} = KiokuDB::LiveObjects::Guard->new( $ei, $id );
-                }
-
-                # break cycle for passthrough objects
-                if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
-                    weaken($entry->{data}); # FIXME there should be a MOP way to do this
-                }
-            }
-
-            # note, $entry = $e->{$id} is *not* desired, it isn't necessarily
-            # up to date
-
-            $o->{$object} = {
-                id => $id,
-                entry => $entry,
-                guard => KiokuDB::LiveObjects::Guard->new( $i, $id ),
-            };
+            $self->register_object( $id => $object );
         }
     }
 }
 
-sub insert_entries {
-    my ( $self, @entries ) = @_;
+sub update_entries {
+    my ( $self, @pairs ) = @_;
+    my @entries;
 
-    confess "non reference entries: ", join ", ", map { $_ ? $_ : "undef" } @entries if grep { !ref } @entries;
+    while ( @pairs ) {
+        my ( $object, $entry ) = splice @pairs, 0, 2;
 
-    my $i = $self->_ids;
+        $self->register_entry( $entry->id => $entry, in_storage => 1 );
 
-    @entries = grep { not exists $i->{$_->id} } @entries;
-
-    my @ids = map { $_->id } @entries;
-
-    my $ei = $self->_entry_ids;
-    @{ $self->_entry_objects }{@entries} = map { KiokuDB::LiveObjects::Guard->new( $ei, $_ ) } @ids;
-
-    {
-        no warnings;
-        weaken($_) for @{$ei}{@ids} = @entries;
+        unless ( $self->object_to_id($object) ) {
+            $self->register_object( $entry->id => $object );
+        } else {
+            $self->update_object_entry( $object, $entry );
+        }
     }
 
     return;
 }
 
+sub rollback_entries {
+    my ( $self, @entries ) = @_;
+
+    foreach my $entry ( reverse @entries ) {
+        my $info = $self->_id_info($entry->id);
+
+        if ( my $prev = $entry->prev ) {
+            weaken($info->{entry} = $prev);
+        } else {
+            delete $info->{entry};
+        }
+    }
+}
+
+sub remove {
+    my ( $self, @stuff ) = @_;
+
+    my ( $i, $o, $e, $oe ) = ( $self->_ids, $self->_objects, $self->_entries, $self->_object_entries );
+
+    while ( @stuff ) {
+        my $thing = shift @stuff;
+
+        if ( ref $thing ) {
+            # FIXME make this a bit less zealous?
+            my $info;
+            if ( $info = delete $o->{$thing} ) {
+                delete $info->{object};
+                delete $oe->{$thing};
+                push @stuff, $info->{entry} if $info->{entry};
+            } elsif ( $info = delete $e->{$thing} ) {
+                delete $info->{entry};
+                push @stuff, $info->{object} if ref $info->{object};
+            }
+        } else {
+            my $info = delete $i->{$thing};
+            push @stuff, grep { ref } delete @{$info}{qw(entry object)};
+        }
+    }
+}
+
 sub clear {
     my $self = shift;
 
-    foreach my $ent ( values %{ $self->_objects } ) {
-        if ( my $guard = $ent->{guard} ) { # sometimes gone in global destruction
-            $guard->dismiss;
-        }
-    }
+    # don't waste too much time in DESTROY
+    $_->{guard}->dismiss for values %{ $self->_ids };
 
-    foreach my $guard ( values %{ $self->_entry_objects } ) {
-        next unless $guard;
-        $guard->dismiss;
-    }
-
-    # avoid the now needless weaken magic, should be faster
+    %{ $self->_ids } = ();
     %{ $self->_objects } = ();
-    %{ $self->_ids }     = ();
-
-    %{ $self->_entry_ids } = ();
-    %{ $self->_entry_objects } = ();
+    %{ $self->_object_entries } = ();
+    %{ $self->_entries } = ();
 
     $self->_clear_current_scope;
     $self->_known_scopes->clear;
@@ -498,6 +578,15 @@ C<circular_off> function:
         circular_off($_) for @leaked_objects;
     });
 
+=item keep_entries
+
+B<EXPERIMENTAL>
+
+When true (the default), L<KiokuDB::Entries> loaded from the backend or created
+by the collapser are kept around.
+
+This results in a considerable memory overhead, so it's no longer required.
+
 =back
 
 =head1 METHODS
@@ -508,13 +597,6 @@ C<circular_off> function:
 
 Takes pairs, id or entry as the key, and object as the value, registering the
 objects.
-
-=item insert_entries
-
-Takes entries and registers them without an object.
-
-This is used when prefetching entries, before their objects are actually
-inflated.
 
 =item objects_to_ids
 

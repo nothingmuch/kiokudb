@@ -451,8 +451,8 @@ sub blah { 42 }
 
     my $entry = $dir->live_objects->id_to_entry($sub_id);
 
-    ok( !exists($entry->{data}{file}), "Moose accessor detected" );
-    is_deeply( $entry->{data}, { package => "KiokuDB::Test::Employee", name => "company" }, "FQ reference only" );
+    ok( !exists($entry->data->{file}), "Moose accessor detected" );
+    is_deeply( $entry->data, { package => "KiokuDB::Test::Employee", name => "company" }, "FQ reference only" );
 
     $dir->live_objects->clear;
 }
@@ -465,8 +465,8 @@ sub blah { 42 }
 
     my $entry = $dir->live_objects->id_to_entry($sub_id);
 
-    ok( !exists($entry->{data}{file}), "XSUB detected" );
-    is_deeply( $entry->{data}, { package => "Scalar::Util", name => "weaken" }, "FQ reference only" );
+    ok( !exists($entry->data->{file}), "XSUB detected" );
+    is_deeply( $entry->data, { package => "Scalar::Util", name => "weaken" }, "FQ reference only" );
 
     $dir->live_objects->clear;
 }

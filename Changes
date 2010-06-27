@@ -1,9 +1,32 @@
+0.46_03
+    - Internals change cleanups regarding weakening $entry->{data} with
+      passthrough objects
+    - fiddle leak tracking code around to avoid keeping temporary refs around,
+      which makes Devel::FindRef more useful in the user's leak tracker
+
+0.46_02
+    - Support for caching of live objects (i.e. immutable ones)
+    - Fix the =head1 NAME of Tutorial::JA
+    - Move t/set.t into a standalone test fixture
+
+0.46_01
+    - Lots of refactoring to LiveObjects
+        - metadata is keyed by ID, not object
+        - keep_entries attribute allows entries to be discarded once used
+          (defaults to true for compatibility, may change in the future)
+        - clear_leaks/leak_tracker attributes
+    - remove txn_{begin,commit,rollback} methods, as they require maintaining a
+      stack to be properly used (#58166)
+    - KiokuDB::Cmd no longer tries to rerun itself after autoinstall, this is
+      very flakey when the installation is the result of an upgrade instead of
+      a fresh install
+
 0.45
     - Introduce KiokuDB::Backend::Role::GC which allows backends to construct
       their own garbage collector for the GC command.
     - name mangle inline classes in tests to avoid false failure reports (e.g.
       when a Foo.pm is in @INC)
-    - add scoped_txn, txn_begin, txn_commit, txn_abort
+    - add scoped_txn, txn_begin, txn_commit, txn_rollback
 
 0.44
     - Remove accidental use of namespace::autoclean instead of namespace::clean

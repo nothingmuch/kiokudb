@@ -81,7 +81,7 @@ for my $i ( 0, 1 ) {
 
     my $copy = dclone($entries);
 
-    $l->live_objects->insert_entries(values %$entries);
+    $l->live_objects->register_entry( $_->id => $_ ) for values %$entries;
 
     my $loaded = $l->expand_object($copy->{$ids[0]});
 

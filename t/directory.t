@@ -16,31 +16,29 @@ BEGIN { $KiokuDB::SERIAL_IDS = 1 }
 use ok 'KiokuDB';
 use ok 'KiokuDB::Backend::Hash';
 
-my $dir = KiokuDB->new(
-    check_class_versions => 1,
-    class_version_table => {
-        KiokuDB_Test_Foo => {
-            "0.01" => {
-                class_version => "0.02",
-                data          => { foo => "upgraded" },
-            },
-        },
-    },
-    backend => KiokuDB::Backend::Hash->new,
-    #backend => KiokuDB::Backend::JSPON->new(
-    #    dir    => temp_root,
-    #    pretty => 1,
-    #    lock   => 0,
-    #),
-);
-
 sub no_live_objects {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
+
+    our $dir;
+
     is_deeply(
         [ $dir->live_objects->live_objects ],
         [],
         "live object set is empty",
     );
+
+    is_deeply(
+        [ $dir->live_objects->live_entries ],
+        [],
+        "live entry set is empty",
+    );
+
+    if ( my @entries = $dir->live_objects->live_entries ) {
+        $dir->live_objects->clear;
+        diag Devel::FindRef::track($entries[0], 100);
+        $entries[0]{__destroyed} = Scope::Guard->new(sub { Carp::cluck("finally destroyed") });
+        diag($dir->live_objects->dump);
+    }
 }
 
 {
@@ -65,6 +63,29 @@ sub no_live_objects {
 
     __PACKAGE__->meta->make_immutable;
 }
+
+foreach my $keep_entries ( 1, 0 ) {
+our $dir = KiokuDB->new(
+    live_objects => {
+        keep_entries => $keep_entries,
+    },
+    check_class_versions => 1,
+    class_version_table => {
+        KiokuDB_Test_Foo => {
+            "0.01" => {
+                class_version => "0.02",
+                data          => { foo => "upgraded" },
+            },
+        },
+    },
+    backend => KiokuDB::Backend::Hash->new,
+    #backend => KiokuDB::Backend::JSPON->new(
+    #    dir    => temp_root,
+    #    pretty => 1,
+    #    lock   => 0,
+    #),
+);
+
 
 my $l = $dir->live_objects;
 
@@ -95,18 +116,23 @@ my $id;
     memory_cycle_ok($s, "no cycles in scope");
     memory_cycle_ok($l, "no cycles in live objects");
 
-    my $entry = $dir->live_objects->objects_to_entries($x);
+    if ( $keep_entries ) {
+        my $entry = $l->object_to_entry($x);
 
-    ok( $entry, "got an entry for $id" );
+        ok( $entry, "got an entry for $id" );
 
-    is( $entry->id, $id, "with the right entry" );
+        is( try { $entry->id }, $id, "with the right entry" );
 
-    is( $entry->object, $x, "and the right object" );
+        is( try { $entry->object }, $x, "and the right object" );
+    } else {
+        is( $l->object_to_entry($x), undef, "no entry" );
+    }
+
 
     memory_cycle_ok($x, "store did not introduce cycles");
 
     is_deeply(
-        [ sort $dir->live_objects->live_objects ],
+        [ sort $l->live_objects ],
         [ sort $x, $x->bar ],
         "live object set"
     );
@@ -116,10 +142,14 @@ no_live_objects;
 
 memory_cycle_ok($l, "no cycles in live objects");
 
+my $weak;
+
 {
     my $s = $dir->new_scope;
 
     my $obj = $dir->lookup($id);
+
+    weaken($weak = $obj);
 
     memory_cycle_ok($obj, "no cycles in object");
 
@@ -132,6 +162,8 @@ memory_cycle_ok($l, "no cycles in live objects");
     isa_ok( $obj->bar->parent, "KiokuDB_Test_Foo", "object attr of sub object" );
     is( $obj->bar->parent, $obj, "circular ref" );
 }
+
+is( $weak, undef, "weak ref to object died" );
 
 no_live_objects;
 
@@ -155,8 +187,8 @@ memory_cycle_ok($l, "no cycles in live objects");
 
     undef $x;
 
-    is( $dir->live_objects->id_to_object($ids[0]), undef, "first object is dead" );
-    is( $dir->live_objects->id_to_object($ids[1]), $y, "second is still alive" );
+    is( $l->id_to_object($ids[0]), undef, "first object is dead" );
+    is( $l->id_to_object($ids[1]), $y, "second is still alive" );
 
     {
         my $s = $dir->new_scope;
@@ -390,7 +422,7 @@ no_live_objects;
         }
 
         is_deeply(
-            [ $dir->live_objects->live_objects ],
+            [ $l->live_objects ],
             [ $child ],
             "only child in live object set",
         );
@@ -410,7 +442,7 @@ no_live_objects;
             is( refaddr($obj->bar), refaddr($child), "same refaddr as live object" );
 
             is_deeply(
-                [ sort $dir->live_objects->live_objects ],
+                [ sort $l->live_objects ],
                 [ sort $child, $obj ],
                 "two objects in live object set",
             );
@@ -490,21 +522,31 @@ no_live_objects;
 
         $obj->foo("goddamn");
 
-        my $entry = $dir->live_objects->objects_to_entries($obj);
+        my $entry;
+        if ( $keep_entries ) {
+            $entry = $l->object_to_entry($obj);
 
-        ok( $entry, "got an entry" );
+            ok( $entry, "got an entry" );
 
-        is( $entry->id, $id, "right id" );
+            is( $entry->id, $id, "right id" );
+        } else {
+            $entry = $l->object_to_entry($obj);
+            is( $entry, undef, "no entry" ) or diag(Devel::FindRef::track($entry, 100));
+        }
 
         $dir->update($obj);
 
-        my $update_entry = $dir->live_objects->objects_to_entries($obj);
+        if ( $keep_entries ) {
+            my $update_entry = $l->object_to_entry($obj);
 
-        ok( $update_entry, "got an update entry" );
+            ok( $update_entry, "got an update entry" );
 
-        is( $update_entry->id, $id, "right id" );
+            is( $update_entry->id, $id, "right id" );
 
-        is( $update_entry->prev, $entry, "prev entry" );
+            is( $update_entry->prev, $entry, "prev entry" );
+        } else {
+            is( $l->object_to_entry($obj), undef, "no entry" );
+        }
     }
 
     no_live_objects;
@@ -529,6 +571,16 @@ no_live_objects;
         };
 
         $dir->insert($child);
+
+        ok( $l->object_to_id($child), "child has ID now" );
+
+        ok( $l->object_in_storage($child), "its in storage" );
+
+        if ( $keep_entries ) {
+            isa_ok( $l->object_to_entry($child), "KiokuDB::Entry" );
+        } else {
+            is( $l->object_to_entry($child), undef, "KiokuDB::Entry" );
+        }
 
         lives_ok { $dir->update($obj) } "no error this time";
     }
@@ -620,16 +672,20 @@ no_live_objects;
         ),
     );
 
-    my @entries = $dir->live_objects->objects_to_entries($foo, $bar);
+    if ( $keep_entries ) {
+        my @entries = $l->objects_to_entries($foo, $bar);
 
-    is( scalar(@entries), 2, "two entries" );
-    is( $entries[0]->object, $foo, "entry object" );
-    is( $entries[1]->object, $bar, "entry object" );
+        is( scalar(@entries), 2, "two entries" );
+        is( $entries[0]->object, $foo, "entry object" );
+        is( $entries[1]->object, $bar, "entry object" );
 
-    $dir->delete($foo, $bar);
+        $dir->delete($foo, $bar);
 
-    is( $dir->live_objects->object_to_entry($foo), undef, "no entry object" );
-    is( $dir->live_objects->object_to_entry($bar), undef, "no entry object" );
+        is( $l->object_to_entry($foo), undef, "no entry object" );
+        is( $l->object_to_entry($bar), undef, "no entry object" );
+    } else {
+        is_deeply( [ $l->live_entries ], [ ], "no live entries" );
+    }
 };
 
 no_live_objects;
@@ -643,11 +699,16 @@ no_live_objects;
 
     is( $id, "blah", "custom id" );
 
-    is( $dir->live_objects->object_to_id($foo), "blah", "object to id" );
+    is( $l->object_to_id($foo), "blah", "object to id" );
 
-    isa_ok( my $entry = $dir->live_objects->object_to_entry($foo), "KiokuDB::Entry" );
+    if ( $keep_entries ) {
+        isa_ok( my $entry = $l->object_to_entry($foo), "KiokuDB::Entry" );
+        ok( $entry->root, "root object" );
+    } else {
+        is( $l->object_to_entry($foo), undef, "no entry" );
+    }
 
-    ok( $entry->root, "root object" );
+    ok( $dir->is_root($foo), "object is in root set" );
 };
 
 no_live_objects;
@@ -661,11 +722,16 @@ no_live_objects;
 
     is( $id, "nonroot_object", "custom id" );
 
-    is( $dir->live_objects->object_to_id($foo), "nonroot_object", "object to id" );
+    is( $l->object_to_id($foo), "nonroot_object", "object to id" );
 
-    isa_ok( my $entry = $dir->live_objects->object_to_entry($foo), "KiokuDB::Entry" );
+    if ( $keep_entries ) {
+        isa_ok( my $entry = $l->object_to_entry($foo), "KiokuDB::Entry" );
+        ok( !$entry->root, "not root" );
+    } else {
+        is( $l->object_to_entry($foo), undef, "no entry" );
+    }
 
-    ok( !$entry->root, "not root" );
+    ok( !$dir->is_root($foo), "object is not in root set" );
 };
 
 no_live_objects;
@@ -698,5 +764,7 @@ no_live_objects;
 };
 
 no_live_objects;
+
+}
 
 done_testing;

@@ -107,22 +107,36 @@ sub may_compact {
 sub make_entry {
     my ( $self, %args ) = @_;
 
-    if ( my $id = $args{id} ) {
-        my $object = $args{object};
+    my $meta = delete $args{meta} || {};
 
-        my $prev = $self->live_objects->object_to_entry($object);
+    my $object = $args{object};
+
+    if ( my $id = $args{id} ) {
+        my $l = $self->live_objects;
+
+        my $prev = $l->object_to_entry($object);
+
+        if ( !$prev and $l->id_in_storage($id) ) {
+            # FIXME Backend->store( insert => [ ... ], update => [ ... ] )
+            # this happens when keep_entries is false
+            $prev = KiokuDB::Entry->new( root => $l->id_in_root_set($id) ); # force the operation to be an update
+        }
 
         my $entry = KiokuDB::Entry->new(
             ( $prev ? ( prev => $prev ) : () ),
             %args,
         );
 
-        $self->_buffer->insert_entry( $id => $entry );
+        $self->_buffer->insert_entry( $id => $entry, $object, %$meta );
 
         return $entry;
     } else {
         # intrinsic
-        return KiokuDB::Entry->new(%args);
+        my $entry = KiokuDB::Entry->new(%args);
+
+        $self->_buffer->insert_intrinsic( $object => $entry, %$meta );
+
+        return $entry;
     }
 }
 
@@ -178,7 +192,7 @@ sub visit_ref_fallback {
 
     my $o = $self->_buffer->options;
 
-    if ( my $entry = $o->{only_new} && $self->live_objects->object_to_entry($ref) ) {
+    if ( my $entry = $o->{only_in_storage} && $self->live_objects->object_to_entry($ref) ) {
         return $self->make_ref( $entry->id => $_[1] );
     }
 
@@ -300,25 +314,24 @@ sub collapse_first_class {
 
     my ( $l, $b ) = ( $self->live_objects, $self->_buffer );
 
-    my $prev = $l->object_to_entry($object);
+    my $id = $l->object_to_id($object);
+    my $in_storage = $l->id_in_storage($id);
 
     my $o = $b->options;
 
-    if ( $o->{only_new} && $prev ) {
-        return $self->make_ref( $prev->id => $_[2] );
+    if ( $o->{only_in_storage} && $in_storage ) {
+        return $self->make_ref( $id => $_[2] );
     }
 
     if ( my $only = $o->{only} ) {
         unless ( $only->contains($object) ) {
-            if ( $prev ) {
-                return $self->make_ref( $prev->id => $_[2] );
+            if ( $in_storage ) {
+                return $self->make_ref( $id => $_[2] );
             } else {
                 KiokuDB::Error::UnknownObjects->throw( objects => [ $object ] );
             }
         }
     }
-
-    my $id = $l->object_to_id($object);
 
     unless ( $id ) {
         if ( $o->{only_known} ) {
@@ -371,11 +384,7 @@ sub collapse_intrinsic {
         @entry_args,
     );
 
-    my $entry = $self->$collapse(@args);
-
-    $self->_buffer->insert_intrinsic( $object => $entry );
-
-    return $entry;
+    return $self->$collapse(@args);
 }
 
 # we don't reblass in collapse_naive
