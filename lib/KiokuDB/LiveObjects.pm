@@ -195,7 +195,9 @@ sub check_leaks {
 
     return if $self->_known_scopes->size;
 
-    if ( my @still_live = grep { defined } $self->live_objects ) {
+    my @still_live = grep { defined } $self->live_objects;
+
+    if (@still_live) {
         # immortal objects are still live but not considered leaks
         my $o = $self->_objects;
         my @leaked = grep {
@@ -203,15 +205,18 @@ sub check_leaks {
             not($i->{immortal} or $i->{cache})
         } @still_live;
 
+        weaken($_) for @leaked;
+        @still_live = ();
+
         if ( $self->clear_leaks ) {
             $self->clear;
         }
 
-        if ( my $tracker = $self->leak_tracker and @leaked ) {
+        if ( my $tracker = $self->leak_tracker and grep { defined } @leaked ) {
             if ( ref($tracker) eq 'CODE' ) {
-                $tracker->(@leaked);
+                $tracker->(grep { defined } @leaked);
             } else {
-                $tracker->leaked_objects(@leaked);
+                $tracker->leaked_objects(grep { defined } @leaked);
             }
         }
     }
@@ -365,8 +370,15 @@ sub register_object {
 
     weaken($info->{object} = $object);
 
-    if ( $self->keep_entries and my $entry = $info->{entry} ) {
-        $self->_object_entries->{$object} = $entry;
+    if ( my $entry = $info->{entry} ) {
+        # break cycle for passthrough objects
+        if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
+            weaken($entry->{data}); # FIXME there should be a MOP way to do this
+        }
+
+        if ( $self->keep_entries ) {
+            $self->_object_entries->{$object} = $entry;
+        }
     }
 
     @{$info}{keys %args} = values %args;
@@ -421,11 +433,6 @@ sub insert {
         if ( $entry ) {
             $self->register_entry( $id => $entry, in_storage => 1 );
             $self->register_object( $id => $object );
-
-            # break cycle for passthrough objects
-            if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
-                weaken($entry->{data}); # FIXME there should be a MOP way to do this
-            }
         } else {
             $self->register_object( $id => $object );
         }

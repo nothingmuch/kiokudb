@@ -381,7 +381,7 @@ foreach my $intrinsic ( 1, 0 ) {
 
         my $clone = $entry->derive(
             data => {
-                %{ $entry->{data} },
+                %{ $entry->data },
                 foo => "henry",
             },
         );

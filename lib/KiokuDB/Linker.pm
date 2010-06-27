@@ -65,12 +65,6 @@ sub register_object {
 
         $l->register_entry( $id => $entry );
         $l->register_object( $id => $object, @args );
-
-        use Scalar::Util qw(refaddr);
-        # break cycle for passthrough objects
-        if ( ref($entry->data) and refaddr($object) == refaddr($entry->data) ) {
-            weaken($entry->{data}); # FIXME there should be a MOP way to do this
-        }
     }
 }
 
