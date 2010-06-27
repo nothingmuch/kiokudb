@@ -195,7 +195,9 @@ sub check_leaks {
 
     return if $self->_known_scopes->size;
 
-    if ( my @still_live = grep { defined } $self->live_objects ) {
+    my @still_live = grep { defined } $self->live_objects;
+
+    if (@still_live) {
         # immortal objects are still live but not considered leaks
         my $o = $self->_objects;
         my @leaked = grep {
@@ -203,15 +205,18 @@ sub check_leaks {
             not($i->{immortal} or $i->{cache})
         } @still_live;
 
+        weaken($_) for @leaked;
+        @still_live = ();
+
         if ( $self->clear_leaks ) {
             $self->clear;
         }
 
-        if ( my $tracker = $self->leak_tracker and @leaked ) {
+        if ( my $tracker = $self->leak_tracker and grep { defined } @leaked ) {
             if ( ref($tracker) eq 'CODE' ) {
-                $tracker->(@leaked);
+                $tracker->(grep { defined } @leaked);
             } else {
-                $tracker->leaked_objects(@leaked);
+                $tracker->leaked_objects(grep { defined } @leaked);
             }
         }
     }
