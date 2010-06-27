@@ -3,7 +3,7 @@
 package KiokuDB;
 use Moose;
 
-our $VERSION = "0.46_02";
+our $VERSION = "0.46_03";
 
 use constant SERIAL_IDS => not not our $SERIAL_IDS;
 
