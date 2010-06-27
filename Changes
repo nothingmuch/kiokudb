@@ -1,4 +1,10 @@
-0.046_02
+0.46_03
+    - Internals change cleanups regarding weakening $entry->{data} with
+      passthrough objects
+    - fiddle leak tracking code around to avoid keeping temporary refs around,
+      which makes Devel::FindRef more useful in the user's leak tracker
+
+0.46_02
     - Support for caching of live objects (i.e. immutable ones)
     - Fix the =head1 NAME of Tutorial::JA
     - Move t/set.t into a standalone test fixture
