@@ -7,6 +7,8 @@ use Test::More;
 use Test::Exception;
 use Scalar::Util qw(weaken);
 
+use Cache::Ref::CART;
+
 use ok 'KiokuDB::LiveObjects';
 use ok 'KiokuDB::Entry';
 
@@ -452,5 +454,28 @@ foreach my $keep ( 1, 0 ) {
 
     isa_ok( $foo, "KiokuDB_Test_Foo", "immortal object still live" );
 }
+
+{
+    my $l = KiokuDB::LiveObjects->new(
+        cache => Cache::Ref::CART->new( size => 50 ),
+    );
+
+    {
+        my $s = $l->new_scope;
+
+        my %hash = map { $_ => KiokuDB_Test_Foo->new( name => $_ ) } 1 .. 100;
+
+        for ( 1 .. 200 ) {
+            $hash{1 + int rand 100}->strong_ref( $hash{1 + int rand 100} );
+        }
+
+        $l->register_object( $_ => $hash{$_}, cache => 1 ) for 1 .. 100;
+
+        cmp_ok( $l->size, '==', 100, "100 live objects" );
+    }
+
+    cmp_ok( $l->size, '<=', 1.1 * $l->cache->size, "not too many live objects" );
+}
+
 
 done_testing;
