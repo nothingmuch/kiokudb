@@ -182,6 +182,8 @@ has live_objects => (
         objects_to_ids     => "objects_to_ids",
         id_to_object       => "id_to_object",
         ids_to_objects     => "ids_to_objects",
+        id_in_storage      => "id_in_storage",
+        object_in_storage  => "object_in_storage",
     },
 );
 
