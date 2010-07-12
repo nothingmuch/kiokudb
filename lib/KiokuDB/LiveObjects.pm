@@ -575,7 +575,7 @@ merely prevents stale objects from staying loaded.
 
 This is a coderef or object.
 
-If any objects ar eleaked (see C<clear_leaks>) then the this can be used to
+If any objects are leaked (see C<clear_leaks>) then the this can be used to
 report them, or to break the circular structure.
 
 When an object is provided the C<leaked_objects> method is called. The coderef

@@ -160,7 +160,7 @@ C<$ref> according to the JSPON spec.
 =item inline_data
 
 Determines whether or not the entry data keys are escaped and the data is
-stored in the same top level mapping, or inside a the C<data_field> key.
+stored in the same top level mapping, or inside the C<data_field> key.
 
 =back
 

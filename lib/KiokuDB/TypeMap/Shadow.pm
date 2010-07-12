@@ -51,7 +51,7 @@ KiokuDB::TypeMap::Shadow - Try a list of L<KiokuDB::TypeMap>s in order
 
 =head1 DESCRIPTION
 
-This class is useful for performing mixin inheritence like merging of typemaps,
+This class is useful for performing mixin inheritance like merging of typemaps,
 by shadowing an ordered list.
 
 This is used internally to overlay the user typemap on top of the

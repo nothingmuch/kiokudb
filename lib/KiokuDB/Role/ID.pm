@@ -20,7 +20,7 @@ KiokuDB::Role::ID - A role for objects who choose their own ID.
 =head1 SYNOPSIS
 
     # typically you set up your own ID role, and map the C<kiokudb_object_id>
-    # method to your shema's ID
+    # method to your schema's ID
 
     package MySchema::ID;
     use Moose::Role;

@@ -29,5 +29,5 @@ KiokuDB::Set::Stored - Stored representation of L<KiokuDB::Set> objects.
 
 This object is the persisted representation of all L<KiokuDB::Set> objects.
 
-It is used internall after collapsing and before expanding, for simplicity.
+It is used internally after collapsing and before expanding, for simplicity.
 

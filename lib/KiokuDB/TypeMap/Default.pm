@@ -102,7 +102,7 @@ entries.
 The default typemap is actually defined per backend, in
 L<KiokuDB::TypeMap::Default::JSON> and L<KiokuDB::TypeMap::Default::Storable>.
 The list of classes handled by both is the same, but the typemap entries
-themselves are tailored to the specific backends' requirements/capabilities.
+themselves are tailored to the specific backend's requirements/capabilities.
 
 The entries have no impact unless you are actually using the listed modules.
 

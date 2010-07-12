@@ -700,7 +700,7 @@ If you're new to L<KiokuDB> check out L<KiokuDB::Tutorial>.
 
 
 
-    # some backends (like DBI) support simple searchs
+    # some backends (like DBI) support simple searches
     $d->search({ name => "foo" });
 
 
@@ -762,7 +762,7 @@ more detail.
 =head2 Collapsing
 
 When an object is stored using L<KiokuDB> it's collapsed into an
-L<KiokDB::Entry|Entry>.
+L<KiokuDB::Entry|Entry>.
 
 An entry is a simplified representation of the object, allowing the data to be
 saved in formats as simple as JSON.
@@ -1153,7 +1153,7 @@ needed.
 
 L<KiokuDB::Collapser>
 
-The collapser prepares objects for storage, by creating L<KiokDB::Entry>
+The collapser prepares objects for storage, by creating L<KiokuDB::Entry>
 objects to pass to the backend.
 
 =item linker

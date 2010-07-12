@@ -43,7 +43,7 @@ KiokuDB::Role::ID::Content - Content dependent object IDs
 =head1 DESCRIPTION
 
 This is a role for L<KiokuDB::Role::Immutable> objects whose IDs depend on
-their content, or in other words content addressible objects.
+their content, or in other words content addressable objects.
 
 A canonical example is a string identified by its SHA-1 hash, as is
 demonstrated in the L</SYNOPSIS>.

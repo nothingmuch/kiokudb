@@ -453,7 +453,7 @@ The typemap contains normal entries (keyed by C<ref $object eq $class>) or isa
 entries (filtered by C<< $object->isa($class) >>). The rationale is that a typemap
 entry for a superclass might not support all subclasses as well.
 
-Any strategy may be collapsed as a first class object, or intrinsicly, inside
+Any strategy may be collapsed as a first class object, or intrinsically, inside
 its parent (in which case it isn't assigned a UUID). This is determined based
 on the C<intrinsic> attribute to the entry. For instance, if L<Path::Class>
 related objects should be collapsed as if they are values, the following

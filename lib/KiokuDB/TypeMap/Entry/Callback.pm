@@ -174,7 +174,7 @@ For the overwhelming majority of the use cases this is good enough though.
 A method name or code reference invoked on the object during collapsing.
 
 This is evaluated in list context, and the list of values it returns will be
-collapsed by the L<KiokuDB::Collapser> and then store.
+collapsed by the L<KiokuDB::Collapser> and then stored.
 
 =item expand
 

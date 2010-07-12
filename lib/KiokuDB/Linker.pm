@@ -399,7 +399,7 @@ KiokuDB::Linker - Relinks live objects from storage entries
 The linker reconnects entry data, recreating the connected object graph in
 memory.
 
-The linkage process starts with a an ID (or several IDs) to be loaded passed to
+The linkage process starts with an ID (or several IDs) to be loaded passed to
 the C<get_or_load_objects> method.
 
 This ID will first be searched for in the live object set

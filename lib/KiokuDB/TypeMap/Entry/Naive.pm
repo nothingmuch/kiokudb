@@ -74,7 +74,7 @@ segfaults.
 
 =item Inside out objects
 
-Since the referant is really a flyweight object with no data, the object will
+Since the referent is really a flyweight object with no data, the object will
 be missing its attributes and a suitable typemap entry is required instead.
 
 This applies to any object interacting with a global state of some sort.

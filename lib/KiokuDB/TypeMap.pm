@@ -229,10 +229,10 @@ A list of parent typemaps to inherit entries from.
 
 =item resolve $class
 
-Given a class returns the C<KiokuDB::TypeMap::Entry> object corresponding tot
-hat class.
+Given a class returns the C<KiokuDB::TypeMap::Entry> object corresponding to
+that class.
 
-Called by L<KiokuDB::TypeMap::Resover>
+Called by L<KiokuDB::TypeMap::Resolver>
 
 =item resolve_entry $entry
 

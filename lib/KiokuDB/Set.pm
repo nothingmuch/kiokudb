@@ -192,7 +192,7 @@ L<KiokuDB::Set::Loaded> object.
 =head2 Loaded Sets
 
 This is the result of vivifying the members of a deferred set, and is similar
-to transient sets in implemenation.
+to transient sets in implementation.
 
 =cut
 

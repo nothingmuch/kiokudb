@@ -189,6 +189,6 @@ L<KiokuDB::Backend::Serialize::JSPON::Expander>.
 
 =item expand_jspon $hashref
 
-Recursively inlates the hash reference, returning a L<KiokuDB::Entry> object.
+Recursively inflates the hash reference, returning a L<KiokuDB::Entry> object.
 
 =back
