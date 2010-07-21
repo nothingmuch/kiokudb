@@ -23,9 +23,11 @@ sub init_meta {
 
     Moose->init_meta(%args);
 
-    Moose::Util::MetaRole::apply_metaclass_roles(
-        for_class                => $for_class,
-        instance_metaclass_roles => [qw(KiokuDB::Meta::Instance)],
+    Moose::Util::MetaRole::apply_metaroles(
+        for             => $for_class,
+        class_metaroles => {
+            instance => [qw(KiokuDB::Meta::Instance)],
+        },
     );
 
     return Class::MOP::get_metaclass_by_name($for_class);

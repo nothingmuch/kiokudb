@@ -1,3 +1,6 @@
+0.47
+    - Avoid warnings from Moose 1.09 (Dave Rolsky)
+
 0.46
     - s/_03/ on the version
 
