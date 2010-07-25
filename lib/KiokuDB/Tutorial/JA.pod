@@ -4,13 +4,13 @@
 
 =head1 NAME
 
+KiokuDB::Tutorial::JA - L<KiokuDB>を始めよう
+
 =begin original
 
 KiokuDB::Tutorial - Getting started with L<KiokuDB>
 
 =end original
-
-KiokuDB::Tutorial::JA - L<KiokuDB>を始めよう
 
 =head1 Install
 
