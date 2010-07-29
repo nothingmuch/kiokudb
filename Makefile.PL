@@ -92,7 +92,7 @@ WriteMakefile(
 
         'Set::Object' => '1.26',
 
-        'Cache::Ref' => 0,
+        'Cache::Ref' => '0.02',
 
         'Module::Pluggable::Object' => 0,
         'Test::use::ok' => 0,
