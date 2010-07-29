@@ -1,5 +1,9 @@
 0.47
     - Avoid warnings from Moose 1.09 (Dave Rolsky)
+    - Numerous documentation fixes (David Leadbeater)
+    - Move the Japanese translation of the tutorial under POD2::JA to allow
+      perldoc -L ja KiokuDB::Tutorial
+    - Don't allow the live object cache to grow too big
 
 0.46
     - s/_03/ on the version
