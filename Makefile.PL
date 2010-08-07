@@ -70,8 +70,8 @@ WriteMakefile(
 
         # Identity is important
         ( eval { require Data::UUID::LibUUID }
-            ? ( "Data::UUID::LibUUID" => 0 )
-            : ( "Data::UUID"          => 0 ) ),
+            ? ( "Data::UUID::LibUUID" => '0.05' )
+            : ( "Data::UUID"          => '1.203' ) ),
 
         # visits are also important
         'Data::Visitor' => '0.24',
