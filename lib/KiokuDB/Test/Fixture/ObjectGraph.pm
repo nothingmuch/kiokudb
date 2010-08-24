@@ -44,7 +44,7 @@ sub clique {
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Test::Fixture) => { excludes => [qw/populate sort/] };
+with qw(KiokuDB::Test::Fixture) => { -excludes => [qw/populate sort/] };
 
 has [qw(homer dubya putin)] => (
     isa => "Str",

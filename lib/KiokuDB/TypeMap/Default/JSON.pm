@@ -8,7 +8,7 @@ use namespace::clean -except => 'meta';
 extends qw(KiokuDB::TypeMap);
 
 with 'KiokuDB::TypeMap::Default::Canonical' => {
-    excludes => [qw(reftype_entries)],
+    -excludes => [qw(reftype_entries)],
 };
 
 has json_boolean_typemap => (

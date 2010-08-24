@@ -12,7 +12,7 @@ use namespace::clean -except => 'meta';
 
 use constant required_backend_roles => qw(Clear);
 
-with qw(KiokuDB::Test::Fixture) => { excludes => [qw/sort required_backend_roles/] };
+with qw(KiokuDB::Test::Fixture) => { -excludes => [qw/sort required_backend_roles/] };
 
 sub sort { -10 }
 
