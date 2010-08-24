@@ -1,3 +1,6 @@
+0.48
+    - Avoid warnings from Moose 1.10
+
 0.47
     - Avoid warnings from Moose 1.09 (Dave Rolsky)
     - Numerous documentation fixes (David Leadbeater)
