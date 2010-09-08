@@ -16,7 +16,7 @@ use namespace::clean -except => 'meta';
 
 use constant required_backend_roles => qw(BinarySafe);
 
-with qw(KiokuDB::Test::Fixture) => { excludes => 'required_backend_roles' };
+with qw(KiokuDB::Test::Fixture) => { -excludes => 'required_backend_roles' };
 
 my $utf8    = "חיים";
 

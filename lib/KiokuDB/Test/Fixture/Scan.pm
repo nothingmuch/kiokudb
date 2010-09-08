@@ -10,7 +10,7 @@ use KiokuDB::Test::Person;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Test::Fixture) => { excludes => 'required_backend_roles' };
+with qw(KiokuDB::Test::Fixture) => { -excludes => 'required_backend_roles' };
 
 use constant required_backend_roles => qw(Clear Scan);
 
