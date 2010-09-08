@@ -21,7 +21,7 @@ use namespace::clean -except => 'meta';
 with (
     'KiokuDB::TypeMap::Entry::Std',
     'KiokuDB::TypeMap::Entry::Std::Expand' => {
-        alias => { compile_expand => 'compile_expand_body' },
+        -alias => { compile_expand => 'compile_expand_body' },
     }
 );
 
