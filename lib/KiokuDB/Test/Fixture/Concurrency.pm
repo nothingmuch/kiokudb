@@ -23,7 +23,8 @@ use constant ITER => 10;
 my @ids = qw(foo bar gorch baz);
 
 {
-    package Foo;
+    package # hide from PAUSE
+        Foo;
     use Moose;
 
     has bar => ( is => 'rw' );
