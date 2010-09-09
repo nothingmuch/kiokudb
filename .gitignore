@@ -6,3 +6,5 @@ Makefile.old
 pm_to_blib*
 *.tar.gz
 cover_db
+MANIFEST*
+!MANIFEST.SKIO
