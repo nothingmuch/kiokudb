@@ -1,5 +1,11 @@
-0.48
+0.49
+    - Merge NUFFIN/0.48 and FLORA/0.48
+
+0.48 [FLORA]
     - Avoid warnings from Moose 1.10
+
+0.48 [NUFFIN]
+    - Reupload with proper MANIFEST
 
 0.47
     - Avoid warnings from Moose 1.09 (Dave Rolsky)
