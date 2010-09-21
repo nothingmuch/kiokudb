@@ -79,7 +79,7 @@ WriteMakefile(
         'Task::Weaken'  => 0,
 
         # scanning and searching
-        'Data::Stream::Bulk' => "0.07",
+        'Data::Stream::Bulk' => "0.08",
 
         # live objects
         'Hash::Util::FieldHash::Compat' => 0,
