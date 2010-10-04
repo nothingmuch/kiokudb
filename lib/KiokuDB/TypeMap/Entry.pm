@@ -41,13 +41,8 @@ This is the role consumed by all typemap entries.
 =item compile $class
 
 This method is called by L<KiokuDB::TypeMap::Resolver> for a given class, and
-should return two code references, one for collapsing and one for expanding.
-
-The collapsing sub is called as a method on L<KiokuDB::Collapser> and the
-expanding sub is called on L<KiokuDB::Linker>.
-
-The callbacks must call other L<KiokuDB::Collapser> and L<KiokuDB::Linker>
-methods to actually get the work done.
+should return a L<KiokuDB::TypeMap::Entry::Compiled> object for collapsing and
+expanding the object.
 
 L<KiokuDB::TypeMap::Entry::Std> provides a more concise way of defining typemap entries.
 
