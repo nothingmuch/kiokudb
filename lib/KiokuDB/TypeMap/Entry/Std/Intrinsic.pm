@@ -56,3 +56,51 @@ sub compile_collapse_wrapper {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Std::Intrinsic - Provides a compile_collapse
+implementation.
+
+=head1 SYNOPSIS
+
+TODO
+
+=head1 DESCRIPTION
+
+This role provides a compile_collapse implementation by breaking it down
+and requiring the implementation of a 'compile_collapse_body' method.
+
+=head1 REQUIRED METHODS
+
+=over 4
+
+=item compile_collapse_body
+
+Must return a code reference or a method name.  The method is called on
+the L<KiokuDB::Collapser>, with a hash of parameters.  The parameters can
+include (but are not limited to) the following:
+
+=over 8
+
+=item object
+
+The object to collapse.
+
+=item id
+
+The id under which the object is to be stored.
+
+=item class
+
+The type of C<object>.
+
+=back
+
+The method should return a L<KiokuDB::Reference> object.
+
+=back
+
+=cut

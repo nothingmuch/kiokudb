@@ -36,3 +36,50 @@ sub new_compiled {
 __PACKAGE__
 
 __END__
+
+=pod
+
+=head1 NAME
+
+KiokuDB::TypeMap::Entry::Std::Compile - Provides a compile implementation
+
+=head1 SYNOPSIS
+
+TODO
+
+=head1 DESCRIPTION
+
+This role provides an implementation for L<KiokuDB::TypeMap::Entry/compile> by
+breaking down its requirements into four separated methods.
+
+=head1 REQUIRED METHODS
+
+=over 4
+
+=item compile_collapse
+
+Must return a code reference or method name.  The calling conventions for this
+method are described in L<KiokuDB::TypeMap::Entry::Compiled/collapse_method>.
+
+=item compile_expand
+
+Must return a code reference or method name.  The calling conventions for this
+method are described in L<KiokuDB::TypeMap::Entry::Compiled/expand_method>.
+
+=item compile_id
+
+Must return a code reference or method name.  The calling conventions for this
+method are described in L<KiokuDB::TypeMap::Entry::Compiled/id_method>.
+
+=item compile_refresh
+
+Must return a code reference or method name.  The calling conventions for this
+method are described in L<KiokuDB::TypeMap::Entry::Compiled/refresh_method>.
+
+=back
+
+=head1 SEE ALSO
+
+L<KiokuDB::TypeMap::Entry::Compiled>
+
+=cut
