@@ -876,14 +876,14 @@ L<KiokuDB::Linker> handle different types of objects.
 An array references of extra classes to allow.
 
 Objects blessed into these classes will be collapsed using
-L<KiokuDB::TypeMap::Entry:Naive>.
+L<KiokuDB::TypeMap::Entry::Naive>.
 
 =item allow_bases
 
 An array references of extra base classes to allow.
 
 Objects derived from these classes will be collapsed using
-L<KiokuDB::TypeMap::Entry:Naive>.
+L<KiokuDB::TypeMap::Entry::Naive>.
 
 =item allow_class_builders
 
