@@ -59,7 +59,7 @@ use constant HAVE_MX_OP             => try { require MooseX::Object::Pluggable }
     has name => ( is => "rw" );
 }
 
-with qw(KiokuDB::Test::Fixture) => { excludes => 'required_backend_roles' };
+with qw(KiokuDB::Test::Fixture) => { -excludes => 'required_backend_roles' };
 
 sub create {
     tie my %refhash, 'Tie::RefHash';

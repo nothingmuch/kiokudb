@@ -11,7 +11,7 @@ use KiokuDB::Test::Company;
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Test::Fixture) => { excludes => 'sort' };
+with qw(KiokuDB::Test::Fixture) => { -excludes => 'sort' };
 
 sub sort { -50 }
 

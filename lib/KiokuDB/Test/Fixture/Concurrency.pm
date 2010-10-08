@@ -11,7 +11,7 @@ use POSIX qw(_exit :sys_wait_h);
 
 use namespace::clean -except => 'meta';
 
-with qw(KiokuDB::Test::Fixture) => { excludes => [qw/run required_backend_roles/] };
+with qw(KiokuDB::Test::Fixture) => { -excludes => [qw/run required_backend_roles/] };
 
 use constant required_backend_roles => qw(Clear TXN Concurrency::POSIX);
 
@@ -23,7 +23,8 @@ use constant ITER => 10;
 my @ids = qw(foo bar gorch baz);
 
 {
-    package Foo;
+    package # hide from PAUSE
+        Foo;
     use Moose;
 
     has bar => ( is => 'rw' );

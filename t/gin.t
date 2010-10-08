@@ -25,7 +25,7 @@ use ok 'Search::GIN::Extract::Class';
 
     with (
 	    'KiokuDB::GIN',
-	    'Search::GIN::Driver::Hash' => { excludes => 'clear' },
+	    'Search::GIN::Driver::Hash' => { -excludes => 'clear' },
 	    'Search::GIN::Extract::Delegate',
     );
 
