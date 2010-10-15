@@ -31,6 +31,8 @@ around 'inline_get_slot_value' => sub {
     }'
 };
 
+sub inline_get_is_lvalue { 0 }
+
 __PACKAGE__
 
 __END__
