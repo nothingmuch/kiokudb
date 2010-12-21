@@ -736,7 +736,7 @@ a relational model.
 =item Interoperability
 
 Persisting arbitrary objects in a way that is compatible with existing
-data/code (for example interoprating with another app using CouchDB with JSPON
+data/code (for example interoperating with another app using CouchDB with JSPON
 semantics).
 
 =back
@@ -837,7 +837,7 @@ PostgreSQL default to read committed.
 
 Depending on your application read committed isolation may be sufficient, but
 due to the graph structure nature of the data repeatable reads or serializable
-level isolation is highly reccomended. Read committed isolation generally works
+level isolation is highly recommended. Read committed isolation generally works
 well when each row in the database is more or less independent of others, and
 various constraints ensure integrity. Unfortunately this is not the case with
 the graph layout.
@@ -997,7 +997,7 @@ The C<nonroot> variant will not mark the objects as members of the root set
 
 =item update @objects
 
-Performs a shallow update of @objects (referants are not updated).
+Performs a shallow update of @objects (referents are not updated).
 
 It is an error to update an object not in the database.
 
@@ -1017,7 +1017,7 @@ objects must already be in the database.
 Inserts objects to the database.
 
 It is an error to insert objects that are already in the database, all elements
-of C<@objects> must be new, but their referants don't have to be.
+of C<@objects> must be new, but their referents don't have to be.
 
 C<@objects> will be collapsed recursively, but the collapsing stops at known
 objects, which will not be updated.
