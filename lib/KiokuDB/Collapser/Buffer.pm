@@ -194,6 +194,8 @@ sub imply_root {
 sub commit {
     my ( $self, $backend ) = @_;
 
+    my $l = $self->live_objects;
+
     $self->insert_to_backend($backend);
     $self->update_entries( in_storage => 1 );
 }
@@ -201,7 +203,7 @@ sub commit {
 sub insert_to_backend {
     my ( $self, $backend ) = @_;
 
-    $backend->insert(values %{ $self->_entries });
+    $backend->insert($self->entries);
 }
 
 sub update_entries {

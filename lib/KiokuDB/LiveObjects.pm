@@ -371,8 +371,12 @@ sub register_object {
     croak($object, " is not a reference") unless ref($object);
     croak($object, " is an entry") if blessed($object) && $object->isa("KiokuDB::Entry");
 
-    if ( my $id = $self->object_to_id($object) ) {
-        croak($object, " is already registered as $id")
+    if ( my $old_id = $self->object_to_id($object) ) {
+        croak($object, " is already registered as '$old_id'")
+    }
+
+    if ( my $object = $self->id_to_object($id) ) {
+        croak("ID '$id' is already in use by ", $object);
     }
 
     my $info = $self->_vivify_id_info($id);

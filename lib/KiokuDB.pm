@@ -16,6 +16,8 @@ use KiokuDB::TypeMap::Shadow;
 use KiokuDB::TypeMap::Resolver;
 use KiokuDB::Stream::Objects;
 
+use Moose::Util qw(does_role);
+
 use Hash::Util::FieldHash::Compat qw(idhash);
 use Carp qw(croak);
 use Try::Tiny;

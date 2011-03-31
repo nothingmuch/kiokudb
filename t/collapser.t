@@ -59,6 +59,22 @@ sub unknown_ok (&@) {
     has id => ( is => "rw", isa => "Int" );
 
     has blah => ( is  => "rw" );
+
+    package KiokuDB_Test_Baz;
+    use Moose;
+
+    with qw(KiokuDB::Role::ID);
+
+    has id => ( isa => "Str", is => "ro", required => 1 );
+
+    sub kiokudb_object_id { shift->id }
+
+    package KiokuDB_Test_Quxx;
+    use Moose;
+
+    extends qw(KiokuDB_Test_Baz);
+
+    with qw(KiokuDB::Role::ID::Content);
 }
 
 {
@@ -813,5 +829,75 @@ sub unknown_ok (&@) {
     };
 }
 
+{
+    my $v = KiokuDB::Collapser->new(
+        backend => KiokuDB::Backend::Hash->new,
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
+        ),
+    );
+
+    my $s = $lo->new_scope;
+
+    {
+        my ( $buffer, @ids ) = $v->collapse( objects => [ KiokuDB_Test_Baz->new( id => "foo" ) ] );
+
+        my $entries = $buffer->_entries;
+
+        is( scalar(keys %$entries), 1, "one entry" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        $buffer->update_entries( in_storage => 1 );
+    }
+
+    {
+        throws_ok {
+            $v->collapse( objects => [ KiokuDB_Test_Baz->new( id => "foo" ) ] );
+        } qr/ID conflict/;
+    }
+}
+
+{
+    my $v = KiokuDB::Collapser->new(
+        backend => KiokuDB::Backend::Hash->new,
+        live_objects => my $lo = KiokuDB::LiveObjects->new,
+        typemap_resolver => KiokuDB::TypeMap::Resolver->new(
+            typemap => KiokuDB::TypeMap->new(
+                entries => {
+                    ARRAY => KiokuDB::TypeMap::Entry::Ref->new,
+                    HASH  => KiokuDB::TypeMap::Entry::Ref->new,
+                },
+            ),
+        ),
+    );
+
+    my $s = $lo->new_scope;
+
+    {
+        my ( $buffer, @ids ) = $v->collapse( objects => [ KiokuDB_Test_Quxx->new( id => "foo" ) ] );
+
+        my $entries = $buffer->_entries;
+
+        is( scalar(keys %$entries), 1, "one entry" );
+        is( scalar(@ids), 1, "one root set ID" );
+
+        $buffer->update_entries( in_storage => 1 );
+    }
+
+    {
+        my ( $buffer, @ids );
+        lives_ok {
+            ( $buffer, @ids ) = $v->collapse( objects => [ KiokuDB_Test_Quxx->new( id => "foo" ) ] );
+        } qr/ID conflict/;
+
+        is_deeply( [ $buffer->entries ], [ ], "no entries produced for backend on duplicate CAS object" );
+    }
+}
 
 done_testing;

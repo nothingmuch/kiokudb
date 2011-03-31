@@ -84,6 +84,8 @@ use ok 'KiokuDB::Entry';
 
         throws_ok { $l->insert( g => $objects{f} ) } qr/already registered/, "double reg under diff ID is an error";
 
+        throws_ok { $l->insert( g => KiokuDB_Test_Foo->new ) } qr/already in use/, "id conflict";
+
         throws_ok { $l->insert( foo => "bar" ) } qr/not a ref/, "can't register non ref";
 
         undef $s;

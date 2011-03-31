@@ -7,7 +7,9 @@ no warnings 'recursion';
 
 use Scope::Guard;
 use Carp qw(croak);
+BEGIN { local $@; eval 'use Devel::PartialDump qw(croak)' };
 use Scalar::Util qw(isweak refaddr reftype);
+use Moose::Util qw(does_role);
 
 use KiokuDB::Entry;
 use KiokuDB::Entry::Skip;
@@ -320,12 +322,14 @@ sub collapse_first_class {
     my $o = $b->options;
 
     if ( $o->{only_in_storage} && $in_storage ) {
+        die "bug" unless defined $id;
         return $self->make_ref( $id => $_[2] );
     }
 
     if ( my $only = $o->{only} ) {
         unless ( $only->contains($object) ) {
             if ( $in_storage ) {
+                die "bug" unless defined $id;
                 return $self->make_ref( $id => $_[2] );
             } else {
                 KiokuDB::Error::UnknownObjects->throw( objects => [ $object ] );
@@ -365,11 +369,17 @@ sub collapse_first_class {
 sub id_conflict {
     my ( $self, $id, $object, $other ) = @_;
 
-    $self->make_skip_entry( id => $id, object => $object );
+    if ( does_role($object, "KiokuDB::Role::ID::Content") and does_role($other, "KiokuDB::Role::ID::Content") ) {
+        # FIXME delegate this knowlege to the typemap? what if $object and
+        # $other have conflicting typemaps?
+        $self->make_skip_entry( id => $id, object => $object );
 
-    $self->_buffer->insert( $id => $object );
+        $self->_buffer->insert( $id => $object );
 
-    return $self->make_ref( $id => $_[2] );
+        return $self->make_ref( $id => $_[2] );
+    } else {
+        croak "ID conflict when registering ", $object, ", '$id' is already in use by ", $other;
+    }
 }
 
 
