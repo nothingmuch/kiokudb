@@ -1,3 +1,7 @@
+0.51
+    - Die with an error when two objects try and register with the same ID but
+      don't both do the KiokuDB::Role::ID::Content role.
+
 0.50
     - Use new instance api in Moose to allow native traits to inline properly
       when used with KiokuDB::Class (doy)
